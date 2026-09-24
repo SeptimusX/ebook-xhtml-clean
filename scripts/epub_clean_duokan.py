@@ -37,6 +37,10 @@ CONFIG = {
     "body_class_from": ["text"],        # p.text -> p.bodytext
     "bodytext_class": "bodytext",
     "heading_map": {"h2": "h3"},        # chapter-title2 的 h2 -> h3
+    "quote_class": "quote",             # <p class="quote"> -> bodytext（blockquote 内的引文段）
+    "signature_class": "signature",     # <p class="signature"> -> right（署名/出处行）
+    "signature_to": "right",
+    "signature_spacer_prefixes": ["（原载于"],  # 这些前缀的署名行前加一个空行段
     "hr": True,
 }
 
@@ -88,6 +92,32 @@ def step_headings(c, name, ctx):
         ctx["headings"] += n
     return c
 
+def step_quote_signature(c, name, ctx):
+    """blockquote 内的 <p class="quote"> -> bodytext；<p class="signature"> -> right
+    （「（原载于…」这类出处行前插入一个空行段）"""
+    qc = CONFIG.get("quote_class")
+    if qc:
+        n = len(re.findall(r'<p class="%s"' % re.escape(qc), c))
+        c = c.replace('<p class="%s">' % qc, '<p class="%s">' % CONFIG["bodytext_class"])
+        ctx["quote"] += n
+    sc = CONFIG.get("signature_class")
+    if sc:
+        for pref in CONFIG.get("signature_spacer_prefixes") or []:
+            spacer = '<p class="%s"><br/></p>' % CONFIG["bodytext_class"]
+            pat = re.compile(r'<p class="%s">%s' % (re.escape(sc), re.escape(pref)))
+
+            def add(m):
+                if c[:m.start()].rstrip().endswith(spacer):
+                    return m.group(0)
+                ctx["spacer"] += 1
+                return spacer + "\n" + m.group(0)
+
+            c = pat.sub(add, c)
+        n = len(re.findall(r'<p class="%s"' % re.escape(sc), c))
+        c = c.replace('<p class="%s">' % sc, '<p class="%s">' % CONFIG["signature_to"])
+        ctx["sign"] += n
+    return c
+
 def step_footnotes(c, name, ctx):
     if not MARK_RE.search(c):
         return c
@@ -127,7 +157,7 @@ def step_footnotes(c, name, ctx):
     return c
 
 STEPS = [("css", step_css), ("bodytext", step_bodytext), ("headings", step_headings),
-         ("footnotes", step_footnotes)]
+         ("quote_signature", step_quote_signature), ("footnotes", step_footnotes)]
 
 # ---------- 校验 ----------
 
@@ -139,6 +169,10 @@ def verify_content(c, name, d):
         probs.append("XML 解析失败: %s" % e)
     if "duokan-footnote" in c or "note.png" in c or "footnote-text" in c:
         probs.append("残留多看注释标记")
+    if CONFIG.get("quote_class") and ('<p class="%s">' % CONFIG["quote_class"]) in c:
+        probs.append("残留 quote 类")
+    if CONFIG.get("signature_class") and ('<p class="%s">' % CONFIG["signature_class"]) in c:
+        probs.append("残留 signature 类")
     if re.search(r'class="%s(?=[\s"])' % "|".join(re.escape(x) for x in CONFIG["body_class_from"]), c):
         probs.append("残留旧正文类")
     for href in CONFIG["drop_css_hrefs"]:
@@ -212,7 +246,7 @@ def process(d, dry=False):
         c = read(fp)
         if not dry:
             shutil.copy2(fp, os.path.join(base, name))
-        ctx = {"marks": 0, "fnotes": 0, "bodytext": 0, "headings": 0}
+        ctx = {"marks": 0, "fnotes": 0, "bodytext": 0, "headings": 0, "quote": 0, "sign": 0, "spacer": 0}
         try:
             for sname, fn in STEPS:
                 c = fn(c, name, ctx)

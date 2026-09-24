@@ -200,11 +200,14 @@ analyze 会对「quotation 含链接」的文件打 `!!` 标记。
 1. **css**：`../Styles/stylesheet.css` + `../Styles/oxenfont.css` → 同目录 `styles.css`
 2. **正文**：`<p class="text">` → `<p class="bodytext">`
 3. **标题**：`<h2 class="chapter-title2" id="sigil_toc_id_N">` → `<h3 class="chapter-title2" …>`（保留 id）
-4. **注释标记**（图片式）：
+4. **引文/署名**：`<blockquote>` 内的 `<p class="quote">` → `<p class="bodytext">`；
+   `<p class="signature">（原载于…）</p>` → `<p class="right">…</p>`，并在其前插入一个
+   `<p class="bodytext"><br/></p>` 空行段（其余 `<p class="signature">` 只改 class）
+5. **注释标记**（图片式）：
    `<a class="duokan-footnote" href="#a_X_Y" id="c_X_Y"><img alt="注释N" class="duokan-footnote" src="../Images/note.png"/></a>`
    → `<sup><a epub:type="noteref" href="#a_X_Y" id="noteref-N">[N]</a></sup>`
    （源文件常未声明 `xmlns:epub`，脚本会自动补上）
-5. **注释列表**：文末
+6. **注释列表**：文末
    `<ol class="duokan-footnote-content"><li class="duokan-footnote-item" id="a_X_Y"><p class="footnote-text"><a class="duokan-footnote-link" href="#c_X_Y">注文</a>​​​​​</p></li>…</ol>`
    → `<hr/>` + `<p class="fnote" id="a_X_Y"><a href="#noteref-N">[N]</a> 注文</p>`（每文件从 1 编号、双向回链，去掉零宽空格）
    （注释正文的 p 类在不同书里可能是 `footnote-text` 或 `footnote-bodytext`，脚本两者都认）
