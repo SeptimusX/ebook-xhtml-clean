@@ -1,6 +1,6 @@
 ---
 name: ebook-xhtml-clean
-description: 电子书 EPUB xhtml 清洗流水线（四套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、kfont、key1/key2 时使用。
+description: 电子书 EPUB xhtml 清洗流水线（五套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2 时使用。
 ---
 
 # EPUB xhtml 清洗流水线
@@ -8,7 +8,7 @@ description: 电子书 EPUB xhtml 清洗流水线（四套 profile：得到/中�
 把 EPUB 的 xhtml 转换为标准格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
 目标目录通常是书籍解包后的 `<项目>/xhtml` 或 `<项目>/EPUB/xhtml`（同目录应已有 `styles.css`）。
 
-## 四套 profile（先 analyze 判断，再选脚本）
+## 五套 profile（先 analyze 判断，再选脚本）
 
 | 源格式 | 脚本 | 特征 |
 |---|---|---|
@@ -16,11 +16,12 @@ description: 电子书 EPUB xhtml 清洗流水线（四套 profile：得到/中�
 | calibre + 多看(duokan) | `scripts/epub_clean_calibre.py` | `<body class="calibre2">`、`<p class="calibre7"><span class="calibre10">`、`calibre23` 引文、`<aside…><ol class="duokan-footnote-content"><li>` 脚注、`<div class="calibre13">` 图 |
 | 微信读书 / QQ阅读 | `scripts/epub_clean_weread.py` | `<section class="readerChapterContent"><div data-wr-bd="1">`、`<span data-wr-id="layout">`、`<p class="content">` / `<p class="quotation">`、`<span class="reader_footer_note" data-wr-footernote="注释">`、`styles/common.css` + 内联 `<style>` |
 | KADOKAWA 竖排/固定版式 | `scripts/epub_clean_kadokawa.py`（**只做阶段二**） | `<html … xml:lang="zh-TW" class="hltr">`、`../style/book-style.css`、`<p class="mfont font-1em10">` 空段、`<p>　　<br/></p>` 版式空行、`class="kfont"` 引文、`class="key1"/"key2"` 注释锚点、`mokuji-` 锚点 |
+| 多看原生（图片式注释标记） | `scripts/epub_clean_duokan.py` | `<p class="text">`、`<h2 class="chapter-title2" id="sigil_toc_id_N">`、`../Styles/stylesheet.css` + `oxenfont.css`、正文 `<a class="duokan-footnote" …><img src="../Images/note.png"/></a>`、文末 `<ol class="duokan-footnote-content">` |
 
 **注意**：KADOKAWA 书几乎没有语义标签，需**先人工做阶段一语义化重排**（规则见下），脚本只做阶段二
 （全角→半角 + 注释编号方括号化）。
 
-四套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
+五套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
 
 ## 环境要点
 
@@ -192,6 +193,25 @@ analyze 会对「quotation 含链接」的文件打 `!!` 标记。
 
 
 
+## 多看原生 profile 约定（epub_clean_duokan.py，图片式注释标记变体）
+
+源：多看(duokan) 原生导出的 xhtml（无 calibre 类，靠 `chapter-title*` / `text` 类排版）。
+
+1. **css**：`../Styles/stylesheet.css` + `../Styles/oxenfont.css` → 同目录 `styles.css`
+2. **正文**：`<p class="text">` → `<p class="bodytext">`
+3. **标题**：`<h2 class="chapter-title2" id="sigil_toc_id_N">` → `<h3 class="chapter-title2" …>`（保留 id）
+4. **注释标记**（图片式）：
+   `<a class="duokan-footnote" href="#a_X_Y" id="c_X_Y"><img alt="注释N" class="duokan-footnote" src="../Images/note.png"/></a>`
+   → `<sup><a epub:type="noteref" href="#a_X_Y" id="noteref-N">[N]</a></sup>`
+   （源文件常未声明 `xmlns:epub`，脚本会自动补上）
+5. **注释列表**：文末
+   `<ol class="duokan-footnote-content"><li class="duokan-footnote-item" id="a_X_Y"><p class="footnote-text"><a class="duokan-footnote-link" href="#c_X_Y">注文</a>​​​​​</p></li>…</ol>`
+   → `<hr/>` + `<p class="fnote" id="a_X_Y"><a href="#noteref-N">[N]</a> 注文</p>`（每文件从 1 编号、双向回链，去掉零宽空格）
+   （注释正文的 p 类在不同书里可能是 `footnote-text` 或 `footnote-bodytext`，脚本两者都认）
+
+⚠️ **不要对这类文件做「全局 `text` → `bodytext` 替换」**：它会把 `text-align`、`text/html` 一起改坏
+（曾出现封面 `bodytext-align: center`、meta `content="bodytext/html"` 的遗留事故）。只按 class 精确匹配。
+
 ## 已知陷阱（脚本已处理，分析报告出现异常时按此排查）
 
 - 插图 div 的 img 和 `</div>` 在同一行（`alt=""/></div>`），`</div>` 不单独成行。
@@ -231,6 +251,7 @@ $sc  = "$sk/epub_clean.py"          # profile A 得到/中华书局
 $sc2 = "$sk/epub_clean_calibre.py"  # profile B calibre+duokan
 $sc3 = "$sk/epub_clean_weread.py"   # profile C 微信读书/QQ阅读
 $sc4 = "$sk/epub_clean_kadokawa.py" # profile D KADOKAWA（阶段二；Kobo 版加 --strip-kobo --drop-scripts --drop-kobo-style）
+$sc5 = "$sk/epub_clean_duokan.py"   # profile E 多看原生（图片式注释标记）
 & $py -X utf8 $sc  analyze <dir> -o <tmp>/report.txt   # 体检（只读）
 & $py -X utf8 $sc  process <dir> --dry-run             # 试处理→临时目录
 & $py -X utf8 $sc  process <dir>                       # 正式处理（自动备份+校验）

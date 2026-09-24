@@ -1,9 +1,9 @@
 # ebook-xhtml-clean
 
 把各类来源的电子书章节 XHTML 清洗为统一的语义化格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
-An opencode skill / CLI for cleaning EPUB xhtml from four common Chinese e-book sources.
+An opencode skill / CLI for cleaning EPUB xhtml from five common Chinese e-book sources.
 
-## 支持的源格式（四套 profile）
+## 支持的源格式（五套 profile）
 
 | profile | 脚本 | 典型特征 |
 |---|---|---|
@@ -11,6 +11,7 @@ An opencode skill / CLI for cleaning EPUB xhtml from four common Chinese e-book 
 | calibre + 多看(duokan) | `scripts/epub_clean_calibre.py` | `calibreN` 类、duokan 脚注 `<ol><li>`、`<div class="calibre13">` 图 |
 | 微信读书 / QQ阅读 | `scripts/epub_clean_weread.py` | `readerChapterContent`、`data-wr-footernote`、`p.content` / `p.quotation` |
 | KADOKAWA 竖排 / 固定版式 | `scripts/epub_clean_kadokawa.py` | `book-style.css`、`kfont` 引文、`key1`/`key2` 注释锚点 |
+| 多看原生（图片式注释标记） | `scripts/epub_clean_duokan.py` | `p.text`、`h2.chapter-title2`、`../Styles/*.css`、`a.duokan-footnote` + `note.png` 注释标记 |
 
 先跑 `analyze` 判断属于哪一套，再选脚本。
 
@@ -37,6 +38,7 @@ python scripts/epub_clean.py process <dir>           # 正式处理（自动备�
 python scripts/epub_clean.py verify  <dir>           # 独立复检
 ```
 
+把 `epub_clean.py` 换成上表对应的 profile 脚本即可；子命令完全一致。
 KADOKAWA 的 Kobo 导出版本额外加 `--strip-kobo --drop-scripts --drop-kobo-style`。
 
 ## 要求
