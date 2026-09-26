@@ -41,6 +41,9 @@ CONFIG = {
     "signature_class": "signature",     # <p class="signature"> -> right（署名/出处行）
     "signature_to": "right",
     "signature_spacer_prefixes": ["（原载于"],  # 这些前缀的署名行前加一个空行段
+    "separator_classes": ["center"],    # 分隔符段落（内容为纯符号）的类名 -> sprt
+    "separator_content_re": r"^[*＊·•—–\-ー\s　]{1,12}$",
+    "separator_to": "sprt",
     "hr": True,
 }
 
@@ -90,6 +93,23 @@ def step_headings(c, name, ctx):
         pat2 = re.compile(r'</%s>' % old)
         c = pat2.sub("</%s>" % new, c)
         ctx["headings"] += n
+    return c
+
+def step_separator(c, name, ctx):
+    """分隔符段落（类名在 separator_classes、内容为纯符号）统一为 class="sprt"（内容保留）"""
+    cre = CONFIG.get("separator_content_re")
+    if not cre:
+        return c
+    for cls in CONFIG.get("separator_classes") or []:
+        pat = re.compile(r'<p class="%s">([^<]*)</p>' % re.escape(cls))
+
+        def repl(m):
+            if not re.match(cre, m.group(1).strip()):
+                return m.group(0)
+            ctx["sep"] += 1
+            return '<p class="%s">%s</p>' % (CONFIG["separator_to"], m.group(1))
+
+        c = pat.sub(repl, c)
     return c
 
 def step_quote_signature(c, name, ctx):
@@ -157,7 +177,8 @@ def step_footnotes(c, name, ctx):
     return c
 
 STEPS = [("css", step_css), ("bodytext", step_bodytext), ("headings", step_headings),
-         ("quote_signature", step_quote_signature), ("footnotes", step_footnotes)]
+         ("separator", step_separator), ("quote_signature", step_quote_signature),
+         ("footnotes", step_footnotes)]
 
 # ---------- 校验 ----------
 
@@ -246,7 +267,7 @@ def process(d, dry=False):
         c = read(fp)
         if not dry:
             shutil.copy2(fp, os.path.join(base, name))
-        ctx = {"marks": 0, "fnotes": 0, "bodytext": 0, "headings": 0, "quote": 0, "sign": 0, "spacer": 0}
+        ctx = {"marks": 0, "fnotes": 0, "bodytext": 0, "headings": 0, "quote": 0, "sign": 0, "spacer": 0, "sep": 0}
         try:
             for sname, fn in STEPS:
                 c = fn(c, name, ctx)
