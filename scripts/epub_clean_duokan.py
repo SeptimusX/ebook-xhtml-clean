@@ -36,7 +36,9 @@ CONFIG = {
     "drop_css_hrefs": ["../Styles/stylesheet.css", "../Styles/oxenfont.css"],
     "body_class_from": ["text"],        # p.text -> p.bodytext
     "bodytext_class": "bodytext",
-    "heading_map": {"h2": "h3"},        # chapter-title2 的 h2 -> h3
+    # 标题按 class 映射（整体下移一级；无 chapter-title3 的书不受影响）
+    "heading_map": {"chapter-title2": "h3", "chapter-title3": "h4"},
+    "class_map": {"leftquote": "left", "preface": "bodytext", "poems": "center"},
     "quote_class": "quote",             # <p class="quote"> -> bodytext（blockquote 内的引文段）
     "signature_class": "signature",     # <p class="signature"> -> right（署名/出处行）
     "signature_to": "right",
@@ -53,6 +55,23 @@ OL_RE = re.compile(r'<ol class="duokan-footnote-content">(.*?)</ol>', re.S)
 LI_RE = re.compile(
     r'<li class="duokan-footnote-item" id="([^"]+)"><p class="footnote-[^"]*">\s*'
     r'<a class="duokan-footnote-link" href="#([^"]+)">(.*?)</a>[\u200b\s]*</p></li>', re.S)
+
+# ---------- 配置 ----------
+
+def load_config(d, path=None):
+    """读取 <dir>/clean_config.json（或 --config），就地覆盖 CONFIG 对应键"""
+    import json
+    p = path or os.path.join(d, "clean_config.json")
+    if not os.path.exists(p):
+        return
+    with open(p, encoding="utf-8") as f:
+        cfg = json.load(f)
+    for k, v in cfg.items():
+        if isinstance(v, dict) and isinstance(CONFIG.get(k), dict):
+            CONFIG[k].update(v)
+        else:
+            CONFIG[k] = v
+    print("config: %s" % p)
 
 # ---------- 基础 ----------
 
@@ -86,13 +105,23 @@ def step_bodytext(c, name, ctx):
     return c
 
 def step_headings(c, name, ctx):
-    for old, new in CONFIG["heading_map"].items():
-        pat = re.compile(r'<%s(\b[^>]*class="chapter-title2"[^>]*)>' % old)
-        n = len(pat.findall(c))
-        c = pat.sub(lambda m: "<%s%s>" % (new, m.group(1)), c)
-        pat2 = re.compile(r'</%s>' % old)
-        c = pat2.sub("</%s>" % new, c)
-        ctx["headings"] += n
+    """按 class 映射标题层级（整元素匹配，open/close 同步改写）"""
+    for cls, new_tag in (CONFIG.get("heading_map") or {}).items():
+        pat = re.compile(r'<h([1-6])(\b[^>]*class="[^"]*\b%s\b[^"]*"[^>]*)>(.*?)</h\1>' % re.escape(cls), re.S)
+
+        def repl(m):
+            ctx["headings"] += 1
+            return "<%s%s>%s</%s>" % (new_tag, m.group(2), m.group(3), new_tag)
+
+        c = pat.sub(repl, c)
+    return c
+
+def step_class_map(c, name, ctx):
+    """按 class_map 归一化其它语义类（如 leftquote -> left、preface -> bodytext、poems -> center）"""
+    for old, new in (CONFIG.get("class_map") or {}).items():
+        n = len(re.findall(r'<p class="%s"' % re.escape(old), c))
+        c = c.replace('<p class="%s">' % old, '<p class="%s">' % new)
+        ctx["cls"] += n
     return c
 
 def step_separator(c, name, ctx):
@@ -177,7 +206,8 @@ def step_footnotes(c, name, ctx):
     return c
 
 STEPS = [("css", step_css), ("bodytext", step_bodytext), ("headings", step_headings),
-         ("separator", step_separator), ("quote_signature", step_quote_signature),
+         ("separator", step_separator), ("class_map", step_class_map),
+         ("quote_signature", step_quote_signature),
          ("footnotes", step_footnotes)]
 
 # ---------- 校验 ----------
@@ -194,6 +224,9 @@ def verify_content(c, name, d):
         probs.append("残留 quote 类")
     if CONFIG.get("signature_class") and ('<p class="%s">' % CONFIG["signature_class"]) in c:
         probs.append("残留 signature 类")
+    for old in (CONFIG.get("class_map") or {}):
+        if ('<p class="%s">' % old) in c:
+            probs.append("残留 %s 类" % old)
     if re.search(r'class="%s(?=[\s"])' % "|".join(re.escape(x) for x in CONFIG["body_class_from"]), c):
         probs.append("残留旧正文类")
     for href in CONFIG["drop_css_hrefs"]:
@@ -267,7 +300,7 @@ def process(d, dry=False):
         c = read(fp)
         if not dry:
             shutil.copy2(fp, os.path.join(base, name))
-        ctx = {"marks": 0, "fnotes": 0, "bodytext": 0, "headings": 0, "quote": 0, "sign": 0, "spacer": 0, "sep": 0}
+        ctx = {"marks": 0, "fnotes": 0, "bodytext": 0, "headings": 0, "quote": 0, "sign": 0, "spacer": 0, "sep": 0, "cls": 0}
         try:
             for sname, fn in STEPS:
                 c = fn(c, name, ctx)
@@ -309,11 +342,13 @@ def main():
             sp.add_argument("-o", "--out")
         if nm == "process":
             sp.add_argument("--dry-run", action="store_true")
+        sp.add_argument("-c", "--config")
     a = ap.parse_args()
     d = os.path.abspath(a.dir)
     if not os.path.isdir(d):
         print("!! 目录不存在: %s" % d)
         sys.exit(1)
+    load_config(d, getattr(a, "config", None))
     if a.cmd == "analyze":
         analyze(d, getattr(a, "out", None))
     elif a.cmd == "process":
