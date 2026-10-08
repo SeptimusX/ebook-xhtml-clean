@@ -199,10 +199,32 @@ def step_sub(c, name, cfg, ctx):
     return pat.sub(r'<sub>\1</sub>', c)
 
 def step_author(c, name, cfg, ctx):
-    """标题后紧跟的 <p class="f_2">作者名 → <p class="author">（推荐人署名等其他 f_2 不动）"""
-    pat = re.compile(r'(</h1>\s*)<p class="f_2">')
-    ctx["author"] += len(pat.findall(c))
-    return pat.sub(r'\1<p class="author">', c)
+    """<p class="f_2">：以 `—` 开头（署名/推荐落款）→ <p class="right">，且其后若还有段落则补一空行段；
+    否则（作者名）→ <p class="author">"""
+    def repl(m):
+        inner = m.group(1)
+        if inner.lstrip().startswith("—"):
+            blank = ""
+            if re.match(r"\s*<p\b", c[m.end():]):
+                blank = '\n<p class="bodytext"><br/></p>'
+                ctx["sig_blank"] += 1
+            ctx["author_right"] += 1
+            return '<p class="right">%s</p>%s' % (inner, blank)
+        ctx["author"] += 1
+        return '<p class="author">%s</p>' % inner
+    return re.sub(r'<p class="f_2">(.*?)</p>', repl, c, flags=re.S)
+
+def step_kai(c, name, cfg, ctx):
+    """残留 <span class="kfont"> → <span class="kai">（styles.css 只定义 .kai/.kaiti，未定义 .kfont）"""
+    n = len(re.findall(r'class="kfont"', c))
+    ctx["kai"] += n
+    return c.replace('class="kfont"', 'class="kai"')
+
+def step_zerocircle(c, name, cfg, ctx):
+    """○ (U+25CB) → 〇 (U+3007)（年份/数量中的「零」）"""
+    n = c.count('\u25CB')
+    ctx["zerocircle"] += n
+    return c.replace('\u25CB', '\u3007')
 
 def step_tidy(c, name, cfg, ctx):
     """清理因删除元素产生的空行与行首缩进（InDesign 导出普遍带 \t 缩进）"""
@@ -220,11 +242,11 @@ def step_tidy(c, name, cfg, ctx):
         c = pre + body
     return c
 
-STEP_ORDER = ["css", "quotes", "markers", "footnotes", "figures", "sep", "bodytext", "sub", "author", "tidy"]
+STEP_ORDER = ["css", "quotes", "markers", "footnotes", "figures", "sep", "bodytext", "sub", "author", "kai", "zerocircle", "tidy"]
 BUILTIN = {"css": step_css, "quotes": step_quotes, "markers": step_markers,
            "footnotes": step_footnotes, "figures": step_figures,
            "sep": step_sep, "bodytext": step_bodytext, "sub": step_sub,
-           "author": step_author, "tidy": step_tidy}
+           "author": step_author, "kai": step_kai, "zerocircle": step_zerocircle, "tidy": step_tidy}
 
 # ---------- 校验 ----------
 
@@ -339,7 +361,8 @@ def process(dirpath, dry=False):
         if not dry:
             shutil.copy2(fp, os.path.join(backup_dir, name))
         ctx = dict(css=0, intro=0, blockquote=0, quote_skip=0, markers=0,
-                   fnotes=[], chatu=0, sprt=0, bodytext=0, sub=0, author=0, blank=0)
+                   fnotes=[], chatu=0, sprt=0, bodytext=0, sub=0, author=0,
+                   author_right=0, sig_blank=0, kai=0, zerocircle=0, blank=0)
         for s in STEP_ORDER:
             c = BUILTIN[s](c, name, CONFIG, ctx)
         probs, info = verify_content(c, name, CONFIG, dirpath)
@@ -348,9 +371,10 @@ def process(dirpath, dry=False):
             print("%-24s FAIL: %s" % (name, "; ".join(probs)))
             continue
         write(os.path.join(backup_dir, name) if dry else fp, c)
-        print("%-24s fnote=%-3d intro=%d bq=%d skip=%d chatu=%-2d sprt=%-2d bodytext=%-3d sub=%-2d author=%d blank=%d" % (
+        print("%-24s fnote=%-3d intro=%d bq=%d skip=%d chatu=%-2d sprt=%-2d bodytext=%-3d sub=%-2d author=%d/%d kai=%-3d ○=%-3d blank=%d" % (
             name, len(ctx["fnotes"]), ctx["intro"], ctx["blockquote"], ctx["quote_skip"],
-            ctx["chatu"], ctx["sprt"], ctx["bodytext"], ctx["sub"], ctx["author"], ctx["blank"]))
+            ctx["chatu"], ctx["sprt"], ctx["bodytext"], ctx["sub"],
+            ctx["author"], ctx["author_right"], ctx["kai"], ctx["zerocircle"], ctx["blank"]))
     print("RESULT:", "OK" if all_ok else "FAIL（有文件未通过校验，未写回）")
     sys.exit(0 if all_ok else 1)
 
