@@ -41,7 +41,7 @@ CONFIG = {
     "margin_div_prefix": "mg_l_",          # 插图包裹 div class 前缀
     "quote_span": "kfont",                 # 引文/题词 span class
     "bodytext_src": "f_1",                 # 正文段 class
-    "intro_first_p_class": "blockquote",   # 题词首行 class（按 2do.md）
+    "intro_first_p_class": "bodytext",     # 题词各行 class（署名行固定 right）
     "sep_text": "＊",                       # 分隔符段文字
 }
 
@@ -186,7 +186,11 @@ def step_sep(c, name, cfg, ctx):
 def step_bodytext(c, name, cfg, ctx):
     pat = re.compile(r'<p class="%s">' % cfg["bodytext_src"])
     ctx["bodytext"] += len(pat.findall(c))
-    return pat.sub('<p class="bodytext">', c)
+    c = pat.sub('<p class="bodytext">', c)
+    # 历史输出/误写：<p class="blockquote"> 归一为 bodytext
+    n = len(re.findall(r'<p class="blockquote">', c))
+    ctx["bodytext"] += n
+    return c.replace('<p class="blockquote">', '<p class="bodytext">')
 
 def step_sub(c, name, cfg, ctx):
     """<span class="sub">X</span> → <sub>X</sub>"""

@@ -233,7 +233,7 @@ analyze 会对「quotation 含链接」的文件打 `!!` 标记。
 - **标题后紧跟的** `<p class="f_2">` 作者名（如 `<h1>導讀 …</h1>` 后的 `黃貞祥`）→ `<p class="author">`
   （推荐人署名等其它 `f_2` 保留不动）
 - **章首题词**：连续 `<p class="f_1">` 全为 `<span class="kfont">…</span>`，且**末行以 `—署名` 结尾**
-  → `<blockquote class="intro">`：首行 `class="blockquote"`、署名行 `class="right"`、其余 `class="bodytext"`
+  → `<blockquote class="intro">`：署名行 `class="right"`、其余行 `class="bodytext"`
 - **正文引文**（kfont 段，非题词）→ `<blockquote><p class="bodytext">`；
   **若该段之后本文件已无其它 `<p>`（章末作者简介/献词）则不转换**，避免误判
 - 正文注释标记 `<span id="footnote-N-backlink"><a class="_idfootnotelink" href="f#footnote-N">N</a></span>`
