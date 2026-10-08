@@ -275,10 +275,12 @@ id 唯一、内链与跨文件锚点（`f.xhtml#id`）可解析、图片存在�
 - `<p class="content_100|101|102">`（术语/小结、必读书目、原理名）→ `<h3>`
 - `<p class="content_103|107">`（译者署名/日期、`——` 题词落款）→ `<p class="right">`
 - `<p class="content_105">`（引文/原理陈述）→ `<blockquote><p class="bodytext">`，连续段合并；
-  **「小结」段（`>小结<` 之后）内的 content_105 不包 blockquote**，直接 `<p class="bodytext">`（`step_summary` 兼容拆掉旧输出里的）
+  **「小结」段（`>小结<` 之后）内的 content_105 不包 blockquote**，直接 `<p class="bodytext">`（`step_summary` 兼容拆掉旧输出里的）；
+  **章末最后一条 content_105**（其后不再有正文段落）同样不包 blockquote → `<p class="bodytext">`
 - 引文 blockquote **后紧跟的** `——落款`(content_107) → 并入该 blockquote，并把 blockquote 标成 `class="intro"`
   （`step_intro_sig`；对已生成的旧输出同样生效）
-- `<p class="content_108">`（括注）→ `<p class="center">`
+- `<p class="content_108">`（括注）→ `<p class="center">`；
+  **紧跟在 `</h1>` 后的一条** → 并入 h1 作第二段副标题 `<br/><span class="subtitle">…</span>`（`step_h1`）
 - `<p class="content_110">`（索引条目）→ `<p class="bodytext-noindent">`
 - `div.pic`（img + `imgtitle`/`imgtitle1`/`imgdescript` 图注）→ `<div class="chatu">…<p class="caption">`
   （图注可多行 `<br/>` 合并；**图注也可能排在 img 之前**，须整块提取而非顺序匹配）

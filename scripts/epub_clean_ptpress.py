@@ -16,8 +16,11 @@ epub_clean_ptpress.py — 人民邮电出版社 / 得到电子版（p.content �
   p.content                -> <p class="bodytext">
   p.content_100/101/102    -> <h3>（术语/小结、必读书目、原理名 等小节标题）
   p.content_103/107        -> <p class="right">（译者署名/日期、—— 题词落款）
+                              紧随引文 blockquote 的 content_107 → 并入该 blockquote（class="intro"）
   p.content_105            -> <blockquote><p class="bodytext">（连续段合并）
+                              「小结」段内 / 章末最后一条 → 普通 <p class="bodytext">
   p.content_108            -> <p class="center">（括注）
+                              紧跟在 </h1> 后的一条 → 并入 h1 作第二段副标题
   p.content_110            -> <p class="bodytext-noindent">（索引条目）
   p.imgtitle/imgtitle1/imgdescript -> chatu 的 <p class="caption">（多行 <br/> 合并）
   div.pic                  -> <div class="chatu"><p class="image"><img …/></p>…
@@ -106,10 +109,15 @@ def step_quotes(c, name, cfg, ctx):
     para = r'<p class="(?:%s)">(.*?)</p>' % qc
     run = re.compile(r'(?:%s\s*)+' % para, re.S)
     summ = c.rfind('>小结<')          # 小结段内的引文不包 blockquote
+    matches = list(run.finditer(c))
+    last_start = matches[-1].start() if matches else -1
     def repl(m):
         items = re.findall(para, m.group(0), re.S)
         out = "\n".join('<p class="bodytext">%s</p>' % x.strip() for x in items)
-        if summ >= 0 and m.start() > summ:
+        in_summary = summ >= 0 and m.start() > summ
+        # 章末最后一条 content_105（其后不再有正文段落）→ 普通正文
+        at_end = m.start() == last_start and not re.search(r'<p class="content', c[m.end():])
+        if in_summary or at_end:
             ctx["quotes_summary"] += len(items)
             return out
         ctx["quotes"] += len(items)
@@ -181,7 +189,13 @@ def step_h1(c, name, cfg, ctx):
         if 'class="subtitle"' in inner:
             ctx["h1_sub"] += 1
         return "<h1%s>%s</h1>" % (attrs, inner.strip())
-    return re.sub(r"<h1([^>]*)>(.*?)</h1>", repl, c, flags=re.S)
+    c = re.sub(r"<h1([^>]*)>(.*?)</h1>", repl, c, flags=re.S)
+    # h1 后紧跟的 <p class="center">（content_108 括注）→ 并入 h1 作第二段副标题
+    def sub(m):
+        ctx["h1_sub2"] += 1
+        return '%s<br/><span class="subtitle">%s</span></h1>' % (m.group(1), m.group(2).strip())
+    return re.sub(r'(?s)(<h1[^>]*>(?:(?!</h1>).)*)</h1>[ \t]*\n?[ \t]*<p class="center">(.*?)</p>',
+                  sub, c)
 
 def step_super(c, name, cfg, ctx):
     pat = re.compile(r'<span class="super">(.*?)</span>', re.S)
@@ -330,7 +344,7 @@ def process(dirpath, dry=False):
             shutil.copy2(fp, os.path.join(backup_dir, name))
         ctx = dict(css=0, markers=0, fnotes=[], chatu=0, quotes=0, quotes_summary=0,
                    summary_unwrap=0, h3=0, right=0, intro_sig=0,
-                   center=0, noindent=0, bodytext=0, kai=0, h1_sub=0, sup=0, blank=0)
+                   center=0, noindent=0, bodytext=0, kai=0, h1_sub=0, h1_sub2=0, sup=0, blank=0)
         for s in STEP_ORDER:
             c = BUILTIN[s](c, name, CONFIG, ctx)
         probs, info = verify_content(c, name, CONFIG, dirpath)
@@ -339,10 +353,10 @@ def process(dirpath, dry=False):
             print("%-18s FAIL: %s" % (name, "; ".join(probs)))
             continue
         write(os.path.join(backup_dir, name) if dry else fp, c)
-        print("%-18s marker=%-2d fnote=%-2d chatu=%-2d h3=%-2d right=%-2d quote=%-3d sum=%-3d introSig=%-2d center=%-2d noindent=%-3d body=%-4d kai=%-4d super=%-2d" % (
+        print("%-18s marker=%-2d fnote=%-2d chatu=%-2d h3=%-2d right=%-2d quote=%-3d sum=%-3d introSig=%-2d h1sub2=%-2d center=%-2d noindent=%-3d body=%-4d kai=%-4d super=%-2d" % (
             name, ctx["markers"], len(ctx["fnotes"]), ctx["chatu"], ctx["h3"], ctx["right"],
             ctx["quotes"], ctx["quotes_summary"], ctx["intro_sig"] + ctx["summary_unwrap"],
-            ctx["center"], ctx["noindent"], ctx["bodytext"], ctx["kai"], ctx["sup"]))
+            ctx["h1_sub2"], ctx["center"], ctx["noindent"], ctx["bodytext"], ctx["kai"], ctx["sup"]))
     print("RESULT:", "OK" if all_ok else "FAIL（有文件未通过校验，未写回）")
     sys.exit(0 if all_ok else 1)
 
