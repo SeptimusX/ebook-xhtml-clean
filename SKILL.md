@@ -245,14 +245,15 @@ analyze 会对「quotation 含链接」的文件打 `!!` 标记。
   `<div class="chatu"><p class="image"><img src="…" alt=""/></p><p class="caption">图注1<br/>图注2</p></div>`
   （多层 div 用**深度计数**取匹配的 `</div>`；外层同名 `calibre1` 包裹一并替换）
 - `<p class="f_1">＊</p>` → `<p class="sprt">＊</p>`
+- `<span class="sub">X</span>` → `<sub>X</sub>`（下标；`span.super` 暂不动）
 - css 链接 → `styles.css`（删除 `styleNNNN.css` / `stylesheet.css` / `page_styles.css`）
 - `tidy`：删空行、去行首缩进
 
-**处理顺序固定不可变**：css → quotes → markers → footnotes → figures → sep → bodytext → author → tidy
+**处理顺序固定不可变**：css → quotes → markers → footnotes → figures → sep → bodytext → sub → author → tidy
 （quotes 必须在 markers 之前：注释标记一旦被 `<sup>` 包裹，kfont 题词/引文段就不再匹配）。
 
 **保留不动**：`h1.f_`（含内层 `span.bold`）、其余 `f_2`（推荐人署名等）/ `f_3` 及非图注的 `f_4`、`hr.horizontalrule`、
-`calibre1`/`_idContainer*` 容器与 id、`span.sub`/`super`/`hfont`/`italic`、`lang` 属性。
+`calibre1`/`_idContainer*` 容器与 id、`span.super`/`hfont`/`italic`、`lang` 属性。
 
 **校验**：XML 良构、无残留（`f_1` / `type="footnote"` / `_idfootnotelink` / `mg_l_` / 旧 css）、
 id 唯一、内链与跨文件锚点（`f.xhtml#id`）可解析、图片存在、注释标记数 == 尾注数。
