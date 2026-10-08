@@ -1,6 +1,6 @@
 ---
 name: ebook-xhtml-clean
-description: 电子书 EPUB xhtml 清洗流水线（五套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2 时使用。
+description: 电子书 EPUB xhtml 清洗流水线（六套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1 时使用。
 ---
 
 # EPUB xhtml 清洗流水线
@@ -17,6 +17,7 @@ description: 电子书 EPUB xhtml 清洗流水线（五套 profile：得到/中�
 | 微信读书 / QQ阅读 | `scripts/epub_clean_weread.py` | `<section class="readerChapterContent"><div data-wr-bd="1">`、`<span data-wr-id="layout">`、`<p class="content">` / `<p class="quotation">`、`<span class="reader_footer_note" data-wr-footernote="注释">`、`styles/common.css` + 内联 `<style>` |
 | KADOKAWA 竖排/固定版式 | `scripts/epub_clean_kadokawa.py`（**只做阶段二**） | `<html … xml:lang="zh-TW" class="hltr">`、`../style/book-style.css`、`<p class="mfont font-1em10">` 空段、`<p>　　<br/></p>` 版式空行、`class="kfont"` 引文、`class="key1"/"key2"` 注释锚点、`mokuji-` 锚点 |
 | 多看原生（图片式注释标记） | `scripts/epub_clean_duokan.py` | `<p class="text">`、`<h2 class="chapter-title2" id="sigil_toc_id_N">`、`../Styles/stylesheet.css` + `oxenfont.css`、正文 `<a class="duokan-footnote" …><img src="../Images/note.png"/></a>`、文末 `<ol class="duokan-footnote-content">` |
+| InDesign / Adept | `scripts/epub_clean_indesign.py` | `<body … class="calibre">`、`<h1 class="f_" id="_idParaDest-N">`、`<p class="f_1">` / `f_2` / `f_4`、注文/回链类 `_idfootnotelink`（常带 `pcalibre*`）、脚注 `<div type="footnote" id="footnote-N">`、插图 `<div class="mg_l_*">`、`<span class="kfont">` 题词 |
 
 **注意**：KADOKAWA 书几乎没有语义标签，需**先人工做阶段一语义化重排**（规则见下），脚本只做阶段二
 （全角→半角 + 注释编号方括号化）。
@@ -220,6 +221,43 @@ analyze 会对「quotation 含链接」的文件打 `!!` 标记。
 ⚠️ **不要对这类文件做「全局 `text` → `bodytext` 替换」**：它会把 `text-align`、`text/html` 一起改坏
 （曾出现封面 `bodytext-align: center`、meta `content="bodytext/html"` 的遗留事故）。只按 class 精确匹配。
 
+## InDesign / Adept profile 约定（epub_clean_indesign.py）
+
+源：Adobe InDesign 导出（常见于繁体中文译本），`<body … class="calibre">` + `<div class="calibre1">` 包裹，
+标题/段落靠 `f_*` class，脚注是 `<div type="footnote">`，注文/回链的 `<a>` 类为 `_idfootnotelink`
+（常带 `pcalibre*` 前缀，脚本用 `[^"]*_idfootnotelink[^"]*` 宽松匹配）；行尾普遍带 `\t` 缩进。
+
+映射（脚本内 CONFIG 可调）：
+
+- `<p class="f_1">` → `<p class="bodytext">`
+- **章首题词**：连续 `<p class="f_1">` 全为 `<span class="kfont">…</span>`，且**末行以 `—署名` 结尾**
+  → `<blockquote class="intro">`：首行 `class="blockquote"`、署名行 `class="right"`、其余 `class="bodytext"`
+- **正文引文**（kfont 段，非题词）→ `<blockquote><p class="bodytext">`；
+  **若该段之后本文件已无其它 `<p>`（章末作者简介/献词）则不转换**，避免误判
+- 正文注释标记 `<span id="footnote-N-backlink"><a class="_idfootnotelink" href="f#footnote-N">N</a></span>`
+  → `<sup><span id="footnote-N-backlink"><a href="f#footnote-N">[N]</a></span></sup>`
+- 脚注 `<div class="calibre1" type="footnote" id="footnote-N"><p class="f_4"><a …>N</a>　注文</p></div>`
+  → `<p class="fnote" id="footnote-N"><a href="f#footnote-N-backlink">[N]</a>　注文</p>`
+  （**保留 `id="footnote-N"` 以支持正文跳回；编号沿用原书全局编号，不重排**）
+- 插图 `<div class="mg_l_*"> … <img …/> … <p class="f_4">图注</p> </div>` →
+  `<div class="chatu"><p class="image"><img src="…" alt=""/></p><p class="caption">图注1<br/>图注2</p></div>`
+  （多层 div 用**深度计数**取匹配的 `</div>`；外层同名 `calibre1` 包裹一并替换）
+- `<p class="f_1">＊</p>` → `<p class="sprt">＊</p>`
+- css 链接 → `styles.css`（删除 `styleNNNN.css` / `stylesheet.css` / `page_styles.css`）
+- `tidy`：删空行、去行首缩进
+
+**处理顺序固定不可变**：css → quotes → markers → footnotes → figures → sep → bodytext → tidy
+（quotes 必须在 markers 之前：注释标记一旦被 `<sup>` 包裹，kfont 题词/引文段就不再匹配）。
+
+**保留不动**：`h1.f_`（含内层 `span.bold`）、`f_2`/`f_3` 及非图注的 `f_4`、`hr.horizontalrule`、
+`calibre1`/`_idContainer*` 容器与 id、`span.sub`/`super`/`hfont`/`italic`、`lang` 属性。
+
+**校验**：XML 良构、无残留（`f_1` / `type="footnote"` / `_idfootnotelink` / `mg_l_` / 旧 css）、
+id 唯一、内链与跨文件锚点（`f.xhtml#id`）可解析、图片存在、注释标记数 == 尾注数。
+
+**注意**：输出里的 `<img>` 必须自闭合（`<img …/>`）；若写成 `<img …>`（漏 `/`）会让 XHTML 无法解析。
+
+
 ## 已知陷阱（脚本已处理，分析报告出现异常时按此排查）
 
 - 插图 div 的 img 和 `</div>` 在同一行（`alt=""/></div>`），`</div>` 不单独成行。
@@ -260,6 +298,7 @@ $sc2 = "$sk/epub_clean_calibre.py"  # profile B calibre+duokan
 $sc3 = "$sk/epub_clean_weread.py"   # profile C 微信读书/QQ阅读
 $sc4 = "$sk/epub_clean_kadokawa.py" # profile D KADOKAWA（阶段二；Kobo 版加 --strip-kobo --drop-scripts --drop-kobo-style）
 $sc5 = "$sk/epub_clean_duokan.py"   # profile E 多看原生（图片式注释标记）
+$sc6 = "$sk/epub_clean_indesign.py" # profile F InDesign/Adept
 & $py -X utf8 $sc  analyze <dir> -o <tmp>/report.txt   # 体检（只读）
 & $py -X utf8 $sc  process <dir> --dry-run             # 试处理→临时目录
 & $py -X utf8 $sc  process <dir>                       # 正式处理（自动备份+校验）
