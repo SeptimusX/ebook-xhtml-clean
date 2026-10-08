@@ -1,6 +1,6 @@
 ---
 name: ebook-xhtml-clean
-description: 电子书 EPUB xhtml 清洗流水线（六套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1 时使用。
+description: 电子书 EPUB xhtml 清洗流水线（七套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept、人民邮电/得到 p.content 系）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』、『得到/人邮导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1、firstTitle、kt_104、annot 时使用。
 ---
 
 # EPUB xhtml 清洗流水线
@@ -8,7 +8,7 @@ description: 电子书 EPUB xhtml 清洗流水线（六套 profile：得到/中�
 把 EPUB 的 xhtml 转换为标准格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
 目标目录通常是书籍解包后的 `<项目>/xhtml` 或 `<项目>/EPUB/xhtml`（同目录应已有 `styles.css`）。
 
-## 五套 profile（先 analyze 判断，再选脚本）
+## 七套 profile（先 analyze 判断，再选脚本）
 
 | 源格式 | 脚本 | 特征 |
 |---|---|---|
@@ -18,11 +18,12 @@ description: 电子书 EPUB xhtml 清洗流水线（六套 profile：得到/中�
 | KADOKAWA 竖排/固定版式 | `scripts/epub_clean_kadokawa.py`（**只做阶段二**） | `<html … xml:lang="zh-TW" class="hltr">`、`../style/book-style.css`、`<p class="mfont font-1em10">` 空段、`<p>　　<br/></p>` 版式空行、`class="kfont"` 引文、`class="key1"/"key2"` 注释锚点、`mokuji-` 锚点 |
 | 多看原生（图片式注释标记） | `scripts/epub_clean_duokan.py` | `<p class="text">`、`<h2 class="chapter-title2" id="sigil_toc_id_N">`、`../Styles/stylesheet.css` + `oxenfont.css`、正文 `<a class="duokan-footnote" …><img src="../Images/note.png"/></a>`、文末 `<ol class="duokan-footnote-content">` |
 | InDesign / Adept | `scripts/epub_clean_indesign.py` | `<body … class="calibre">`、`<h1 class="f_" id="_idParaDest-N">`、`<p class="f_1">` / `f_2` / `f_4`、注文/回链类 `_idfootnotelink`（常带 `pcalibre*`）、脚注 `<div type="footnote" id="footnote-N">`、插图 `<div class="mg_l_*">`、`<span class="kfont">` 题词 |
+| 人民邮电/得到（`p.content` 系） | `scripts/epub_clean_ptpress.py` | `xml:lang="zh-hans"`、`<h1 class="firstTitle" id="sigil_toc_id_N">`、`<p class="content">` / `content_100..110`、`<div class="pic">`+`imgtitle` 图、`<span class="kt_104">` 楷体、`<span class="super" id="refN">`+`<p class="noindent" id="annotN">` 注释 |
 
 **注意**：KADOKAWA 书几乎没有语义标签，需**先人工做阶段一语义化重排**（规则见下），脚本只做阶段二
 （全角→半角 + 注释编号方括号化）。
 
-五套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
+七套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
 
 ## 环境要点
 
@@ -263,6 +264,40 @@ id 唯一、内链与跨文件锚点（`f.xhtml#id`）可解析、图片存在�
 **注意**：输出里的 `<img>` 必须自闭合（`<img …/>`）；若写成 `<img …>`（漏 `/`）会让 XHTML 无法解析。
 
 
+## 人民邮电 / 得到（`p.content` 系）profile 约定（epub_clean_ptpress.py）
+
+源：人民邮电出版社授权「得到」电子版（`xml:lang="zh-hans"`），`../Styles/stylesheets.css`；
+标题/段落靠 `firstTitle` / `content*` class，注释是 `super`+`annot` 锚点。
+
+映射（脚本内 CONFIG 可调）：
+
+- `<p class="content">` → `<p class="bodytext">`
+- `<p class="content_100|101|102">`（术语/小结、必读书目、原理名）→ `<h3>`
+- `<p class="content_103|107">`（译者署名/日期、`——` 题词落款）→ `<p class="right">`
+- `<p class="content_105">`（引文/原理陈述）→ `<blockquote><p class="bodytext">`，连续段合并
+- `<p class="content_108">`（括注）→ `<p class="center">`
+- `<p class="content_110">`（索引条目）→ `<p class="bodytext-noindent">`
+- `div.pic`（img + `imgtitle`/`imgtitle1`/`imgdescript` 图注）→ `<div class="chatu">…<p class="caption">`
+  （图注可多行 `<br/>` 合并；**图注也可能排在 img 之前**，须整块提取而非顺序匹配）
+- `<span class="kt_104|kt_106">` → `<span class="kai">`（楷体强调）
+- `<h1 class="firstTitle" id="sigil_toc_id_N">` → 去 class、保留 id；`<span class="xiao">第X章</span>` → `<span class="subtitle">`
+- `<span class="super">`（剩余、数学上标）→ `<sup>`
+- 注释：`<span class="super" id="refN"><a href="#annotN">[K]</a></span>`
+  → `<sup><a epub:type="noteref" href="#annotN" id="refN">[K]</a></sup>`；
+  文末 `<p class="noindent" id="annotN"><a href="#refN">[K].</a>注文</p>`
+  → `<p class="fnote" id="annotN"><a href="#refN">[K]</a> 注文</p>`（保留 `<hr/>`）
+- css → `styles.css`（删除 `stylesheets.css` 与内联 `<style>`）
+
+**处理顺序固定不可变**：css → footnotes → figures → quotes → headings → right → center → noindent → bodytext → kai → h1 → super → tidy
+（footnotes 必须先于 super：注释标记 `super#refN` 先被消费，剩下的 `super` 才是数学上标）。
+
+**保留不动**：`p.banquan2` / `p.yingwen2`（版权页）、`span.bold`/`italic`、`cover.xhtml` 的 SVG、`lang` 属性。
+
+**校验**：XML 良构、无残留（`content*` / `pic` / `imgtitle*` / `kt_104/106` / `super` / 内联 style / 旧 css）、
+id 唯一、`ref↔annot` 锚点可解析、图片存在、注释标记数 == 尾注数。
+
+
+
 ## 已知陷阱（脚本已处理，分析报告出现异常时按此排查）
 
 - 插图 div 的 img 和 `</div>` 在同一行（`alt=""/></div>`），`</div>` 不单独成行。
@@ -304,6 +339,7 @@ $sc3 = "$sk/epub_clean_weread.py"   # profile C 微信读书/QQ阅读
 $sc4 = "$sk/epub_clean_kadokawa.py" # profile D KADOKAWA（阶段二；Kobo 版加 --strip-kobo --drop-scripts --drop-kobo-style）
 $sc5 = "$sk/epub_clean_duokan.py"   # profile E 多看原生（图片式注释标记）
 $sc6 = "$sk/epub_clean_indesign.py" # profile F InDesign/Adept
+$sc7 = "$sk/epub_clean_ptpress.py"  # profile G 人民邮电/得到（p.content 系）
 & $py -X utf8 $sc  analyze <dir> -o <tmp>/report.txt   # 体检（只读）
 & $py -X utf8 $sc  process <dir> --dry-run             # 试处理→临时目录
 & $py -X utf8 $sc  process <dir>                       # 正式处理（自动备份+校验）
