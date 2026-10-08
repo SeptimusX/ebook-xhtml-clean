@@ -188,6 +188,12 @@ def step_bodytext(c, name, cfg, ctx):
     ctx["bodytext"] += len(pat.findall(c))
     return pat.sub('<p class="bodytext">', c)
 
+def step_author(c, name, cfg, ctx):
+    """标题后紧跟的 <p class="f_2">作者名 → <p class="author">（推荐人署名等其他 f_2 不动）"""
+    pat = re.compile(r'(</h1>\s*)<p class="f_2">')
+    ctx["author"] += len(pat.findall(c))
+    return pat.sub(r'\1<p class="author">', c)
+
 def step_tidy(c, name, cfg, ctx):
     """清理因删除元素产生的空行与行首缩进（InDesign 导出普遍带 \t 缩进）"""
     hm = re.search(r"<head>.*?</head>", c, re.S)
@@ -204,10 +210,10 @@ def step_tidy(c, name, cfg, ctx):
         c = pre + body
     return c
 
-STEP_ORDER = ["css", "quotes", "markers", "footnotes", "figures", "sep", "bodytext", "tidy"]
+STEP_ORDER = ["css", "quotes", "markers", "footnotes", "figures", "sep", "bodytext", "author", "tidy"]
 BUILTIN = {"css": step_css, "quotes": step_quotes, "markers": step_markers,
            "footnotes": step_footnotes, "figures": step_figures,
-           "sep": step_sep, "bodytext": step_bodytext, "tidy": step_tidy}
+           "sep": step_sep, "bodytext": step_bodytext, "author": step_author, "tidy": step_tidy}
 
 # ---------- 校验 ----------
 
@@ -322,7 +328,7 @@ def process(dirpath, dry=False):
         if not dry:
             shutil.copy2(fp, os.path.join(backup_dir, name))
         ctx = dict(css=0, intro=0, blockquote=0, quote_skip=0, markers=0,
-                   fnotes=[], chatu=0, sprt=0, bodytext=0, blank=0)
+                   fnotes=[], chatu=0, sprt=0, bodytext=0, author=0, blank=0)
         for s in STEP_ORDER:
             c = BUILTIN[s](c, name, CONFIG, ctx)
         probs, info = verify_content(c, name, CONFIG, dirpath)
@@ -331,9 +337,9 @@ def process(dirpath, dry=False):
             print("%-24s FAIL: %s" % (name, "; ".join(probs)))
             continue
         write(os.path.join(backup_dir, name) if dry else fp, c)
-        print("%-24s fnote=%-3d intro=%d bq=%d skip=%d chatu=%-2d sprt=%-2d bodytext=%-3d blank=%d" % (
+        print("%-24s fnote=%-3d intro=%d bq=%d skip=%d chatu=%-2d sprt=%-2d bodytext=%-3d author=%d blank=%d" % (
             name, len(ctx["fnotes"]), ctx["intro"], ctx["blockquote"], ctx["quote_skip"],
-            ctx["chatu"], ctx["sprt"], ctx["bodytext"], ctx["blank"]))
+            ctx["chatu"], ctx["sprt"], ctx["bodytext"], ctx["author"], ctx["blank"]))
     print("RESULT:", "OK" if all_ok else "FAIL（有文件未通过校验，未写回）")
     sys.exit(0 if all_ok else 1)
 

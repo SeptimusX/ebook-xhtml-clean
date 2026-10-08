@@ -230,6 +230,8 @@ analyze 会对「quotation 含链接」的文件打 `!!` 标记。
 映射（脚本内 CONFIG 可调）：
 
 - `<p class="f_1">` → `<p class="bodytext">`
+- **标题后紧跟的** `<p class="f_2">` 作者名（如 `<h1>導讀 …</h1>` 后的 `黃貞祥`）→ `<p class="author">`
+  （推荐人署名等其它 `f_2` 保留不动）
 - **章首题词**：连续 `<p class="f_1">` 全为 `<span class="kfont">…</span>`，且**末行以 `—署名` 结尾**
   → `<blockquote class="intro">`：首行 `class="blockquote"`、署名行 `class="right"`、其余 `class="bodytext"`
 - **正文引文**（kfont 段，非题词）→ `<blockquote><p class="bodytext">`；
@@ -246,10 +248,10 @@ analyze 会对「quotation 含链接」的文件打 `!!` 标记。
 - css 链接 → `styles.css`（删除 `styleNNNN.css` / `stylesheet.css` / `page_styles.css`）
 - `tidy`：删空行、去行首缩进
 
-**处理顺序固定不可变**：css → quotes → markers → footnotes → figures → sep → bodytext → tidy
+**处理顺序固定不可变**：css → quotes → markers → footnotes → figures → sep → bodytext → author → tidy
 （quotes 必须在 markers 之前：注释标记一旦被 `<sup>` 包裹，kfont 题词/引文段就不再匹配）。
 
-**保留不动**：`h1.f_`（含内层 `span.bold`）、`f_2`/`f_3` 及非图注的 `f_4`、`hr.horizontalrule`、
+**保留不动**：`h1.f_`（含内层 `span.bold`）、其余 `f_2`（推荐人署名等）/ `f_3` 及非图注的 `f_4`、`hr.horizontalrule`、
 `calibre1`/`_idContainer*` 容器与 id、`span.sub`/`super`/`hfont`/`italic`、`lang` 属性。
 
 **校验**：XML 良构、无残留（`f_1` / `type="footnote"` / `_idfootnotelink` / `mg_l_` / 旧 css）、
