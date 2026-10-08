@@ -105,11 +105,29 @@ def step_quotes(c, name, cfg, ctx):
     qc = "|".join(re.escape(x) for x in cfg["quote_from"])
     para = r'<p class="(?:%s)">(.*?)</p>' % qc
     run = re.compile(r'(?:%s\s*)+' % para, re.S)
+    summ = c.rfind('>小结<')          # 小结段内的引文不包 blockquote
     def repl(m):
         items = re.findall(para, m.group(0), re.S)
+        out = "\n".join('<p class="bodytext">%s</p>' % x.strip() for x in items)
+        if summ >= 0 and m.start() > summ:
+            ctx["quotes_summary"] += len(items)
+            return out
         ctx["quotes"] += len(items)
-        return "<blockquote>\n" + "\n".join('<p class="bodytext">%s</p>' % x.strip() for x in items) + "\n</blockquote>"
+        return "<blockquote>\n" + out + "\n</blockquote>"
     return run.sub(repl, c)
+
+def step_summary(c, name, cfg, ctx):
+    """小结段内不应有 blockquote：拆掉（兼容已生成的旧输出）"""
+    i = c.rfind('>小结<')
+    if i < 0:
+        return c
+    head, tail = c[:i], c[i:]
+    n = len(re.findall(r'<blockquote>', tail))
+    if n:
+        tail = re.sub(r'<blockquote>\s*', '', tail)
+        tail = re.sub(r'\s*</blockquote>', '', tail)
+    ctx["summary_unwrap"] += n
+    return head + tail
 
 def step_headings(c, name, cfg, ctx):
     hc = "|".join(re.escape(x) for x in cfg["h3_from"])
@@ -122,6 +140,15 @@ def step_right(c, name, cfg, ctx):
     pat = re.compile(r'<p class="(?:%s)">(.*?)</p>' % rc, re.S)
     ctx["right"] += len(pat.findall(c))
     return pat.sub(lambda m: '<p class="right">%s</p>' % m.group(1).strip(), c)
+
+def step_intro_sig(c, name, cfg, ctx):
+    """引文 blockquote 后紧跟的 ——落款(right) 并进 blockquote，并把 blockquote 标为 class="intro" """
+    pat = re.compile(r'(?s)<blockquote>(.*?)</blockquote>\s*<p class="right">(.*?)</p>')
+    def repl(m):
+        ctx["intro_sig"] += 1
+        return '<blockquote class="intro">\n%s\n<p class="right">%s</p></blockquote>' % (
+            m.group(1).strip(), m.group(2).strip())
+    return pat.sub(repl, c)
 
 def step_center(c, name, cfg, ctx):
     cc = "|".join(re.escape(x) for x in cfg["center_from"])
@@ -175,12 +202,13 @@ def step_tidy(c, name, cfg, ctx):
         c = pre + body
     return c
 
-STEP_ORDER = ["css", "footnotes", "figures", "quotes", "headings", "right", "center",
-              "noindent", "bodytext", "kai", "h1", "super", "tidy"]
+STEP_ORDER = ["css", "footnotes", "figures", "quotes", "summary", "headings", "right",
+              "intro_sig", "center", "noindent", "bodytext", "kai", "h1", "super", "tidy"]
 BUILTIN = {"css": step_css, "footnotes": step_footnotes, "figures": step_figures,
-           "quotes": step_quotes, "headings": step_headings, "right": step_right,
-           "center": step_center, "noindent": step_noindent, "bodytext": step_bodytext,
-           "kai": step_kai, "h1": step_h1, "super": step_super, "tidy": step_tidy}
+           "quotes": step_quotes, "summary": step_summary, "headings": step_headings,
+           "right": step_right, "intro_sig": step_intro_sig, "center": step_center,
+           "noindent": step_noindent, "bodytext": step_bodytext, "kai": step_kai,
+           "h1": step_h1, "super": step_super, "tidy": step_tidy}
 
 # ---------- 校验 ----------
 
@@ -219,6 +247,8 @@ def verify_content(c, name, cfg, dirpath):
     fn = len(re.findall(r'<p class="fnote" id="annot\d+">', c))
     if mk != fn:
         probs.append("注释标记(%d) != 尾注(%d)" % (mk, fn))
+    if re.search(r'</blockquote>\s*<p class="right">', c):
+        probs.append("落款未并入 blockquote")
     info.append("fnote=%d chatu=%d h3=%d right=%d quote=%d" % (
         fn, c.count('class="chatu"'), len(re.findall(r"<h3", c)),
         c.count('class="right"'), len(re.findall(r"<blockquote", c))))
@@ -298,7 +328,8 @@ def process(dirpath, dry=False):
         c = read(fp)
         if not dry:
             shutil.copy2(fp, os.path.join(backup_dir, name))
-        ctx = dict(css=0, markers=0, fnotes=[], chatu=0, quotes=0, h3=0, right=0,
+        ctx = dict(css=0, markers=0, fnotes=[], chatu=0, quotes=0, quotes_summary=0,
+                   summary_unwrap=0, h3=0, right=0, intro_sig=0,
                    center=0, noindent=0, bodytext=0, kai=0, h1_sub=0, sup=0, blank=0)
         for s in STEP_ORDER:
             c = BUILTIN[s](c, name, CONFIG, ctx)
@@ -308,9 +339,10 @@ def process(dirpath, dry=False):
             print("%-18s FAIL: %s" % (name, "; ".join(probs)))
             continue
         write(os.path.join(backup_dir, name) if dry else fp, c)
-        print("%-18s marker=%-2d fnote=%-2d chatu=%-2d h3=%-2d right=%-2d quote=%-3d center=%-2d noindent=%-2d body=%-4d kai=%-4d super=%-2d" % (
+        print("%-18s marker=%-2d fnote=%-2d chatu=%-2d h3=%-2d right=%-2d quote=%-3d sum=%-3d introSig=%-2d center=%-2d noindent=%-3d body=%-4d kai=%-4d super=%-2d" % (
             name, ctx["markers"], len(ctx["fnotes"]), ctx["chatu"], ctx["h3"], ctx["right"],
-            ctx["quotes"], ctx["center"], ctx["noindent"], ctx["bodytext"], ctx["kai"], ctx["sup"]))
+            ctx["quotes"], ctx["quotes_summary"], ctx["intro_sig"] + ctx["summary_unwrap"],
+            ctx["center"], ctx["noindent"], ctx["bodytext"], ctx["kai"], ctx["sup"]))
     print("RESULT:", "OK" if all_ok else "FAIL（有文件未通过校验，未写回）")
     sys.exit(0 if all_ok else 1)
 

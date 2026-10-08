@@ -274,7 +274,10 @@ id 唯一、内链与跨文件锚点（`f.xhtml#id`）可解析、图片存在�
 - `<p class="content">` → `<p class="bodytext">`
 - `<p class="content_100|101|102">`（术语/小结、必读书目、原理名）→ `<h3>`
 - `<p class="content_103|107">`（译者署名/日期、`——` 题词落款）→ `<p class="right">`
-- `<p class="content_105">`（引文/原理陈述）→ `<blockquote><p class="bodytext">`，连续段合并
+- `<p class="content_105">`（引文/原理陈述）→ `<blockquote><p class="bodytext">`，连续段合并；
+  **「小结」段（`>小结<` 之后）内的 content_105 不包 blockquote**，直接 `<p class="bodytext">`（`step_summary` 兼容拆掉旧输出里的）
+- 引文 blockquote **后紧跟的** `——落款`(content_107) → 并入该 blockquote，并把 blockquote 标成 `class="intro"`
+  （`step_intro_sig`；对已生成的旧输出同样生效）
 - `<p class="content_108">`（括注）→ `<p class="center">`
 - `<p class="content_110">`（索引条目）→ `<p class="bodytext-noindent">`
 - `div.pic`（img + `imgtitle`/`imgtitle1`/`imgdescript` 图注）→ `<div class="chatu">…<p class="caption">`
@@ -288,8 +291,9 @@ id 唯一、内链与跨文件锚点（`f.xhtml#id`）可解析、图片存在�
   → `<p class="fnote" id="annotN"><a href="#refN">[K]</a> 注文</p>`（保留 `<hr/>`）
 - css → `styles.css`（删除 `stylesheets.css` 与内联 `<style>`）
 
-**处理顺序固定不可变**：css → footnotes → figures → quotes → headings → right → center → noindent → bodytext → kai → h1 → super → tidy
-（footnotes 必须先于 super：注释标记 `super#refN` 先被消费，剩下的 `super` 才是数学上标）。
+**处理顺序固定不可变**：css → footnotes → figures → quotes → summary → headings → right → intro_sig → center → noindent → bodytext → kai → h1 → super → tidy
+（footnotes 必须先于 super：注释标记 `super#refN` 先被消费，剩下的 `super` 才是数学上标；
+quotes/summary 先于 headings；intro_sig 须在 right 之后，才能把落款并入 blockquote）。
 
 **保留不动**：`p.banquan2` / `p.yingwen2`（版权页）、`span.bold`/`italic`、`cover.xhtml` 的 SVG、`lang` 属性。
 
