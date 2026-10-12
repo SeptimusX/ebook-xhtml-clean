@@ -111,9 +111,9 @@ def step_images(c, name, ctx):
     return IMG_RE.sub(repl, c)
 
 def step_headings(c, name, ctx):
-    # biaoti1 + biaoti2 -> h1 + span.subtitle
+    # biaoti1（章号行）+ biaoti2（书题行）-> 章号套 subtitle，书题作正文
     pat = re.compile(r'<span class="biaoti1">(.*?)<br/>\s*<span class="biaoti2">(.*?)</span>\s*</span>', re.S)
-    c, n = pat.subn(r'\1<br/><span class="subtitle">\2</span>', c)
+    c, n = pat.subn(r'<span class="subtitle">\1</span><br/>\2', c)
     ctx["subtitle"] += n
     for cls in CONFIG["unwrap_in_heading"]:
         c, k = unwrap_span(c, cls)

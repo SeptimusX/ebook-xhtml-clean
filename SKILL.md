@@ -72,6 +72,8 @@ description: 电子书 EPUB xhtml 清洗流水线（八套 profile：得到/中�
   成一个 `<p class="bodytext">`**（诗歌、多行引文按行拆段）。
 - 章副标题：h1 后紧跟的居中样式段并入 h1 →
   `<h1>标题<br/><span class="subtitle">——副题</span></h1>`（h1 内原有 span/b 标签去掉）。
+  **例外**：若源标题分「章号行 + 书名行」两行（如多看 `biaoti1`+`biaoti2`），
+  `.subtitle` 包**章号行**、书名行作正文（`<h1><span class="subtitle">第二章</span><br/>书名</h1>`）。
 - 加粗引导段（整段）：去样式 → `<p class="bodytext"><span><b>（一）…</b></span></p>`；
   行内嵌套加粗 span 同样去 style（保留 span+b）。处理后全文件不应残留任何
   `<span style=`。
@@ -255,7 +257,9 @@ analyze 会对「quotation 含链接」的文件打 `!!` 标记。
    （否则 `styles.css` 的 `body{text-align:justify}` 会反过来压掉封面的居中）
 2. **插图**：`duokan-image-single` → `<div class="chatu">`：`<p class="image"><img src alt/></p>` +
    主标题 `<p class="caption">` + 副标题再一条 `<p class="caption">`（**保留 `<a id="imgN" href="…">` 链接**，img 只留 src/alt）
-3. **标题**：`biaoti1`(+`biaoti2`) → `<h1>…<br/><span class="subtitle">…</span></h1>`；
+3. **标题**：`biaoti1`（章号行）+ `biaoti2`（书名行）→
+   `<h1><span class="subtitle">章号</span><br/>书名</h1>`（`.subtitle` 是 80% 字号，**包章号、不包书名**）；
+   只有 `biaoti1` 的（缘起/尾声/后记/插图目录/DLC 等）→ `<h1>文本</h1>`，不加 subtitle；
    `biaoti1/2/3/5`、`list_of_ill`、`banquan`、`neiwen6` 的 span 一律去掉
    （标签与层级保留：`biaoti3`/`biaoti5` 都仍是 `<h2>`，**不降级**）
 4. **引文**：`<p><span class="neiwen2">…</span></p>` → `<blockquote><p class="bodytext">…</p></blockquote>`
