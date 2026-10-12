@@ -37,7 +37,8 @@ CONFIG = {
     "css_href": "styles.css",
     "drop_css_hrefs": ["../styles/fonts.css", "../styles/page_styles.css", "../styles/stylesheet.css"],
     "bodytext_class": "bodytext",
-    "body_from": ["neiwen", "neiwen3", "neiwen5"],   # -> bodytext
+    "body_from": ["neiwen", "neiwen3", "neiwen5"],   # -> bodytext（neiwen3 仅作兜底，正常情况下由 intro 规则处理）
+    "intro_from": ["neiwen3"],                       # 章前摘要：紧随 h1 的那条 -> blockquote.intro > p.center
     "right_from": ["neiwen4"],                       # -> right（落款）
     "quote_from": ["neiwen2"],                       # -> blockquote
     "quote_inner": ["neiwen2_1"],                    # 引文内层，去标签
@@ -152,6 +153,18 @@ def step_quotes(c, name, ctx):
         ctx["bq"] += len(g)
     return c
 
+def step_intro(c, name, ctx):
+    """章标题单独成文件时，h1 之后的那条章前摘要 -> blockquote.intro > p.center"""
+    pat = re.compile(r'(</h1>\s*)<p><span class="(%s)">(.*?)</span></p>' % "|".join(
+        map(re.escape, CONFIG["intro_from"])), re.S)
+
+    def repl(m):
+        ctx["intro"] += 1
+        return '%s<blockquote class="intro">\n<p class="center">%s</p>\n</blockquote>' % (
+            m.group(1), m.group(3).strip())
+
+    return pat.sub(repl, c)
+
 def step_body(c, name, ctx):
     for cls in CONFIG["body_from"]:
         pat = re.compile(r'<p><span class="%s">(.*?)</span></p>' % re.escape(cls), re.S)
@@ -221,8 +234,8 @@ def step_ws(c, name, ctx):
     return c
 
 STEPS = [("css", step_css), ("images", step_images), ("headings", step_headings),
-         ("quotes", step_quotes), ("body", step_body), ("hr", step_hr),
-         ("footnotes", step_footnotes), ("ws", step_ws)]
+         ("quotes", step_quotes), ("intro", step_intro), ("body", step_body),
+         ("hr", step_hr), ("footnotes", step_footnotes), ("ws", step_ws)]
 
 # ---------- 校验 ----------
 
@@ -255,8 +268,9 @@ def verify_content(c, name, d):
     nums = sorted(int(x) for x in re.findall(r'id="noteref-(\d+)"', c))
     if nums and nums != list(range(1, len(nums) + 1)):
         probs.append("noteref 编号不连续")
-    info.append("chatu=%d fnote=%d bodytext=%d" % (
-        len(re.findall(r'<div class="chatu">', c)), fn, len(re.findall(r'class="bodytext"', c))))
+    info.append("chatu=%d fnote=%d intro=%d bodytext=%d" % (
+        len(re.findall(r'<div class="chatu">', c)), fn,
+        len(re.findall(r'<blockquote class="intro">', c)), len(re.findall(r'class="bodytext"', c))))
     return probs, info
 
 # ---------- 命令 ----------
@@ -305,8 +319,8 @@ def process(d, dry=False):
         c = read(fp)
         if not dry:
             shutil.copy2(fp, os.path.join(base, name))
-        ctx = {"chatu": 0, "subtitle": 0, "head": 0, "bq": 0, "bodytext": 0, "right": 0,
-               "marks": 0, "fnotes": 0, "ws": 0, "hr": 0}
+        ctx = {"chatu": 0, "subtitle": 0, "head": 0, "bq": 0, "intro": 0, "bodytext": 0,
+               "right": 0, "marks": 0, "fnotes": 0, "ws": 0, "hr": 0}
         try:
             for sname, fn in STEPS:
                 c = fn(c, name, ctx)
@@ -320,9 +334,9 @@ def process(d, dry=False):
             print("%-16s FAIL: %s" % (name, "; ".join(probs)))
             continue
         write(os.path.join(outdir, name) if dry else fp, c)
-        print("%-16s chatu=%-2d 标记=%-3d 尾注=%-3d 引文=%-3d bodytext=%-4d right=%-2d h去span=%-3d 空段=%-2d" % (
-            name, ctx["chatu"], ctx["marks"], ctx["fnotes"], ctx["bq"], ctx["bodytext"],
-            ctx["right"], ctx["head"], ctx["ws"]))
+        print("%-16s chatu=%-2d 标记=%-3d 尾注=%-3d 引文=%-3d 摘要=%-2d bodytext=%-4d right=%-2d h去span=%-3d 空段=%-2d" % (
+            name, ctx["chatu"], ctx["marks"], ctx["fnotes"], ctx["bq"], ctx["intro"],
+            ctx["bodytext"], ctx["right"], ctx["head"], ctx["ws"]))
     print("RESULT:", "OK" if ok else "FAIL（有文件未通过校验，未写回）")
     sys.exit(0 if ok else 1)
 

@@ -248,7 +248,7 @@ analyze 会对「quotation 含链接」的文件打 `!!` 标记。
 - 辅助页：`<h3><span class="list_of_ill">` 插图目录、`<h5><span class="banquan">` 版权页
 - `<p class="whitespace">&#160;</p>` 空段
 
-处理顺序（脚本 STEPS，固定不可乱）：css → images → headings → quotes → body → hr → footnotes → ws
+处理顺序（脚本 STEPS，固定不可乱）：css → images → headings → quotes → intro → body → hr → footnotes → ws
 
 1. **css**：`fonts.css` + `page_styles.css` + `stylesheet.css` → 同目录 `styles.css`；
    **若该文件有内联 `<style>`（封面常见），`styles.css` 链接插到内联样式之前**，保证内联覆盖优先级更高
@@ -261,12 +261,15 @@ analyze 会对「quotation 含链接」的文件打 `!!` 标记。
 4. **引文**：`<p><span class="neiwen2">…</span></p>` → `<blockquote><p class="bodytext">…</p></blockquote>`
    （连续段合并；内层 `neiwen2_1` 先整批去标签，再处理外层，避免非贪婪在内层 `</span>` 处截断；
    **引文内的 `<br/>` 一律拆成独立 `<p class="bodytext">`，blockquote 里不出现 `<br/>`**）
-5. **正文**：`neiwen` / `neiwen3` / `neiwen5` → `<p class="bodytext">`；`neiwen4`（`——落款`）→ `<p class="right">`
-6. **注释**：先删除重复 id 的空 `<a class="footnote-trigger" …></a>`；标记 →
+5. **正文**：`neiwen` / `neiwen5` → `<p class="bodytext">`；`neiwen4`（`——落款`）→ `<p class="right">`
+6. **章前摘要**：章标题单独成文件时，紧跟 `</h1>` 的那条 `neiwen3` →
+   `<blockquote class="intro">` + `<p class="center">…</p>`（脚本按「紧跟在 `</h1>` 之后」精确匹配；
+   若不属于该结构的 `neiwen3` 兜底降为 `<p class="bodytext">`）
+7. **注释**：先删除重复 id 的空 `<a class="footnote-trigger" …></a>`；标记 →
    `<sup><a epub:type="noteref" href="#foN" id="noteref-K">[N]</a></sup>`；文末 `<ol>` →
    `<hr/>` + `<p class="fnote" id="foN"><a href="#noteref-K">[N]</a> 注文</p>`（每文件从 1 编号、双向回链）。
    脚本先做 hr 步骤，故 **`<ol>` 前原有的 `<hr class="xian"/>` 会被复用**，不会再补一个造成两个 `<hr/>` 相邻
-7. **收尾**：`<hr class="xian"/>`（含 `<div>` 包裹）→ `<hr/>`；删除 `<p class="whitespace">&#160;</p>` 空段
+8. **收尾**：`<hr class="xian"/>`（含 `<div>` 包裹）→ `<hr/>`；删除 `<p class="whitespace">&#160;</p>` 空段
 
 ⚠️ 同多看上一种：**不要做全局 `text` → `bodytext` 替换**（会改坏 `text-align` 等）。只按 class 精确匹配。
 
