@@ -1,9 +1,9 @@
 # ebook-xhtml-clean
 
 把各类来源的电子书章节 XHTML 清洗为统一的语义化格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
-An opencode skill / CLI for cleaning EPUB xhtml from seven common Chinese e-book sources.
+An opencode skill / CLI for cleaning EPUB xhtml from eight common Chinese e-book sources.
 
-## 支持的源格式（七套 profile）
+## 支持的源格式（八套 profile）
 
 | profile | 脚本 | 典型特征 |
 |---|---|---|
@@ -14,6 +14,7 @@ An opencode skill / CLI for cleaning EPUB xhtml from seven common Chinese e-book
 | 多看原生（图片式注释标记） | `scripts/epub_clean_duokan.py` | `p.text`、`h2.chapter-title2`、`../Styles/*.css`、`a.duokan-footnote` + `note.png` 注释标记 |
 | InDesign / Adept | `scripts/epub_clean_indesign.py` | `<h1 class="f_" id="_idParaDest-N">`、`p.f_1`/`f_2`/`f_4`、`_idfootnotelink`、`<div type="footnote">`、`<div class="mg_l_*">` 图 |
 | 人民邮电 / 得到（`p.content` 系） | `scripts/epub_clean_ptpress.py` | `h1.firstTitle#sigil_toc_id_N`、`p.content` / `content_100..110`、`div.pic`+`imgtitle`、`span.kt_104`、`span.super[id=refN]`+`p.noindent[id=annotN]` |
+| 多看原生 · 内文/标题（`neiwen`/`biaoti`） | `scripts/epub_clean_duokan_biaoti.py` | `p>span.neiwen`（变体 `neiwen2/2_1/3/4/5/6`）、`h1>span.biaoti1`+`biaoti2`、`h2>span.biaoti3`/`biaoti5`、`div.duokan-image-single`+`maintitle`/`subtitle`、`a.duokan-footnote`+`note.png`、`ol.duokan-footnote-content`、`hr.xian`、`p.whitespace` |
 
 先跑 `analyze` 判断属于哪一套，再选脚本。
 
@@ -21,7 +22,7 @@ An opencode skill / CLI for cleaning EPUB xhtml from seven common Chinese e-book
 
 - **脚注 → 尾注**：`[N]` 编号 + 双向回链，章末 `<hr/>` 后集中列出；符号注（`[*]`、`[†]`…）自动分组
 - **插图 → chatu**：装饰性重复小图自动删除（或降级为 `sprt`），真插图保留图注
-- **引文 → blockquote**：连续引文段合并为一个块
+- **引文 → blockquote**：连续引文段合并为一个块，块内每行独立成 `p.bodytext`（不用 `<br/>` 分行）
 - **正文 → bodytext**：章副标题并入 `h1`、`h` 标签去 `b`、CSS 链接统一为 `styles.css`
 - **杂项**：内嵌 SVG 生僻字图替换为实际字符、全角字母/数字转半角、注释编号方括号化
 - **内置校验**：XML 良构、无残留标记、id 唯一、锚点可解析、编号连续、**正文文本完整性**比对

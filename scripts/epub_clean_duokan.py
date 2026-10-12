@@ -76,7 +76,10 @@ def load_config(d, path=None):
 # ---------- 基础 ----------
 
 def list_files(d):
-    return sorted(f for f in glob.glob(os.path.join(d, "*.xhtml")) if not f.endswith(".bak"))
+    files = []
+    for pat in ("*.xhtml", "*.html"):
+        files += [f for f in glob.glob(os.path.join(d, pat)) if not f.endswith(".bak")]
+    return sorted(set(files))
 
 def read(fp):
     with open(fp, encoding="utf-8", newline="") as f:

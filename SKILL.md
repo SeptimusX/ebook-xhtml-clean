@@ -1,6 +1,6 @@
 ---
 name: ebook-xhtml-clean
-description: 电子书 EPUB xhtml 清洗流水线（七套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept、人民邮电/得到 p.content 系）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』、『得到/人邮导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1、firstTitle、kt_104、annot 时使用。
+description: 电子书 EPUB xhtml 清洗流水线（八套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept、人民邮电/得到 p.content 系、多看原生内文/标题 neiwen/biaoti）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』、『得到/人邮导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1、firstTitle、kt_104、annot、neiwen、biaoti、duokan-image-single、xian 时使用。
 ---
 
 # EPUB xhtml 清洗流水线
@@ -8,7 +8,7 @@ description: 电子书 EPUB xhtml 清洗流水线（七套 profile：得到/中�
 把 EPUB 的 xhtml 转换为标准格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
 目标目录通常是书籍解包后的 `<项目>/xhtml` 或 `<项目>/EPUB/xhtml`（同目录应已有 `styles.css`）。
 
-## 七套 profile（先 analyze 判断，再选脚本）
+## 八套 profile（先 analyze 判断，再选脚本）
 
 | 源格式 | 脚本 | 特征 |
 |---|---|---|
@@ -19,11 +19,13 @@ description: 电子书 EPUB xhtml 清洗流水线（七套 profile：得到/中�
 | 多看原生（图片式注释标记） | `scripts/epub_clean_duokan.py` | `<p class="text">`、`<h2 class="chapter-title2" id="sigil_toc_id_N">`、`../Styles/stylesheet.css` + `oxenfont.css`、正文 `<a class="duokan-footnote" …><img src="../Images/note.png"/></a>`、文末 `<ol class="duokan-footnote-content">` |
 | InDesign / Adept | `scripts/epub_clean_indesign.py` | `<body … class="calibre">`、`<h1 class="f_" id="_idParaDest-N">`、`<p class="f_1">` / `f_2` / `f_4`、注文/回链类 `_idfootnotelink`（常带 `pcalibre*`）、脚注 `<div type="footnote" id="footnote-N">`、插图 `<div class="mg_l_*">`、`<span class="kfont">` 题词 |
 | 人民邮电/得到（`p.content` 系） | `scripts/epub_clean_ptpress.py` | `xml:lang="zh-hans"`、`<h1 class="firstTitle" id="sigil_toc_id_N">`、`<p class="content">` / `content_100..110`、`<div class="pic">`+`imgtitle` 图、`<span class="kt_104">` 楷体、`<span class="super" id="refN">`+`<p class="noindent" id="annotN">` 注释 |
+| 多看原生·内文/标题（`neiwen`/`biaoti`） | `scripts/epub_clean_duokan_biaoti.py` | `<p><span class="neiwen">`（变体 `neiwen2/2_1/3/4/5/6`）、`<h1><span class="biaoti1">…<br/><span class="biaoti2">`、`<h2><span class="biaoti3">`/`biaoti5`、`<div class="duokan-image-single">` 插图（`duokan-image-maintitle/subtitle`）、`<a class="duokan-footnote" href="#foN" id="forefN"><img src="../images/note.png"/></a>`、文末 `<ol class="duokan-footnote-content">`、`<hr class="xian"/>`、`<p class="whitespace">&#160;</p>` |
 
 **注意**：KADOKAWA 书几乎没有语义标签，需**先人工做阶段一语义化重排**（规则见下），脚本只做阶段二
 （全角→半角 + 注释编号方括号化）。
 
-七套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
+八套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
+所有脚本同时收录 `*.xhtml` 与 `*.html`（部分书目标目录用 `.html` 扩展名）。
 
 ## 环境要点
 
@@ -66,7 +68,8 @@ description: 电子书 EPUB xhtml 清洗流水线（七套 profile：得到/中�
   （noteref→aside 按 alt 文本精确配对，aside 正文为权威文本）。
 - 插图：`<div class="chatu">` + `<p class="image"><img src=... alt=""/></p>` + `<p class="caption">`。
 - 引文：整段 FZFangSong 仿宋引文，连续段合并为一个 `<blockquote>`，内部段落保留
-  `class="bodytext"`，段内 noteref 保留。
+  `class="bodytext"`，段内 noteref 保留。**blockquote 内不用 `<br/>` 分行：每一行各自
+  成一个 `<p class="bodytext">`**（诗歌、多行引文按行拆段）。
 - 章副标题：h1 后紧跟的居中样式段并入 h1 →
   `<h1>标题<br/><span class="subtitle">——副题</span></h1>`（h1 内原有 span/b 标签去掉）。
 - 加粗引导段（整段）：去样式 → `<p class="bodytext"><span><b>（一）…</b></span></p>`；
@@ -222,6 +225,54 @@ analyze 会对「quotation 含链接」的文件打 `!!` 标记。
 ⚠️ **不要对这类文件做「全局 `text` → `bodytext` 替换」**：它会把 `text-align`、`text/html` 一起改坏
 （曾出现封面 `bodytext-align: center`、meta `content="bodytext/html"` 的遗留事故）。只按 class 精确匹配。
 
+## 多看原生·内文/标题 profile 约定（epub_clean_duokan_biaoti.py）
+
+源：多看(duokan) 原生导出的又一种变体，正文/标题用「内文/标题」拼音类名（`neiwen*` / `biaoti*`），
+插图带主/副标题，注释同样是图片式标记但列表结构不同（注文直接是 `<p class="footnote-content">`）。
+`<html>` 常无 `xml:lang`，也无 `xmlns:epub`；文件扩展名可能是 `partNN.xhtml` / `partNN.html` 混排。
+
+识别特征：
+
+- `<link … href="../styles/fonts.css"/>` + `page_styles.css` + `stylesheet.css`
+- 正文 `<p><span class="neiwen">…</span></p>`（变体 `neiwen2` 引文、`neiwen2_1` 引文内诗行、
+  `neiwen3` 章前摘要、`neiwen4` 落款、`neiwen5` ◆问句、`neiwen6` h1 内导语）
+- 标题 `<h1><span class="biaoti1">第X章<br/><span class="biaoti2">副题</span></span></h1>`、
+  `<h2><span class="biaoti3">一</span></h2>`、`<h2><span class="biaoti5">1.1 …</span></h2>`
+- 插图 `<div class="duokan-image-single"><img/><p class="duokan-image-maintitle">…</p>
+  <p class="duokan-image-subtitle">…</p></div>`（**主标题带 `<a id="imgN" href="partNN.html#imgfN">` 链到插图目录**）
+- 注释标记 `<a class="duokan-footnote" href="#foN" id="forefN"><img src="../images/note.png"/></a>`
+  （`href`/`id` 是 `#foN`/`forefN`，与上一种多看的 `#a_X_Y`/`c_X_Y` 不同）
+- 文末 `<hr class="xian"/>` + `<ol class="duokan-footnote-content"><li class="duokan-footnote-item" id="foN">
+  <p class="footnote-content"><a href="#forefN" style="…">[N]</a> 注文</p></li></ol>`
+  （注文段类固定 `footnote-content`，`[N]` 源里已带方括号）
+- 辅助页：`<h3><span class="list_of_ill">` 插图目录、`<h5><span class="banquan">` 版权页
+- `<p class="whitespace">&#160;</p>` 空段
+
+处理顺序（脚本 STEPS，固定不可乱）：css → images → headings → quotes → body → hr → footnotes → ws
+
+1. **css**：`fonts.css` + `page_styles.css` + `stylesheet.css` → 同目录 `styles.css`；
+   **若该文件有内联 `<style>`（封面常见），`styles.css` 链接插到内联样式之前**，保证内联覆盖优先级更高
+   （否则 `styles.css` 的 `body{text-align:justify}` 会反过来压掉封面的居中）
+2. **插图**：`duokan-image-single` → `<div class="chatu">`：`<p class="image"><img src alt/></p>` +
+   主标题 `<p class="caption">` + 副标题再一条 `<p class="caption">`（**保留 `<a id="imgN" href="…">` 链接**，img 只留 src/alt）
+3. **标题**：`biaoti1`(+`biaoti2`) → `<h1>…<br/><span class="subtitle">…</span></h1>`；
+   `biaoti1/2/3/5`、`list_of_ill`、`banquan`、`neiwen6` 的 span 一律去掉
+   （标签与层级保留：`biaoti3`/`biaoti5` 都仍是 `<h2>`，**不降级**）
+4. **引文**：`<p><span class="neiwen2">…</span></p>` → `<blockquote><p class="bodytext">…</p></blockquote>`
+   （连续段合并；内层 `neiwen2_1` 先整批去标签，再处理外层，避免非贪婪在内层 `</span>` 处截断；
+   **引文内的 `<br/>` 一律拆成独立 `<p class="bodytext">`，blockquote 里不出现 `<br/>`**）
+5. **正文**：`neiwen` / `neiwen3` / `neiwen5` → `<p class="bodytext">`；`neiwen4`（`——落款`）→ `<p class="right">`
+6. **注释**：先删除重复 id 的空 `<a class="footnote-trigger" …></a>`；标记 →
+   `<sup><a epub:type="noteref" href="#foN" id="noteref-K">[N]</a></sup>`；文末 `<ol>` →
+   `<hr/>` + `<p class="fnote" id="foN"><a href="#noteref-K">[N]</a> 注文</p>`（每文件从 1 编号、双向回链）。
+   脚本先做 hr 步骤，故 **`<ol>` 前原有的 `<hr class="xian"/>` 会被复用**，不会再补一个造成两个 `<hr/>` 相邻
+7. **收尾**：`<hr class="xian"/>`（含 `<div>` 包裹）→ `<hr/>`；删除 `<p class="whitespace">&#160;</p>` 空段
+
+⚠️ 同多看上一种：**不要做全局 `text` → `bodytext` 替换**（会改坏 `text-align` 等）。只按 class 精确匹配。
+
+**教训（同类变体留意）**：`biaoti5` 的 class 有时**直接挂在 `<h2>` 标签上**（`<h2 class="biaoti5">1.2 …</h2>`），
+而非包在 span 里；标题去 span 规则必须同时处理 `span.biaotiX` 与 `hN.biaotiX` 两种写法。
+
 ## InDesign / Adept profile 约定（epub_clean_indesign.py）
 
 源：Adobe InDesign 导出（常见于繁体中文译本），`<body … class="calibre">` + `<div class="calibre1">` 包裹，
@@ -346,6 +397,7 @@ $sc4 = "$sk/epub_clean_kadokawa.py" # profile D KADOKAWA（阶段二；Kobo 版�
 $sc5 = "$sk/epub_clean_duokan.py"   # profile E 多看原生（图片式注释标记）
 $sc6 = "$sk/epub_clean_indesign.py" # profile F InDesign/Adept
 $sc7 = "$sk/epub_clean_ptpress.py"  # profile G 人民邮电/得到（p.content 系）
+$sc8 = "$sk/epub_clean_duokan_biaoti.py" # profile H 多看原生·内文/标题（neiwen/biaoti）
 & $py -X utf8 $sc  analyze <dir> -o <tmp>/report.txt   # 体检（只读）
 & $py -X utf8 $sc  process <dir> --dry-run             # 试处理→临时目录
 & $py -X utf8 $sc  process <dir>                       # 正式处理（自动备份+校验）

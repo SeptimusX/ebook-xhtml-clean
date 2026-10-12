@@ -60,8 +60,10 @@ def load_config(dirpath, config_path=None):
     return json.loads(json.dumps(DEFAULT_CONFIG)), None
 
 def list_files(dirpath):
-    return sorted(f for f in glob.glob(os.path.join(dirpath, "*.xhtml"))
-                  if not f.endswith(".bak"))
+    files = []
+    for pat in ("*.xhtml", "*.html"):
+        files += [f for f in glob.glob(os.path.join(dirpath, pat)) if not f.endswith(".bak")]
+    return sorted(set(files))
 
 def read(fp):
     with open(fp, encoding="utf-8", newline="") as f:
