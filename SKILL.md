@@ -1,6 +1,6 @@
 ---
 name: ebook-xhtml-clean
-description: 电子书 EPUB xhtml 清洗流水线（八套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept、人民邮电/得到 p.content 系、多看原生内文/标题 neiwen/biaoti）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』、『得到/人邮导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1、firstTitle、kt_104、annot、neiwen、biaoti、duokan-image-single、xian 时使用。
+description: 电子书 EPUB xhtml 清洗流水线（九套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept、人民邮电/得到 p.content 系、多看原生内文/标题 neiwen/biaoti、Kobo 导出·多看式排版 koboSpan/book-columns）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』、『得到/人邮导出清理』、『Kobo 导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1、firstTitle、kt_104、annot、neiwen、biaoti、duokan-image-single、xian、koboSpan、book-columns、kobostylehacks 时使用。
 ---
 
 # EPUB xhtml 清洗流水线
@@ -8,7 +8,7 @@ description: 电子书 EPUB xhtml 清洗流水线（八套 profile：得到/中�
 把 EPUB 的 xhtml 转换为标准格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
 目标目录通常是书籍解包后的 `<项目>/xhtml` 或 `<项目>/EPUB/xhtml`（同目录应已有 `styles.css`）。
 
-## 八套 profile（先 analyze 判断，再选脚本）
+## 九套 profile（先 analyze 判断，再选脚本）
 
 | 源格式 | 脚本 | 特征 |
 |---|---|---|
@@ -20,11 +20,12 @@ description: 电子书 EPUB xhtml 清洗流水线（八套 profile：得到/中�
 | InDesign / Adept | `scripts/epub_clean_indesign.py` | `<body … class="calibre">`、`<h1 class="f_" id="_idParaDest-N">`、`<p class="f_1">` / `f_2` / `f_4`、注文/回链类 `_idfootnotelink`（常带 `pcalibre*`）、脚注 `<div type="footnote" id="footnote-N">`、插图 `<div class="mg_l_*">`、`<span class="kfont">` 题词 |
 | 人民邮电/得到（`p.content` 系） | `scripts/epub_clean_ptpress.py` | `xml:lang="zh-hans"`、`<h1 class="firstTitle" id="sigil_toc_id_N">`、`<p class="content">` / `content_100..110`、`<div class="pic">`+`imgtitle` 图、`<span class="kt_104">` 楷体、`<span class="super" id="refN">`+`<p class="noindent" id="annotN">` 注释 |
 | 多看原生·内文/标题（`neiwen`/`biaoti`） | `scripts/epub_clean_duokan_biaoti.py` | `<p><span class="neiwen">`（变体 `neiwen2/2_1/3/4/5/6`）、`<h1><span class="biaoti1">…<br/><span class="biaoti2">`、`<h2><span class="biaoti3">`/`biaoti5`、`<div class="duokan-image-single">` 插图（`duokan-image-maintitle/subtitle`）、`<a class="duokan-footnote" href="#foN" id="forefN"><img src="../images/note.png"/></a>`、文末 `<ol class="duokan-footnote-content">`、`<hr class="xian"/>`、`<p class="whitespace">&#160;</p>` |
+| Kobo 导出·多看式排版（`koboSpan`） | `scripts/epub_clean_kobo.py` | `<style class="kobostylehacks">` + `../Styles/css.css`、`<div id="book-columns"><div id="book-inner">`、**每段文字被 `<span class="koboSpan" id="kobo.N.M">` 逐句包裹**、`<h1 class="h2">章名</h1>` / `<h1 class="h1">后记</h1>` / `<h2>一</h2>`、`<p class="kh">` 楷体引文、`<p class="no fs"><b>年份</b></p>`、`<div class="hr">` 题词、`<a class="duokan-footnote" …><img src="../Images/06.png"/></a>` + `<aside><ol class="duokan-footnote-content">` |
 
 **注意**：KADOKAWA 书几乎没有语义标签，需**先人工做阶段一语义化重排**（规则见下），脚本只做阶段二
 （全角→半角 + 注释编号方括号化）。
 
-八套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
+九套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
 所有脚本同时收录 `*.xhtml` 与 `*.html`（部分书目标目录用 `.html` 扩展名）。
 
 ## 环境要点
@@ -129,6 +130,48 @@ calibre 的 `calibreNN` 类号**每本书都不同**（按首次出现顺序分�
 - 编辑判断（不自动化，遇到时照做）：
   - **章首图**（章节第一张图）按惯例手工改成 `<h1 title="第X章 …"><img/></h1>`（skill 的图片页约定）
   - 诗歌引文若与相邻正文诗行混标 → 统一处理
+
+
+## Kobo 导出 · 多看式排版 profile 约定（epub_clean_kobo.py）
+
+源：**Kobo 阅读器导出**的「多看」式 EPUB（`<style class="kobostylehacks">` + `../Styles/css.css`；
+`<div id="book-columns"><div id="book-inner">` 包裹；**每段文字被 `<span class="koboSpan" id="kobo.N.M">` 逐句包住**）。
+文件常为 `101.xhtml`…`NNN.xhtml` + `cover.xhtml`。
+
+识别特征：
+
+- `<body class="fen">`（章标题页）/ `body class="copy"`（版权页）/ 无 class（正文）
+- 章标题页 `<h1 class="h2">楔子　北境</h1>`；后记/年表/书目 `<h1 class="h1">…</h1>`；
+  节 `<h2>一</h2>`；小节 `<h3 id="sigil_toc_id_N"><span class="h3kt">古籍</span></h3>`
+- 正文 `<p>`；后记/书目/年表 `<p class="fs">`、`<p class="no fs"><b>年份</b></p>`
+- 楷体引文 `<p class="kh">`；章首题词 `<div class="hr"><p class="fs center">…</p><p class="fs right">——落款<br/>《出处》</p></div>`
+- 装饰空块 `<div class="logo">` / `<div class="image">`
+- 脚注标记 `<a class="duokan-footnote" epub:type="noteref" href="#B_N" id="A_N"><img src="../Images/06.png"/></a>`；
+  文末 `<aside epub:type="footnote"><div><hr class="xian"/></div><ol class="duokan-footnote-content">
+  <li class="duokan-footnote-item" id="B_N"><p class="footnote"><a href="#A_N">⊙</a>注文</p></li></ol></aside>`
+
+处理顺序（脚本 STEPS，固定不可乱）：css → body → kobo(去 koboSpan) → wrap(解包) → dropdiv → headings → footnotes → epigraph → quotes → paras → tidy → append
+
+1. **css**：删 `<style class="kobostylehacks">` 与 `../Styles/css.css` 链接 → `styles.css`
+2. **koboSpan**：`<span class="koboSpan" …>…</span>` 去标签保留文字（含空 span）
+3. **wrap**：`#book-columns` / `#book-inner` 深度计数解包
+4. **dropdiv**：`div.logo` / `div.image`（空装饰）与 `style="page-break-before:always"` 的 div 整块删除
+5. **headings**：`<h1 style="display:none">` 删；`h1.h1`/`h1.h2` → `<h1>`（保 id）；`<h3><span class="h3kt">` → `<h3>`
+6. **footnotes**：`aside` 内 `<li id="B_N">` 的注文收集、整块删；正文 `<a class="duokan-footnote">` → `[N]`
+   （每文件从 1、`href=#B_N` ↔ `li id=B_N`、双向回链），章末 `<hr/>` + `<p class="fnote" id="B_N">`
+7. **epigraph**：`div.hr` → `<blockquote class="intro">`（引文行 `p.bodytext`、落款行 `p.right`；块内 `<br/>` 拆成独立段）
+8. **quotes**：`<p class="kh">`（连续）→ `<blockquote><p class="bodytext">…`（每行独立段）
+9. **paras**：其余 `<p …>` 统一 → `bodytext`（`right`→`p.right`、含 `center`/`vol`→`p.center`），去段首全角空格
+10. **收尾**：清理空行与行首缩进
+
+**保留不动**：`cover.xhtml` 的 SVG（`<image xlink:href="../Images/03.jpg"/>` 原样）。
+
+**校验**：XML 良构、无残留（`koboSpan` / `kobo.` / `duokan-footnote` / `<aside` / `class="kh|fs|no|h3kt"` /
+`book-columns` / 旧 css）、id 唯一、内链可解析、图片存在、注释标记数 == 尾注数。
+
+**注意**：正文标记、脚注图片标记（`06.png`，115 次引用）都是图片式；脚注步骤会消费标记，故图片清单里
+`06.png` 属正常。版权页里的「制作组页脚」（如 `<p class="center">阿獴读书·阅读经典</p>`）会按正文保留，
+如需删除请手工处理。
 
 
 ## 微信读书 / QQ阅读 profile 约定（epub_clean_weread.py）
@@ -421,6 +464,7 @@ $sc5 = "$sk/epub_clean_duokan.py"   # profile E 多看原生（图片式注释�
 $sc6 = "$sk/epub_clean_indesign.py" # profile F InDesign/Adept
 $sc7 = "$sk/epub_clean_ptpress.py"  # profile G 人民邮电/得到（p.content 系）
 $sc8 = "$sk/epub_clean_duokan_biaoti.py" # profile H 多看原生·内文/标题（neiwen/biaoti）
+$sc9 = "$sk/epub_clean_kobo.py"     # profile I Kobo 导出·多看式排版（koboSpan）
 & $py -X utf8 $sc  analyze <dir> -o <tmp>/report.txt   # 体检（只读）
 & $py -X utf8 $sc  process <dir> --dry-run             # 试处理→临时目录
 & $py -X utf8 $sc  process <dir>                       # 正式处理（自动备份+校验）
