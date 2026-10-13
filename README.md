@@ -8,7 +8,7 @@ An opencode skill / CLI for cleaning EPUB xhtml from eight common Chinese e-book
 | profile | 脚本 | 典型特征 |
 |---|---|---|
 | 得到 / 中华书局 | `scripts/epub_clean.py` | `<aside epub:type="footnote">注文</aside>`、仿宋引文、`<p><span style="…">` 内联样式 |
-| calibre + 多看(duokan) | `scripts/epub_clean_calibre.py` | `calibreN` 类、duokan 脚注 `<ol><li>`、`<div class="calibre13">` 图 |
+| calibre + 多看(duokan) | `scripts/epub_clean_calibre.py`（**配置驱动**：`<dir>/clean_config.json`，`calibreNN` 类号逐书不同） | `calibreN` 类、duokan 脚注 `<ol><li>`、`<div class="calibre13">` 图 |
 | 微信读书 / QQ阅读 | `scripts/epub_clean_weread.py` | `readerChapterContent`、`data-wr-footernote`、`p.content` / `p.quotation` |
 | KADOKAWA 竖排 / 固定版式 | `scripts/epub_clean_kadokawa.py` | `book-style.css`、`kfont` 引文、`key1`/`key2` 注释锚点 |
 | 多看原生（图片式注释标记） | `scripts/epub_clean_duokan.py` | `p.text`、`h2.chapter-title2`、`../Styles/*.css`、`a.duokan-footnote` + `note.png` 注释标记 |

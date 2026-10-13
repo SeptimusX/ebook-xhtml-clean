@@ -88,32 +88,48 @@ description: 电子书 EPUB xhtml 清洗流水线（八套 profile：得到/中�
   css → append（chatu 先于引文规则消费 fangsong caption；footnotes 先于引文规则
   以免 aside 割裂连续性；unwrap 先于 bodytext/h1_subtitle）。
 
-## calibre + duokan profile 约定（epub_clean_calibre.py）
+## calibre + duokan profile 约定（epub_clean_calibre.py，**配置驱动**）
 
-映射（脚本内 CONFIG 可调）：
+calibre 的 `calibreNN` 类号**每本书都不同**（按首次出现顺序分配），所以本 profile 全部角色都走配置：
+默认值见脚本头 `DEFAULT_CONFIG`，目标目录放 **`<dir>/clean_config.json`**（顶层键覆盖默认；`-c` 可另指）。
+`analyze` 会列出各文件的 p/span/div/hN 类号与图片尺寸，据此写配置。
 
-- `calibre10` / `calibre26` → `<p class="bodytext">`（去 span）
-- `calibre23`（连续整段）→ `<blockquote>` + `<p class="bodytext">`；
-  **紧跟插图的 `calibre23`（配图说明）→ 并入该 `<div class="chatu">` 的 `<p class="caption">`**
-- `calibre19` / `calibre27` / `calibre28` → 去 span，保留 `<i>`（行内英文书名）
-- `calibre17` → `<h3>`；`calibre24` / `calibre29` → `<h4>`（span 上的 id 移到标题上）
-- `calibre21` / `calibre22` → **`<p class="right">`**（正文底部署名/日期，右对齐），
-  并在正文与署名之间插入一个 `<p class="bodytext"><br/></p>` 空行段
-- `calibre13` 图 div → **先判装饰图**：尺寸小于 `ornament_max_bytes`（默认 50KB）
-  或列在 `drop_images` 名单 → 视为装饰图；**紧邻标题(h1–h4)前后 → 整块删除**，
-  否则 → `<p class="sprt"><img/></p>`；其余（真插图）→ `<div class="chatu">`
-  （analyze 会列出引用图片及尺寸，供确定阈值/名单）
-- 仅含一图的包裹 div（扉页）→ 按同一装饰图判断，否则 chatu
-- h1 文字型 → `<h1>文本</h1>`（保留 id，去 span/b/class）；
-  **h1 包图型 → 加 `title="<title>内容"`**，去 class，img 只留 src/alt
-- duokan `aside`（`<ol><li>`）→ 章末 `<hr/>` + `<p class="fnote">`；noteref → `[N]` + 双向回链
-- css 链接 → `styles.css`（删除 calibre 的 stylesheet.css / page_styles.css）
-- `<body class="calibre2">` → `<body>`；`<div class="calibre3">` 解包；清理空行与行首缩进
-- 源文件可能是 **CRLF**，脚本读取时统一为 LF
-- 装饰图常见形态：同一张很小的图（十几 KB）在小节标题后重复出现；真照片通常 ≥ 80KB。
-  阈值以 `analyze` 报告的图片尺寸为准。删除装饰图后注意 `tidy` 会清掉留下的空行
-- 编辑判断（不自动化，遇到时照做）：诗歌引文若与相邻正文诗行混标（如 calibre10+calibre23
-  同一首诗）→ 统一处理；图片页（无 h1）可手工加 `<h1 title="栏目名"></h1>`
+主要 CONFIG 键：
+
+| 键 | 作用 |
+|---|---|
+| `p_para` | 段落容器 `<p class="…">`（默认 `calibre7`）|
+| `body_spans` | 正文 span → `<p class="bodytext">`（去 span，span 上的 id 移到 `<p>`）|
+| `quote_spans` | 引文 span（连续段合并 `<blockquote>`，块内每行独立 `<p class="bodytext">`）|
+| `sig_span` | 引文**后紧跟的落款** span → 并进块内 `<p class="right">` |
+| `epigraph_class` / `poem_class` | **章首题词**（body 内本块前无 `<p>`/`<h2>`）用前者（默认 `intro`）；**正文内带落款的引文**用后者（默认 `poem`）；**无落款**的正文引文用**裸 `<blockquote>`**。⚠️ `intro` 只应出现在标题后，正文内禁 `intro` |
+| `lead_spans` | 整段逐字加粗 → `<p class="bodytext"><span><b>…</b></span></p>`（后记「其一」、年表年份等）|
+| `head_map` | `{类号: 标签}` → `<hN>`（类号可在 hN 标签上，也可在 `<p class="p_para"><span class="…">` 里；保 id、去 span/逐字 b）|
+| `h1_spans` | `<h1><span class="…"><b>…</b></span></h1>` → `<h1>` |
+| `fig_div` | 插图 div → `chatu` |
+| `caption_spans` | 图后的图注 span → `<p class="caption">`（多行 `<br/>` 合并）|
+| `sub_span` | `<sub class="…">` → `<sub>` |
+| `italic_spans` | 去 span 保留内容（保留 `<i>`）|
+| `author_span` / `date_span` | 正文底部署名/日期 → `<p class="right">` + 前置空行段 |
+| `bold_spans` | 逐字 `<b class="…">` 去标签保留文字 |
+| `cover_page` | `<body><img/></body>` → `<div class="chatu">` |
+| `head_sub_relocate` | `{标题类号: 引导段类号}` 把**源里误置于标题的 `<sub>` 数字**挪到紧随其后的引导段（如年表首条年份）|
+| `ornament_max_bytes` / `drop_images` | 装饰图判定（小于阈值或列名单）；**紧邻标题(h1–h4)前后 → 整块删除**，否则 → `<p class="sprt"><img/></p>`；真插图 → `chatu`。`0` = 不判装饰图 |
+
+其余固定行为：
+
+- `aside`（`<ol><li>`）+ noteref → 章末 `<hr/>` + `<p class="fnote">`，`[N]` 每文件从 1、双向回链；
+  **配对优先按 id，失败回退按文档顺序**（源里常有缺 id / 重复 id，但 noteref 的 alt 与 aside 正文逐条一致）
+- css 链接 → `styles.css`（删除 `styleNNNN/stylesheet/page_styles/fonts.css`）
+- `<body class="…">` → `<body>`；`wrapper_div`（默认 `calibre3`）解包；清理空行与行首缩进
+- 源文件可能是 **CRLF**，读取时统一为 LF
+- 装饰图常见形态：同一张很小的图（十几 KB）在小节标题后反复出现；真照片通常 ≥ 80KB，阈值以 analyze 为准
+- **脚注标记常为图片**（`<img src="../images/…png"/>`，几千字节、重复出现）；它们由脚注步骤消费，
+  不要当成装饰图（analyze 的小图清单里会出现，属正常）
+- 编辑判断（不自动化，遇到时照做）：
+  - **章首图**（章节第一张图）按惯例手工改成 `<h1 title="第X章 …"><img/></h1>`（skill 的图片页约定）
+  - 诗歌引文若与相邻正文诗行混标 → 统一处理
+
 
 ## 微信读书 / QQ阅读 profile 约定（epub_clean_weread.py）
 
