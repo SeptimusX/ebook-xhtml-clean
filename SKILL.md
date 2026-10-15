@@ -1,6 +1,6 @@
 ---
 name: ebook-xhtml-clean
-description: 电子书 EPUB xhtml 清洗流水线（十一套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept、人民邮电/得到 p.content 系、多看原生内文/标题 neiwen/biaoti、Kobo 导出·多看式排版 koboSpan/book-columns、InDesign→calibre 繁中重注本 _idParaDest/div.foot、掌阅 ZHANGYUE 已语义化稿 text-title-*/noteref_N）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』、『得到/人邮导出清理』、『Kobo 导出清理』、『掌阅导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1、firstTitle、kt_104、annot、neiwen、biaoti、duokan-image-single、xian、koboSpan、book-columns、kobostylehacks、_idParaDest、div.foot、ref1、text-title-1-c、zhangyue-c80、sigil_toc_id、noteref_N 时使用。
+description: 电子书 EPUB xhtml 清洗流水线（十二套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept、人民邮电/得到 p.content 系、多看原生内文/标题 neiwen/biaoti、Kobo 导出·多看式排版 koboSpan/book-columns、InDesign→calibre 繁中重注本 _idParaDest/div.foot、掌阅 ZHANGYUE 已语义化稿 text-title-*/noteref_N、Kindle-cn 亚马逊中国 calibre 混合 kindle-cn-*/chatu_img）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG/图片生僻字替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』、『得到/人邮导出清理』、『Kobo 导出清理』、『掌阅导出清理』、『Kindle 导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1、firstTitle、kt_104、annot、neiwen、biaoti、duokan-image-single、xian、koboSpan、book-columns、kobostylehacks、_idParaDest、div.foot、ref1、text-title-1-c、zhangyue-c80、sigil_toc_id、noteref_N、kindle-cn-heading、kindle-cn-inline-character、chatu_img、gaiword 时使用。
 ---
 
 # EPUB xhtml 清洗流水线
@@ -8,7 +8,7 @@ description: 电子书 EPUB xhtml 清洗流水线（十一套 profile：得到/�
 把 EPUB 的 xhtml 转换为标准格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
 目标目录通常是书籍解包后的 `<项目>/xhtml` 或 `<项目>/EPUB/xhtml`（同目录应已有 `styles.css`）。
 
-## 十一套 profile（先 analyze 判断，再选脚本）
+## 十二套 profile（先 analyze 判断，再选脚本）
 
 | 源格式 | 脚本 | 特征 |
 |---|---|---|
@@ -23,11 +23,12 @@ description: 电子书 EPUB xhtml 清洗流水线（十一套 profile：得到/�
 | Kobo 导出·多看式排版（`koboSpan`） | `scripts/epub_clean_kobo.py` | `<style class="kobostylehacks">` + `../Styles/css.css`、`<div id="book-columns"><div id="book-inner">`、**每段文字被 `<span class="koboSpan" id="kobo.N.M">` 逐句包裹**、`<h1 class="h2">章名</h1>` / `<h1 class="h1">后记</h1>` / `<h2>一</h2>`、`<p class="kh">` 楷体引文、`<p class="no fs"><b>年份</b></p>`、`<div class="hr">` 题词、`<a class="duokan-footnote" …><img src="../Images/06.png"/></a>` + `<aside><ol class="duokan-footnote-content">` |
 | InDesign→calibre 繁中重注本（`_idParaDest`） | `scripts/epub_clean_indesign_calibre.py` | `<body id="story-N" class="calibre2">`、`<div class="calibre3">` 包裹、`<h1 id="_idParaDest-N" class="calibre4"><span class="small">标签</span>　章名</h1>`、`<h5 class="calibre8">`、`<h6 class="h6_b/h6_s">`、正文 `<p class="calibre5/p_/p_b/p_s/calibre11/text_tp">`、`<p class="end/end_k">`、`<p class="kai_n/kai_nb">`、`<div class="container"><img class="fit"/><p class="caption">`、`<table class="calibre9">`、生僻字图 `<img class="pw" src="image/a1.jpg"/>`（a1=燠 a2=賴）、章内脚注 `<div class="foot"><hr class="calibre6"/><p class="footnote"><a id="foot-NNN" href="#back-NNN" class="green">[N]</a>` + 正文 ref `<a id="back-NNN" href="story-N.xhtml#foot-NNN" class="ref1">N</a>`、跨文件引用注 ref `<a id="back-aN" href="story-28.xhtml#foot-aN" class="ref1">` / 注 `<p class="footnote_a/b/c"><a id="foot-aN" href="#back-aN" class="calibre7">N</a>` |
 | 掌阅 ZHANGYUE（`text-title-*`，已语义化稿） | `scripts/epub_clean_zhangyue.py` | `<h1 class="text-title-1-c/text-title-1-r">`、`<div class="zhangyue-c80"><h2 class="text-title-2" style="padding-left:3.5em;text-indent:-3.5em" id="sigil_toc_id_N">`、`<h3 class="text-title-3" id="sigil_toc_id_N">`、正文 `<p class="bodytext">`（本已语义化）、文件内尾注 `<sup class=""><a href="#note_N" id="noteref_N">N</a></sup>` + 文末 `<pre><code><b>[注释]</b></code></pre>` 与 `<p class="bodytext"><span class=""><a href="#noteref_N" id="note_N"> N</a></span>`、图 `<div class="zhangyue-c"><img class="zhangyue-img"/><p class="bodytext-no">图题</p><p class="img-note">图注</p><hr/>`、`span.fangsong`、`../Styles/Style0001.css`+`jianrong.css`、内联 style |
+| Kindle-cn 亚马逊中国（`kindle-cn-*`，calibre 混合） | `scripts/epub_clean_kindle_cn.py` | `<body class="calibre">`、`../stylesheet.css`+`../page_styles1.css`、`h1.kindle-cn-heading[id=calibre_pb_0]`、`h2.kindle-cn-heading2`（内含空锚 `<a id=sec001 class=calibre6>`）、`h3.kindle-cn-heading3`、正文 `p.calibre1`/`p.kindle-cn-para-2em-indent`/`-no-indent(1)`、`p.kindle-cn-poem-left`、`p.kindle-cn-signature(1)`、文件内尾注 `<a id=chN-back href=file#chN><sup class=calibre5>[N]</sup></a>` + `<p class="fnote"><a id=chN>`、尾注前 `div.empty`+20×U+2014、`div.kindle-cn-toc-level(1)`、图片页 `div.kindle-cn-bodycontent-div-alone`、生僻字图 `img.kindle-cn-inline-character`、`div.chatu_img`+`gaiword.png` 广告 |
 
 **注意**：KADOKAWA 书几乎没有语义标签，需**先人工做阶段一语义化重排**（规则见下），脚本只做阶段二
 （全角→半角 + 注释编号方括号化）。
 
-十一套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
+十二套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
 所有脚本同时收录 `*.xhtml` 与 `*.html`（部分书目标目录用 `.html` 扩展名）。
 
 ## 环境要点
@@ -463,6 +464,45 @@ id 唯一；**源 id 一个都不能丢**（process 比对源与成果的 id 集
 **注意**：`content.opf` 的 manifest 需把 `Styles/Style0001.css`、`Styles/jianrong.css` 两项换成
 `<item id="styles.css" href="Text/styles.css" media-type="text/css"/>`，否则阅读器不加载样式（本书已同步改好）。
 
+## Kindle-cn（亚马逊中国）profile 约定（epub_clean_kindle_cn.py）
+
+源：亚马逊中国（Kindle）导出后经 calibre 转码，`zh-CN`，`<body class="calibre">` + `kindle-cn-*` 混用；
+css 链 `../stylesheet.css` + `../page_styles1.css`；同目录另有规范版 `styles.css`。
+常见「书籍分享公众号」污染：`<div class="chatu_img"><img src="../gaiword.png"></div>` + 若干 `p.calibre8` 求书段，
+**可能整篇位于 `</body>` 之后**（非法 HTML），也有整文件只有广告的 `_split_000` 残片。
+
+映射（统一到同目录 `styles.css`）：
+
+- css 链 → `styles.css`；`<body>` 去 class；`<html>` 补 `xmlns:epub`
+- **广告**：`div.chatu_img` 及其后连续的 `p.calibre8` 求书段、`gaiword` 引用，整块删除；空 `<div class="calibre4|empty">` 删除；
+  `</body>` 之后的残留一并清掉（整篇只有广告的文件会变成空 body，需在打包时删除）
+- 标题去 class：`h1.kindle-cn-heading|kindle-cn-toc-title` → `h1`（保留 `id="calibre_pb_0"`）；
+  `h2.kindle-cn-heading2|calibre7` → `h2`，**把 h2 内嵌空锚 `<a id="secNNN" class="calibre6"></a>` 的 id 提到 `<h2 id="secNNN">`**
+  （`toc.ncx` 与书内目录都按 `#secNNN` 跳转）；`h3.kindle-cn-heading3` → `h3`；`h4.kindle-cn-heading1` → `h4`
+- 目录页 `div.kindle-cn-toc-level` → `div.toc1`；`toc-level1` → `div.toc2`（styles.css 已定义）；`a.calibre3` → `<a>`
+- 正文 `p.calibre1|kindle-cn-para-2em-indent` → `bodytext`；`kindle-cn-para-no-indent(1)` → `bodytext-noindent`；
+  `p.kindle-cn-kai` → `bodytext` 内包 `span.kai`；`p.kindle-cn-signature(1)` → `p.right`
+- 诗句（连续 `p.kindle-cn-poem-left`）→ `<blockquote class="poem">` + 各段 `<p class="bodytext">`（段末多余 `<br/>` 去掉）
+- 尾注：ref `<a id="chN-back" href="file#chN"><sup class="calibre5">[N]</sup></a>` →
+  `<sup><a epub:type="noteref" href="#foot-N" id="back-N">[N]</a></sup>`；
+  注文 `<p class="fnote"><a id="chN" href="file#chN-back">[N]</a> 注文</p>` →
+  `<p class="fnote" id="foot-N"><a href="#back-N">[N]</a> 注文</p>`；
+  **编号沿用原书（本就是每文件 1..M 顺序）**；`href` 指别的文件时保留文件部分（跨文件注，如 `_split_000`↔`_split_001` 共享编号）
+  尾注前 `div.empty` + 20 个 U+2014 的段 → `<hr/>`（故 **footnotes 步骤必须在 ads 之前**，否则 `div.empty` 被先删）
+- 图片页 `div.kindle-cn-bodycontent-div-alone` → `<div class="chatu"><p class="image"><img …/></p></div>`
+- 行内图 `<img class="kindle-cn-inline-character|kindle-cn-inline-image">` → `<img src alt/>`（**保留**）；
+  若目录下存在 `rare_map.json`（`{"Image00003.jpg": "𠀀", …}`）则按表替换为实际字符并计数
+- `span.kindle-cn-bold` → `<b>`；`br.calibre4` → `<br/>`；`span.calibre8` 去 class（保留 `lang`）
+- `href` 里 `textNNNNN.html` → `textNNNNN.xhtml`；**文件 `.html` → `.xhtml`**（打包时同步 `content.opf`/`toc.ncx` 的 href/src）
+
+**处理顺序**：css → toc → headings → footnotes → poem → paras → figures → inline_imgs → misc → ads → body → ns → tidy
+
+**校验**：XML 良构；无残留（`calibre`/`kindle-cn`/`chatu_img`/`empty`/`gaiword`/`.html` 链接/`chN` id/内联 style）；
+id 唯一；**源 id 一个不丢**（TOC 锚点 `secNNN`、`calibre_pb_0` 等，比对源与成果）；ref↔注 配对（跨文件与源书悬空注只提示不判错）。
+
+**注意**：`text00014_split_000/_001` 是被拆成两半的同一章（ref 在 _000、310 条注在 _001），编号跨文件共享，
+不要当广告残片删；只有**整篇只剩空 body** 的 `_split_000` 才是广告残片。
+
 ## 人民邮电 / 得到（`p.content` 系）profile 约定（epub_clean_ptpress.py）
 
 源：人民邮电出版社授权「得到」电子版（`xml:lang="zh-hans"`），`../Styles/stylesheets.css`；
@@ -549,6 +589,7 @@ $sc8 = "$sk/epub_clean_duokan_biaoti.py" # profile H 多看原生·内文/标题
 $sc9 = "$sk/epub_clean_kobo.py"     # profile I Kobo 导出·多看式排版（koboSpan）
 $sc10= "$sk/epub_clean_indesign_calibre.py" # profile J InDesign→calibre 繁中重注本（_idParaDest/div.foot）
 $sc11= "$sk/epub_clean_zhangyue.py" # profile K 掌阅 ZHANGYUE（text-title-*/noteref_N，已语义化稿）
+$sc12= "$sk/epub_clean_kindle_cn.py" # profile L Kindle-cn 亚马逊中国（kindle-cn-*/chatu_img 广告）
 & $py -X utf8 $sc  analyze <dir> -o <tmp>/report.txt   # 体检（只读）
 & $py -X utf8 $sc  process <dir> --dry-run             # 试处理→临时目录
 & $py -X utf8 $sc  process <dir>                       # 正式处理（自动备份+校验）

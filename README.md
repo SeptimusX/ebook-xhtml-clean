@@ -1,9 +1,9 @@
 # ebook-xhtml-clean
 
 把各类来源的电子书章节 XHTML 清洗为统一的语义化格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
-An opencode skill / CLI for cleaning EPUB xhtml from eleven common Chinese e-book sources.
+An opencode skill / CLI for cleaning EPUB xhtml from twelve common Chinese e-book sources.
 
-## 支持的源格式（十一套 profile）
+## 支持的源格式（十二套 profile）
 
 | profile | 脚本 | 典型特征 |
 |---|---|---|
@@ -18,6 +18,7 @@ An opencode skill / CLI for cleaning EPUB xhtml from eleven common Chinese e-boo
 | Kobo 导出 · 多看式（`koboSpan`） | `scripts/epub_clean_kobo.py` | `style.kobostylehacks` + `../Styles/css.css`、`div#book-columns>div#book-inner`、每段文字被 `span.koboSpan[id=kobo.N.M]` 包裹、`h1.h2`(章)/`h1.h1`(后记)/`h2`(节)、`p.kh`(楷体引文)、`p.no.fs`(年表)、`div.hr`(题词)、`a.duokan-footnote`+`06.png`、`aside`+`ol.duokan-footnote-content` |
 | InDesign→calibre 繁中重注本（`_idParaDest`） | `scripts/epub_clean_indesign_calibre.py` | `body#story-N.calibre2` + `div.calibre3`、`h1[id=_idParaDest-N].calibre4>span.small`、`h5.calibre8`/`h6.h6_b`、`p.calibre5`/`p_`/`calibre11`、`p.end`/`end_k`、`p.kai_n`/`kai_nb`、`div.container`+`img.fit`+`p.caption`、`table.calibre9`、`img.pw`(生僻字图)、`div.foot`+`hr.calibre6`+`p.footnote`+`a.ref1`(章内注)、`a.calibre7`(跨文件引用注) |
 | 掌阅 ZHANGYUE（`text-title-*`，已语义化稿） | `scripts/epub_clean_zhangyue.py` | `h1.text-title-1-c/-r`、`div.zhangyue-c80>h2.text-title-2[id=sigil_toc_id_N]`、`h3.text-title-3`、`p.bodytext`(本已语义化)、`sup>a[href=#note_N][id=noteref_N]` + 文末 `pre>code` `[注释]`、`p.bodytext>span>a[id=note_N]`、`div.zhangyue-c>img.zhangyue-img`+`p.bodytext-no`+`p.img-note`、`span.fangsong`、`../Styles/Style0001.css`+`jianrong.css`、内联 style |
+| Kindle-cn 亚马逊中国（`kindle-cn-*`） | `scripts/epub_clean_kindle_cn.py` | `body.calibre`、`../stylesheet.css`+`../page_styles1.css`、`h1.kindle-cn-heading[id=calibre_pb_0]`、`h2.kindle-cn-heading2`(内嵌空锚 `a[id=sec001].calibre6`)、`h3.kindle-cn-heading3`、`p.calibre1`/`p.kindle-cn-para-2em-indent`/`-no-indent(1)`、`p.kindle-cn-poem-left`、`p.kindle-cn-signature(1)`、尾注 `a[id=chN-back][href=file#chN]>sup.calibre5` + `p.fnote>a[id=chN]`、`div.empty`+20×U+2014、`div.kindle-cn-toc-level(1)`、`div.kindle-cn-bodycontent-div-alone`、`img.kindle-cn-inline-character`、`div.chatu_img`+`gaiword.png` |
 
 先跑 `analyze` 判断属于哪一套，再选脚本。
 
