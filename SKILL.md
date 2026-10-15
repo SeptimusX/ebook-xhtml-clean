@@ -402,6 +402,7 @@ id 唯一、内链与跨文件锚点（`f.xhtml#id`）可解析、图片存在�
   **引文（blockquote）内去掉 `span.kai`**（源常按句切成多个 kai span，合并为纯文本）
 - 插图 `<div class="container"><div …><img class="fit" src/><p class="caption">…</p></div></div>` →
   `<div class="chatu"><p class="image"><img …/></p><p class="caption">…</p></div>`；**`p.caption` 内也去掉 `span.kai`**（保留 `span.bold`）
+- **`<p class="fnote">` 脚注内同样去掉 `span.kai`**（脚注正文不用楷体）
 - 生僻字内嵌图 `<img class="pw" src="image/aN.jpg"/>` → 实际字符（CONFIG `rare_img_map`，按书的索引罗马字判定）
 - `<div class="box">`（献词）/ `<div class="copyright">` → 解包；`table/tr/td` 去 class 保留
 - `span.small1` → `span.small`、`span.bold1` → `span.bold`；`italic`/`kai`/`bold` 保留

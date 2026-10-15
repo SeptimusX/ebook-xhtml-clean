@@ -66,8 +66,9 @@ def txt(s):
     return re.sub(r"\s+", "", re.sub(r"</?[^>]+>", "", s))
 
 def flat(s):
-    """保留内部空格与行内 span（英文脚注需要），去掉源 calibre 类"""
+    """保留内部空格与行内 span（英文脚注需要），去掉源 calibre 类与 span.kai（脚注内不用楷体）"""
     s = re.sub(r'\s+class="calibre[^"]*"', "", s)
+    s = re.sub(r'<span class="kai">(.*?)</span>', r'\1', s, flags=re.S)
     return re.sub(r"\s+", " ", s).strip()
 
 # ---------- 步骤 ----------
@@ -335,6 +336,10 @@ def verify_content(c, name, dirpath):
     for cap in re.finditer(r'<p class="caption">(.*?)</p>', c, re.S):
         if 'class="kai"' in cap.group(1):
             probs.append("图注 p.caption 内残留 span.kai")
+            break
+    for fn in re.finditer(r'<p class="fnote"[^>]*>(.*?)</p>', c, re.S):
+        if 'class="kai"' in fn.group(1):
+            probs.append("脚注 p.fnote 内残留 span.kai")
             break
     for h in re.finditer(r'<h1\b[^>]*>(.*?)</h1>', c, re.S):
         if 'class="subtitle"' in h.group(1) and '<br' not in h.group(1):
