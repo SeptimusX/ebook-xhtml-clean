@@ -391,12 +391,17 @@ id 唯一、内链与跨文件锚点（`f.xhtml#id`）可解析、图片存在�
 
 - css → `styles.css`（删 `../stylesheet.css` / `../page_styles.css`）；`<body>` 去 class（保留 id）
 - `<h1 id="_idParaDest-N" class="calibre4|h1_">…<span class="small">标签</span>　章名…</h1>` → `<h1 id>`
-  （`span.small` → `span.subtitle`，即标签行；后面 `　章名` 原样保留）
+  （`span.small` 是标签，如「推薦序 / 第一章」；源用 `　` 与标题连在同一行 → **直接去掉标签 span**，
+  只有 `h1` 内含 `<br/>` 真正分行时才保留 `<span class="subtitle">`）
 - `<h5 class="calibre8">节</h5>` → `<h3>`；`<h6 class="h6_b|h6_s">…</h6>` → `<h4>`；`<h4 class="calibre12">书名</h4>` → `<h4>`
 - 正文 `<p class="calibre5|p_|p_1|p_2|p_3|p_b|p_s|calibre11|text_tp">` → `<p class="bodytext">`
-- 署名 `<p class="end|end_k">` → `<p class="right">`；楷体引文 `<p class="kai_n|kai_nb">`（连续段）→ `<blockquote><p class="bodytext">`
+- 署名 `<p class="end|end_k">`：**紧跟在 `</h1>` 之后**（章首作者，如推薦序作者名+职务）→ `<p class="author">`
+  且**去掉内层 `span`**（`<span class="kai">姓名</span><span class="small1">（职务）</span>` → 纯文本）；
+  其余（`——`落款、序末署名）→ `<p class="right">`
+- 楷体引文 `<p class="kai_n|kai_nb">`（连续段）→ `<blockquote><p class="bodytext">`；
+  **引文（blockquote）内去掉 `span.kai`**（源常按句切成多个 kai span，合并为纯文本）
 - 插图 `<div class="container"><div …><img class="fit" src/><p class="caption">…</p></div></div>` →
-  `<div class="chatu"><p class="image"><img …/></p><p class="caption">…</p></div>`
+  `<div class="chatu"><p class="image"><img …/></p><p class="caption">…</p></div>`；**`p.caption` 内也去掉 `span.kai`**（保留 `span.bold`）
 - 生僻字内嵌图 `<img class="pw" src="image/aN.jpg"/>` → 实际字符（CONFIG `rare_img_map`，按书的索引罗马字判定）
 - `<div class="box">`（献词）/ `<div class="copyright">` → 解包；`table/tr/td` 去 class 保留
 - `span.small1` → `span.small`、`span.bold1` → `span.bold`；`italic`/`kai`/`bold` 保留

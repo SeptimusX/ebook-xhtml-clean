@@ -110,7 +110,8 @@ def step_figures(c, name, ctx):
         out = '<div class="chatu">\n<p class="image"><img src="%s" alt="%s"/></p>' % (
             src.group(1) if src else "", alt.group(1) if alt else "")
         if m.group(2):
-            out += "\n" + m.group(2).strip()
+            cap = re.sub(r'<span class="kai">(.*?)</span>', r'\1', m.group(2).strip(), flags=re.S)
+            out += "\n" + cap
         return out + "\n</div>"
     return pat.sub(repl, c)
 
@@ -165,16 +166,22 @@ def step_append(c, name, ctx):
     block = "<hr/>\n" + "\n".join(ctx["fnotes"]) + "\n"
     return c.replace("</body>", block + "</body>")
 
+def h1_inner(inner):
+    # <span class="small"> 是「标签」（推薦序 / 第一章 …）。源用 　 把它与标题连在同一行，
+    # 因此直接去掉标签 span（保留 　）；只有真的分行（<br/>）时才保留 <span class="subtitle">
+    if re.search(r'<br\s*/?>', inner):
+        return re.sub(r'<span class="small">(.*?)</span>', r'<span class="subtitle">\1</span>', inner, flags=re.S)
+    return re.sub(r'<span class="small">(.*?)</span>', r'\1', inner, flags=re.S)
+
 def step_headings(c, name, ctx):
     def mkh(tag):
         def repl(m):
             ctx["heads"] += 1
-            inner = re.sub(r'<span class="small">(.*?)</span>', r'<span class="subtitle">\1</span>', m.group(2), flags=re.S)
-            return "<%s%s>%s</%s>" % (tag, (' id="%s"' % m.group(1)) if m.group(1) else "", inner.strip(), tag)
+            return "<%s%s>%s</%s>" % (tag, (' id="%s"' % m.group(1)) if m.group(1) else "", h1_inner(m.group(2)).strip(), tag)
         return repl
     c = re.sub(r'<h1\b[^>]*\bid="([^"]*)"[^>]*class="(?:calibre4|h1_)"[^>]*>(.*?)</h1>', mkh("h1"), c, flags=re.S)
     c = re.sub(r'<h1\b(?![^>]*\bid=)([^>]*)class="(?:calibre4|h1_)"([^>]*)>(.*?)</h1>',
-               lambda m: "<h1>%s</h1>" % m.group(3).strip(), c, flags=re.S)
+               lambda m: "<h1>%s</h1>" % h1_inner(m.group(3)).strip(), c, flags=re.S)
     c = re.sub(r'<h5\b[^>]*class="calibre8"[^>]*>(.*?)</h5>', lambda m: "<h3>%s</h3>" % m.group(1).strip(), c, flags=re.S)
     c = re.sub(r'<h6\b[^>]*class="h6_[bs]"[^>]*>(.*?)</h6>', lambda m: "<h4>%s</h4>" % m.group(1).strip(), c, flags=re.S)
     c = re.sub(r'<h4\b[^>]*class="calibre12"[^>]*>(.*?)</h4>', lambda m: "<h4>%s</h4>" % m.group(1).strip(), c, flags=re.S)
@@ -195,7 +202,10 @@ def step_quotes(c, name, ctx):
     groups.append(cur)
     for g in reversed(groups):
         start, end = g[0].start(), g[-1].end()
-        body = "\n".join('<p class="bodytext">%s</p>' % x.group(1).strip() for x in g)
+        def qtext(x):
+            t = re.sub(r'<span class="kai">(.*?)</span>', r'\1', x.group(1), flags=re.S)  # 引文内不用 span.kai
+            return '<p class="bodytext">%s</p>' % t.strip()
+        body = "\n".join(qtext(x) for x in g)
         c = c[:start] + "<blockquote>\n" + body + "\n</blockquote>" + c[end:]
         ctx["quotes"] += len(g)
     return c
@@ -203,9 +213,17 @@ def step_quotes(c, name, ctx):
 def step_paras(c, name, ctx):
     # 空段（仅全角空格）
     c = re.sub(r'<p class="(?:%s)">[\u3000\s]*</p>\n?' % "|".join(CONFIG["bodytext_classes"]), "", c)
-    # 署名
+    # 署名 / 章首作者：紧跟在 </h1> 之后的署名段 = 该章作者 → <p class="author">（去内层 span）；
+    # 其余（——落款、序末署名等）→ <p class="right">
     rc = "|".join(CONFIG["right_classes"])
-    c = re.sub(r'<p class="(?:%s)">(.*?)</p>' % rc, lambda m: '<p class="right">%s</p>' % m.group(1).strip(), c, flags=re.S)
+    def sig(m):
+        inner = m.group(1).strip()
+        if c[:m.start()].rstrip().endswith("</h1>"):
+            ctx["author"] += 1
+            return '<p class="author">%s</p>' % re.sub(r"</?span[^>]*>", "", inner)
+        ctx["right"] += 1
+        return '<p class="right">%s</p>' % inner
+    c = re.sub(r'<p class="(?:%s)">(.*?)</p>' % rc, sig, c, flags=re.S)
     # 正文
     bc = "|".join(CONFIG["bodytext_classes"])
     c = re.sub(r'<p class="(?:%s)">(.*?)</p>' % bc, lambda m: '<p class="bodytext">%s</p>' % m.group(1).strip(), c, flags=re.S)
@@ -306,6 +324,18 @@ def verify_content(c, name, dirpath):
         probs.append("残留源 class")
     if '<div class="foot"' in c or '<hr class="calibre6"' in c:
         probs.append("残留脚注结构")
+    for bq in re.finditer(r'<blockquote>(.*?)</blockquote>', c, re.S):
+        if 'class="kai"' in bq.group(1):
+            probs.append("引文 blockquote 内残留 span.kai")
+            break
+    for cap in re.finditer(r'<p class="caption">(.*?)</p>', c, re.S):
+        if 'class="kai"' in cap.group(1):
+            probs.append("图注 p.caption 内残留 span.kai")
+            break
+    for h in re.finditer(r'<h1\b[^>]*>(.*?)</h1>', c, re.S):
+        if 'class="subtitle"' in h.group(1) and '<br' not in h.group(1):
+            probs.append("h1 未分行却保留 span.subtitle")
+            break
     if re.search(r'class="pw"', c):
         probs.append("残留生僻字图")
     if re.search(r'href="[^"]*' + CONFIG["drop_css_re"] + r'"', c):
@@ -360,7 +390,7 @@ def process(dirpath, dry=False):
         if not dry:
             shutil.copy2(fp, os.path.join(base, name))
         ctx = dict.fromkeys(["css", "body", "rare", "chatu", "heads", "quotes", "unwrap",
-                             "blank", "unref"], 0)
+                             "blank", "unref", "author", "right"], 0)
         ctx["fnotes"] = []
         for s, fn in STEPS:
             c = fn(c, name, ctx)
