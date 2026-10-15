@@ -412,7 +412,8 @@ id 唯一、内链与跨文件锚点（`f.xhtml#id`）可解析、图片存在�
   注在「注釋」章 `<p class="footnote_a|_b|_c"><a id="foot-aN" href="story-*#back-aN" class="calibre7">N</a> 文献…`）
   → `<sup><a epub:type="noteref" href="story-28*.xhtml#foot-aN" id="back-aN">[N]</a></sup>`，注就地转 `<p class="fnote">`，
   **编号沿用原书数字、不重排**
-- 空段 `<p class="…">　</p>`（仅全角空格）→ 删除
+- 空行段 `<p class="calibre5|…">　</p>`（仅全角空格）→ **保留**为 `<p class="bodytext"><br/></p>`
+  （源书的空行是排版意图：文末落款与正文间、落款与附注/附筆间、推荐语署名之间等；**不要删**）
 - **固定版式页**（`<meta name="viewport">` + 内联 SVG，如书名页/插图页）**原样保留**（只去 calibre class）
 
 **处理顺序**：css → body → rare（生僻字）→ figures → footnotes → headings → quotes → paras → table → spans

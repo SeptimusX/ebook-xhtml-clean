@@ -211,8 +211,12 @@ def step_quotes(c, name, ctx):
     return c
 
 def step_paras(c, name, ctx):
-    # 空段（仅全角空格）
-    c = re.sub(r'<p class="(?:%s)">[\u3000\s]*</p>\n?' % "|".join(CONFIG["bodytext_classes"]), "", c)
+    # 空行段（仅全角空格）→ <p class="bodytext"><br/></p>（保留源书空行：落款/署名前后、推荐语之间等）
+    bc = "|".join(CONFIG["bodytext_classes"])
+    def spacer(m):
+        ctx["spacer"] += 1
+        return '<p class="bodytext"><br/></p>'
+    c = re.sub(r'<p class="(?:%s)">[\u3000\s]*</p>' % bc, spacer, c)
     # 署名 / 章首作者：紧跟在 </h1> 之后的署名段 = 该章作者 → <p class="author">（去内层 span）；
     # 其余（——落款、序末署名等）→ <p class="right">
     rc = "|".join(CONFIG["right_classes"])
@@ -390,7 +394,7 @@ def process(dirpath, dry=False):
         if not dry:
             shutil.copy2(fp, os.path.join(base, name))
         ctx = dict.fromkeys(["css", "body", "rare", "chatu", "heads", "quotes", "unwrap",
-                             "blank", "unref", "author", "right"], 0)
+                             "blank", "unref", "author", "right", "spacer"], 0)
         ctx["fnotes"] = []
         for s, fn in STEPS:
             c = fn(c, name, ctx)
