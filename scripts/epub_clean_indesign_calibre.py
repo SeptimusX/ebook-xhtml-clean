@@ -71,9 +71,23 @@ def flat(s):
     s = re.sub(r'<span class="kai">(.*?)</span>', r'\1', s, flags=re.S)
     return re.sub(r"\s+", " ", s).strip()
 
-def marker(rid):
-    """跨文件引用注的标记：取 id 尾部（back-c43 / foot-c43 → 'c43'），短且与锚点一致"""
-    return re.sub(r"^(?:back|foot)-", "", rid or "")
+_ROMAN = [(1000, "m"), (900, "cm"), (500, "d"), (400, "cd"), (100, "c"), (90, "xc"),
+          (50, "l"), (40, "xl"), (10, "x"), (9, "ix"), (5, "v"), (4, "iv"), (1, "i")]
+
+def roman(n):
+    """1..3999 → 小写罗马数字（**文件内**脚注用它编号：每文件只有 1..几个，标记很短）"""
+    n = int(n)
+    out = ""
+    for v, s in _ROMAN:
+        while n >= v:
+            out += s
+            n -= v
+    return out or "i"
+
+def anum(rid):
+    """取 id 尾部数字（back-c43 / foot-c43 → '43'）：**跨文件**引用注用它作阿拉伯编号"""
+    m = re.search(r"(\d+)$", rid or "")
+    return m.group(1) if m else "1"
 
 # ---------- 步骤 ----------
 
@@ -136,30 +150,30 @@ def step_footnotes(c, name, ctx):
     def rr(m):
         rid, tgt, num = m.group(1), m.group(2), m.group(4)
         nid = m.group(3)
-        if nid in own:                       # 章内注：重排
+        if nid in own:                       # 文件内注：每文件从 1 重排，用罗马数字
             if rid not in seq:
                 order.append(nid)
                 seq[rid] = len(order)
             k = seq[rid]
-            return '<sup><a epub:type="noteref" href="#%s" id="%s">[%d]</a></sup>' % (nid, rid, k)
-        # 跨文件引用注：用「系列字母+序号」标记（back-c43 → [c43]），短且与章内阿拉伯编号不撞
+            return '<sup><a epub:type="noteref" href="#%s" id="%s">[%s]</a></sup>' % (nid, rid, roman(k))
+        # 跨文件引用注（链到书末「注釋」章）：用阿拉伯数字（该系列原序号，back-c43 → [43]）
         return '<sup><a epub:type="noteref" href="%s#%s" id="%s">[%s]</a></sup>' % (
-            m.group(2), nid, rid, marker(rid))
+            m.group(2), nid, rid, anum(rid))
     c = ref.sub(rr, c)
     if own:
         # 章内尾注按 order 重排；同文件里没有 ref 的（罕见）附在后面
         ordered = [nid for nid in order] + [nid for nid in own if nid not in order]
         lines = []
         for k, nid in enumerate(ordered, 1):
-            lines.append('<p class="fnote" id="%s"><a href="#%s">[%d]</a> %s</p>'
-                         % (nid, nid.replace('foot-', 'back-'), k, own[nid]))
+            lines.append('<p class="fnote" id="%s"><a href="#%s">[%s]</a> %s</p>'
+                         % (nid, nid.replace('foot-', 'back-'), roman(k), own[nid]))
         ctx["fnotes"] = lines
         if not order and len(own) != len(ordered):
             ctx["unref"] += len(own) - len(order)
-    # 注释章里的跨文件注（foot-aN/jN 等）就地转 fnote，标记同步为「系列字母+序号」
+    # 注释章里的跨文件注（foot-aN/jN 等）就地转 fnote，标记同步为阿拉伯数字
     c = re.sub(r'<p class="footnote[^"]*">\s*<a id="(foot-[^"]*)" href="([^"]*)#([^"]*)" class="[^"]*">\[?(\d+)\]?</a>\s*(.*?)</p>',
                lambda m: '<p class="fnote" id="%s"><a href="%s#%s">[%s]</a> %s</p>'
-               % (m.group(1), m.group(2), m.group(3), marker(m.group(1)), flat(m.group(5))), c, flags=re.S)
+               % (m.group(1), m.group(2), m.group(3), anum(m.group(1)), flat(m.group(5))), c, flags=re.S)
     return c
 
 def step_append(c, name, ctx):
