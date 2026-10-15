@@ -209,12 +209,14 @@ def step_inline_imgs(c, name, ctx):
         src = re.search(r'src="([^"]*)"', attrs)
         alt = re.search(r'alt="([^"]*)"', attrs)
         s = src.group(1) if src else ""
+        if not s.startswith("Image"):
+            return m.group(0)          # 非本书图片（如 gaiword 广告图）不动，交给 ads
         if s in rare:
             ctx["rare_hit"] += 1
             return rare[s]
         ctx["imgs"] += 1
         return '<img src="%s" alt="%s"/>' % (s, alt.group(1) if alt else "")
-    return re.sub(r'<img\b([^>]*class="[^"]*kindle-cn-inline-(?:character|image)[^"]*"[^>]*)/>', repl, c)
+    return re.sub(r'<img\b([^>]*?)/>', repl, c)
 
 def step_misc(c, name, ctx):
     c = re.sub(r'<span class="kindle-cn-bold">(.*?)</span>', r'<b>\1</b>', c, flags=re.S)
