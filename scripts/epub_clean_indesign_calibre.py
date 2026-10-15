@@ -71,28 +71,9 @@ def flat(s):
     s = re.sub(r'<span class="kai">(.*?)</span>', r'\1', s, flags=re.S)
     return re.sub(r"\s+", " ", s).strip()
 
-_ROMAN = [(1000, "m"), (900, "cm"), (500, "d"), (400, "cd"), (100, "c"), (90, "xc"),
-          (50, "l"), (40, "xl"), (10, "x"), (9, "ix"), (5, "v"), (4, "iv"), (1, "i")]
-
-def roman(n):
-    """1..3999 → 小写罗马数字（跨文件引用注用它编号，避免与章内阿拉伯编号撞号）"""
-    n = int(n)
-    out = ""
-    for v, s in _ROMAN:
-        while n >= v:
-            out += s
-            n -= v
-    return out or "i"
-
-def rnum(rid, fallback):
-    """从 id 尾部取编号（back-a15 / foot-c43 → 15 / 43），取不到则用正文数字"""
-    m = re.search(r"(\d+)$", rid or "")
-    if m:
-        return int(m.group(1))
-    try:
-        return int(fallback)
-    except (TypeError, ValueError):
-        return 1
+def marker(rid):
+    """跨文件引用注的标记：取 id 尾部（back-c43 / foot-c43 → 'c43'），短且与锚点一致"""
+    return re.sub(r"^(?:back|foot)-", "", rid or "")
 
 # ---------- 步骤 ----------
 
@@ -161,9 +142,9 @@ def step_footnotes(c, name, ctx):
                 seq[rid] = len(order)
             k = seq[rid]
             return '<sup><a epub:type="noteref" href="#%s" id="%s">[%d]</a></sup>' % (nid, rid, k)
-        # 跨文件引用注：编号改用罗马数字（避免与章内阿拉伯编号撞号），保留原 href
+        # 跨文件引用注：用「系列字母+序号」标记（back-c43 → [c43]），短且与章内阿拉伯编号不撞
         return '<sup><a epub:type="noteref" href="%s#%s" id="%s">[%s]</a></sup>' % (
-            m.group(2), nid, rid, roman(rnum(rid, num)))
+            m.group(2), nid, rid, marker(rid))
     c = ref.sub(rr, c)
     if own:
         # 章内尾注按 order 重排；同文件里没有 ref 的（罕见）附在后面
@@ -175,10 +156,10 @@ def step_footnotes(c, name, ctx):
         ctx["fnotes"] = lines
         if not order and len(own) != len(ordered):
             ctx["unref"] += len(own) - len(order)
-    # 注释章里的跨文件注（foot-aN/jN 等）就地转 fnote，编号同步用罗马数字
+    # 注释章里的跨文件注（foot-aN/jN 等）就地转 fnote，标记同步为「系列字母+序号」
     c = re.sub(r'<p class="footnote[^"]*">\s*<a id="(foot-[^"]*)" href="([^"]*)#([^"]*)" class="[^"]*">\[?(\d+)\]?</a>\s*(.*?)</p>',
                lambda m: '<p class="fnote" id="%s"><a href="%s#%s">[%s]</a> %s</p>'
-               % (m.group(1), m.group(2), m.group(3), roman(rnum(m.group(1), m.group(4))), flat(m.group(5))), c, flags=re.S)
+               % (m.group(1), m.group(2), m.group(3), marker(m.group(1)), flat(m.group(5))), c, flags=re.S)
     return c
 
 def step_append(c, name, ctx):
@@ -268,6 +249,14 @@ def step_spans(c, name, ctx):
     c = re.sub(r'<span class="bold1">', '<span class="bold">', c)
     return c
 
+def step_zerocircle(c, name, ctx):
+    # ○ (U+25CB) → 〇 (U+3007)：年份/数量里的「零」用正字
+    n = c.count("\u25cb")
+    if n:
+        ctx["zerocircle"] += n
+        c = c.replace("\u25cb", "\u3007")
+    return c
+
 def step_unwrap_extra(c, name, ctx):
     for cls in ("box", "copyright"):
         pat = re.compile(r'<div\b[^>]*\bclass="[^"]*\b%s\b[^"]*"[^>]*>' % cls)
@@ -335,7 +324,8 @@ STEPS = [("css", step_css), ("body", step_body), ("rare", step_rare), ("figures"
          ("footnotes", step_footnotes), ("headings", step_headings), ("quotes", step_quotes),
          ("paras", step_paras), ("table", step_table), ("spans", step_spans),
          ("unwrap_extra", step_unwrap_extra), ("unwrap", step_unwrap), ("residual", step_residual),
-         ("tidy", step_tidy), ("append", step_append)]
+         ("tidy", step_tidy), ("append", step_append),
+         ("zerocircle", step_zerocircle)]   # 放最后：脚注文字是 append 时才插入的
 
 # ---------- 校验 ----------
 
@@ -367,6 +357,8 @@ def verify_content(c, name, dirpath):
             break
     if re.search(r'class="pw"', c):
         probs.append("残留生僻字图")
+    if "\u25cb" in c:
+        probs.append("残留 U+25CB ○（应为 〇）")
     if re.search(r'href="[^"]*' + CONFIG["drop_css_re"] + r'"', c):
         probs.append("残留旧 css 链接")
     if ('href="%s"' % CONFIG["css_href"]) not in c:
@@ -419,7 +411,7 @@ def process(dirpath, dry=False):
         if not dry:
             shutil.copy2(fp, os.path.join(base, name))
         ctx = dict.fromkeys(["css", "body", "rare", "chatu", "heads", "quotes", "unwrap",
-                             "blank", "unref", "author", "right", "spacer"], 0)
+                             "blank", "unref", "author", "right", "spacer", "zerocircle"], 0)
         ctx["fnotes"] = []
         for s, fn in STEPS:
             c = fn(c, name, ctx)
