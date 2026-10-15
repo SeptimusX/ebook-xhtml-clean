@@ -1,9 +1,9 @@
 # ebook-xhtml-clean
 
 把各类来源的电子书章节 XHTML 清洗为统一的语义化格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
-An opencode skill / CLI for cleaning EPUB xhtml from nine common Chinese e-book sources.
+An opencode skill / CLI for cleaning EPUB xhtml from ten common Chinese e-book sources.
 
-## 支持的源格式（九套 profile）
+## 支持的源格式（十套 profile）
 
 | profile | 脚本 | 典型特征 |
 |---|---|---|
@@ -16,6 +16,7 @@ An opencode skill / CLI for cleaning EPUB xhtml from nine common Chinese e-book 
 | 人民邮电 / 得到（`p.content` 系） | `scripts/epub_clean_ptpress.py` | `h1.firstTitle#sigil_toc_id_N`、`p.content` / `content_100..110`、`div.pic`+`imgtitle`、`span.kt_104`、`span.super[id=refN]`+`p.noindent[id=annotN]` |
 | 多看原生 · 内文/标题（`neiwen`/`biaoti`） | `scripts/epub_clean_duokan_biaoti.py` | `p>span.neiwen`（变体 `neiwen2/2_1/3/4/5/6`）、`h1>span.biaoti1`+`biaoti2`、`h2>span.biaoti3`/`biaoti5`、`div.duokan-image-single`+`maintitle`/`subtitle`、`a.duokan-footnote`+`note.png`、`ol.duokan-footnote-content`、`hr.xian`、`p.whitespace` |
 | Kobo 导出 · 多看式（`koboSpan`） | `scripts/epub_clean_kobo.py` | `style.kobostylehacks` + `../Styles/css.css`、`div#book-columns>div#book-inner`、每段文字被 `span.koboSpan[id=kobo.N.M]` 包裹、`h1.h2`(章)/`h1.h1`(后记)/`h2`(节)、`p.kh`(楷体引文)、`p.no.fs`(年表)、`div.hr`(题词)、`a.duokan-footnote`+`06.png`、`aside`+`ol.duokan-footnote-content` |
+| InDesign→calibre 繁中重注本（`_idParaDest`） | `scripts/epub_clean_indesign_calibre.py` | `body#story-N.calibre2` + `div.calibre3`、`h1[id=_idParaDest-N].calibre4>span.small`、`h5.calibre8`/`h6.h6_b`、`p.calibre5`/`p_`/`calibre11`、`p.end`/`end_k`、`p.kai_n`/`kai_nb`、`div.container`+`img.fit`+`p.caption`、`table.calibre9`、`img.pw`(生僻字图)、`div.foot`+`hr.calibre6`+`p.footnote`+`a.ref1`(章内注)、`a.calibre7`(跨文件引用注) |
 
 先跑 `analyze` 判断属于哪一套，再选脚本。
 
