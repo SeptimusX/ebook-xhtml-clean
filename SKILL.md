@@ -411,8 +411,8 @@ id 唯一、内链与跨文件锚点（`f.xhtml#id`）可解析、图片存在�
   → 章末 `<hr/>` + `<p class="fnote" id="foot-NNN"><a href="#back-NNN">[K]</a> 注文</p>`，**每文件从 [1] 重排**、双向回链
 - **跨文件引用注**（ref 在正文各章 `<a id="back-aN" href="story-28*.xhtml#foot-aN" class="ref1">N</a>`，
   注在「注釋」章 `<p class="footnote_a|_b|_c"><a id="foot-aN" href="story-*#back-aN" class="calibre7">N</a> 文献…`）
-  → `<sup><a epub:type="noteref" href="story-28*.xhtml#foot-aN" id="back-aN">[N]</a></sup>`，注就地转 `<p class="fnote">`，
-  **编号沿用原书数字、不重排**
+  → `<sup><a epub:type="noteref" href="story-28*.xhtml#foot-aN" id="back-aN">[vii]</a></sup>`，注就地转 `<p class="fnote">`，
+  **编号改用「小写罗马数字」（`roman()`，取自 id 尾部数字），避免与章内阿拉伯编号撞号**
 - 空行段 `<p class="calibre5|…">　</p>`（仅全角空格）→ **保留**为 `<p class="bodytext"><br/></p>`
   （源书的空行是排版意图：文末落款与正文间、落款与附注/附筆间、推荐语署名之间等；**不要删**）
 - **固定版式页**（`<meta name="viewport">` + 内联 SVG，如书名页/插图页）**原样保留**（只去 calibre class）
@@ -421,9 +421,9 @@ id 唯一、内链与跨文件锚点（`f.xhtml#id`）可解析、图片存在�
 → unwrap_extra（box/copyright）→ unwrap（calibre3）→ residual（去残留 calibre class）→ tidy → append（章末尾注）
 
 **注意**：脚注文字必须**保留内部空格**（英文文献脚注需要）——不要用「去所有空白」的 txt()，
-用 flat()（折叠空白+去首尾，并剥掉源 calibre class）。**章内重排 + 跨文件保留编号**会产生编号撞号
-（如某章章内注 [3] 与跨文件引用注 [3] 并存），这是该策略的固有结果，如需要应改为「全章统一重排」或
-「跨文件 ref 用不带方括号的上标数字」。
+用 flat()（折叠空白+去首尾，并剥掉源 calibre class）。**编号方案**：章内注每文件从 `[1]` 重排（阿拉伯），
+跨文件引用注用**小写罗马数字**（`[i]`…`[cxv]`，由其 id 尾部数字转来，注释章里的对应注同步）——
+两者采用不同数字体系，故即使都从 1 开始也不会撞号。
 
 ## 人民邮电 / 得到（`p.content` 系）profile 约定（epub_clean_ptpress.py）
 
