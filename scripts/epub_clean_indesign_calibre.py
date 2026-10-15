@@ -233,6 +233,10 @@ def step_paras(c, name, ctx):
         ctx["spacer"] += 1
         return '<p class="bodytext"><br/></p>'
     c = re.sub(r'<p class="(?:%s)">[\u3000\s]*</p>' % bc, spacer, c)
+    # 连续空行段折叠为一个（源书偶有两连空行，如落款与附筆之间）
+    c, n = re.subn(r'(?:<p class="bodytext"><br/></p>\s*){2,}',
+                   '<p class="bodytext"><br/></p>\n', c)
+    ctx["spacer_merged"] += n
     # 署名 / 章首作者：紧跟在 </h1> 之后的署名段 = 该章作者 → <p class="author">（去内层 span）；
     # 其余（——落款、序末署名等）→ <p class="right">
     rc = "|".join(CONFIG["right_classes"])
@@ -373,6 +377,8 @@ def verify_content(c, name, dirpath):
         probs.append("残留生僻字图")
     if "\u25cb" in c:
         probs.append("残留 U+25CB ○（应为 〇）")
+    if re.search(r'<p class="bodytext"><br/></p>(?:\s*<p class="bodytext"><br/></p>)+', c):
+        probs.append("存在连续空行段（应折叠为一个）")
     if re.search(r'href="[^"]*' + CONFIG["drop_css_re"] + r'"', c):
         probs.append("残留旧 css 链接")
     if ('href="%s"' % CONFIG["css_href"]) not in c:
@@ -425,7 +431,8 @@ def process(dirpath, dry=False):
         if not dry:
             shutil.copy2(fp, os.path.join(base, name))
         ctx = dict.fromkeys(["css", "body", "rare", "chatu", "heads", "quotes", "unwrap",
-                             "blank", "unref", "author", "right", "spacer", "zerocircle"], 0)
+                             "blank", "unref", "author", "right", "spacer", "spacer_merged",
+                             "zerocircle"], 0)
         ctx["fnotes"] = []
         for s, fn in STEPS:
             c = fn(c, name, ctx)
