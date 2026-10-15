@@ -1,6 +1,6 @@
 ---
 name: ebook-xhtml-clean
-description: 电子书 EPUB xhtml 清洗流水线（十套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept、人民邮电/得到 p.content 系、多看原生内文/标题 neiwen/biaoti、Kobo 导出·多看式排版 koboSpan/book-columns、InDesign→calibre 繁中重注本 _idParaDest/div.foot）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』、『得到/人邮导出清理』、『Kobo 导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1、firstTitle、kt_104、annot、neiwen、biaoti、duokan-image-single、xian、koboSpan、book-columns、kobostylehacks、_idParaDest、div.foot、ref1 时使用。
+description: 电子书 EPUB xhtml 清洗流水线（十一套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept、人民邮电/得到 p.content 系、多看原生内文/标题 neiwen/biaoti、Kobo 导出·多看式排版 koboSpan/book-columns、InDesign→calibre 繁中重注本 _idParaDest/div.foot、掌阅 ZHANGYUE 已语义化稿 text-title-*/noteref_N）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG 生僻字图替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』、『得到/人邮导出清理』、『Kobo 导出清理』、『掌阅导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1、firstTitle、kt_104、annot、neiwen、biaoti、duokan-image-single、xian、koboSpan、book-columns、kobostylehacks、_idParaDest、div.foot、ref1、text-title-1-c、zhangyue-c80、sigil_toc_id、noteref_N 时使用。
 ---
 
 # EPUB xhtml 清洗流水线
@@ -8,7 +8,7 @@ description: 电子书 EPUB xhtml 清洗流水线（十套 profile：得到/中�
 把 EPUB 的 xhtml 转换为标准格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
 目标目录通常是书籍解包后的 `<项目>/xhtml` 或 `<项目>/EPUB/xhtml`（同目录应已有 `styles.css`）。
 
-## 十套 profile（先 analyze 判断，再选脚本）
+## 十一套 profile（先 analyze 判断，再选脚本）
 
 | 源格式 | 脚本 | 特征 |
 |---|---|---|
@@ -22,11 +22,12 @@ description: 电子书 EPUB xhtml 清洗流水线（十套 profile：得到/中�
 | 多看原生·内文/标题（`neiwen`/`biaoti`） | `scripts/epub_clean_duokan_biaoti.py` | `<p><span class="neiwen">`（变体 `neiwen2/2_1/3/4/5/6`）、`<h1><span class="biaoti1">…<br/><span class="biaoti2">`、`<h2><span class="biaoti3">`/`biaoti5`、`<div class="duokan-image-single">` 插图（`duokan-image-maintitle/subtitle`）、`<a class="duokan-footnote" href="#foN" id="forefN"><img src="../images/note.png"/></a>`、文末 `<ol class="duokan-footnote-content">`、`<hr class="xian"/>`、`<p class="whitespace">&#160;</p>` |
 | Kobo 导出·多看式排版（`koboSpan`） | `scripts/epub_clean_kobo.py` | `<style class="kobostylehacks">` + `../Styles/css.css`、`<div id="book-columns"><div id="book-inner">`、**每段文字被 `<span class="koboSpan" id="kobo.N.M">` 逐句包裹**、`<h1 class="h2">章名</h1>` / `<h1 class="h1">后记</h1>` / `<h2>一</h2>`、`<p class="kh">` 楷体引文、`<p class="no fs"><b>年份</b></p>`、`<div class="hr">` 题词、`<a class="duokan-footnote" …><img src="../Images/06.png"/></a>` + `<aside><ol class="duokan-footnote-content">` |
 | InDesign→calibre 繁中重注本（`_idParaDest`） | `scripts/epub_clean_indesign_calibre.py` | `<body id="story-N" class="calibre2">`、`<div class="calibre3">` 包裹、`<h1 id="_idParaDest-N" class="calibre4"><span class="small">标签</span>　章名</h1>`、`<h5 class="calibre8">`、`<h6 class="h6_b/h6_s">`、正文 `<p class="calibre5/p_/p_b/p_s/calibre11/text_tp">`、`<p class="end/end_k">`、`<p class="kai_n/kai_nb">`、`<div class="container"><img class="fit"/><p class="caption">`、`<table class="calibre9">`、生僻字图 `<img class="pw" src="image/a1.jpg"/>`（a1=燠 a2=賴）、章内脚注 `<div class="foot"><hr class="calibre6"/><p class="footnote"><a id="foot-NNN" href="#back-NNN" class="green">[N]</a>` + 正文 ref `<a id="back-NNN" href="story-N.xhtml#foot-NNN" class="ref1">N</a>`、跨文件引用注 ref `<a id="back-aN" href="story-28.xhtml#foot-aN" class="ref1">` / 注 `<p class="footnote_a/b/c"><a id="foot-aN" href="#back-aN" class="calibre7">N</a>` |
+| 掌阅 ZHANGYUE（`text-title-*`，已语义化稿） | `scripts/epub_clean_zhangyue.py` | `<h1 class="text-title-1-c/text-title-1-r">`、`<div class="zhangyue-c80"><h2 class="text-title-2" style="padding-left:3.5em;text-indent:-3.5em" id="sigil_toc_id_N">`、`<h3 class="text-title-3" id="sigil_toc_id_N">`、正文 `<p class="bodytext">`（本已语义化）、文件内尾注 `<sup class=""><a href="#note_N" id="noteref_N">N</a></sup>` + 文末 `<pre><code><b>[注释]</b></code></pre>` 与 `<p class="bodytext"><span class=""><a href="#noteref_N" id="note_N"> N</a></span>`、图 `<div class="zhangyue-c"><img class="zhangyue-img"/><p class="bodytext-no">图题</p><p class="img-note">图注</p><hr/>`、`span.fangsong`、`../Styles/Style0001.css`+`jianrong.css`、内联 style |
 
 **注意**：KADOKAWA 书几乎没有语义标签，需**先人工做阶段一语义化重排**（规则见下），脚本只做阶段二
 （全角→半角 + 注释编号方括号化）。
 
-十套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
+十一套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
 所有脚本同时收录 `*.xhtml` 与 `*.html`（部分书目标目录用 `.html` 扩展名）。
 
 ## 环境要点
@@ -429,6 +430,39 @@ id 唯一、内链与跨文件锚点（`f.xhtml#id`）可解析、图片存在�
 **跨文件**引用注（链到书末「注釋」章）用**阿拉伯数字**（`[43]`，该系列原序号；每文件只引用一个系列）。
 不要用带圈数字（Unicode 只到 ㊿=50，本书 16 个系列有 11 个超过 50）。
 
+## 掌阅 ZHANGYUE profile 约定（epub_clean_zhangyue.py）
+
+源：掌阅（ZHANGYUE）导出的书稿，**已经相当语义化**（正文本就是 `p.bodytext`），脚注经 SigilFootnoteUltimate
+插件处理（`noteref_N`/`note_N`）。结构：`Text/*.xhtml` + `Text/styles.css`（规范版）+
+`Styles/Style0001.css`（`@font-face` 見容 cs/仿宋 fs）+ `Styles/jianrong.css`（掌阅排版）。
+
+映射（统一到同目录 `styles.css`）：
+
+- css 链 → `styles.css`（删 `../Styles/Style0001.css`、`jianrong.css`）
+- `<h1 class="text-title-1-c|text-title-1-r">` → `<h1>`；`<div class="zhangyue-c80">` **解包**（可同名嵌套，深度计数）；
+  `<h2 class="text-title-2" … id="sigil_toc_id_N">` → `<h2 id>`；`<h3 class="text-title-3" id="sigil_toc_id_N">` → `<h3 id>`
+  ——**属性顺序不定，`id` 必须原样保留**（`toc.ncx` 按 `#sigil_toc_id_N` 跳转）
+- 正文 `<p class="bodytext">` 保持；`<span class="fangsong">` → `<span class="kai">`
+- `<br/>*` + `<pre><code><b>[注释]</b></code></pre>` → `<hr/>` + `<h2>注释</h2>`；
+  `<pre><code>尾注说明：</code></pre>` → `<p class="sprt">`
+- 尾注 ref `<sup class=""><a href="#note_N" id="noteref_N">N</a></sup>` →
+  `<sup><a epub:type="noteref" href="#foot-K" id="back-K">[K]</a></sup>`；
+  注文 `<p class="bodytext"><span class=""><a href="#noteref_N" id="note_N"> N</a></span> 注文</p>` →
+  `<p class="fnote" id="foot-K"><a href="#back-K">[K]</a> 注文</p>`（**每文件从 1 重排、阿拉伯**；本书全部为文件内尾注，无跨文件）
+- 图 `<div class="zhangyue-c">` → `<div class="chatu">`：`<img class="zhangyue-img">` → `<p class="image"><img …/></p>`；
+  `p.bodytext-no`（图题）与 `p.img-note`（图注）→ `<p class="caption">`（**保留原序**，有的图题在图上方）；块内 `<hr/>` 删除
+- `p.bodytext-no`（图块外）→ `p.bodytext-noindent`
+- 内联 style：`text-align:right` → `class="right"`、`center` → `center`，其余丢弃（含 h2 的悬挂缩进、cover 的居中 div）
+- **`<html>` 补 `xmlns:epub`**（源未声明；用了 `epub:type` 就必须补，否则 XML 不合法）；封面 SVG 原样保留
+
+**处理顺序**：css → spans → noteheads → footnotes → ns → figures → headings → unwrap → styles → tidy
+
+**校验**：XML 良构；无残留（`text-title-*`/`zhangyue-*`/`fangsong`/`img-note`/内联 style/`noteref_`/`note_`/`<pre>`/`[注释]`）；
+id 唯一；**源 id 一个都不能丢**（process 比对源与成果的 id 集合）；ref ↔ fnote 双向配对；`styles.css` 已链。
+
+**注意**：`content.opf` 的 manifest 需把 `Styles/Style0001.css`、`Styles/jianrong.css` 两项换成
+`<item id="styles.css" href="Text/styles.css" media-type="text/css"/>`，否则阅读器不加载样式（本书已同步改好）。
+
 ## 人民邮电 / 得到（`p.content` 系）profile 约定（epub_clean_ptpress.py）
 
 源：人民邮电出版社授权「得到」电子版（`xml:lang="zh-hans"`），`../Styles/stylesheets.css`；
@@ -514,6 +548,7 @@ $sc7 = "$sk/epub_clean_ptpress.py"  # profile G 人民邮电/得到（p.content 
 $sc8 = "$sk/epub_clean_duokan_biaoti.py" # profile H 多看原生·内文/标题（neiwen/biaoti）
 $sc9 = "$sk/epub_clean_kobo.py"     # profile I Kobo 导出·多看式排版（koboSpan）
 $sc10= "$sk/epub_clean_indesign_calibre.py" # profile J InDesign→calibre 繁中重注本（_idParaDest/div.foot）
+$sc11= "$sk/epub_clean_zhangyue.py" # profile K 掌阅 ZHANGYUE（text-title-*/noteref_N，已语义化稿）
 & $py -X utf8 $sc  analyze <dir> -o <tmp>/report.txt   # 体检（只读）
 & $py -X utf8 $sc  process <dir> --dry-run             # 试处理→临时目录
 & $py -X utf8 $sc  process <dir>                       # 正式处理（自动备份+校验）
