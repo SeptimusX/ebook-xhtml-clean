@@ -503,6 +503,18 @@ id 唯一；**源 id 一个不丢**（TOC 锚点 `secNNN`、`calibre_pb_0` 等�
 **注意**：`text00014_split_000/_001` 是被拆成两半的同一章（ref 在 _000、310 条注在 _001），编号跨文件共享，
 不要当广告残片删；只有**整篇只剩空 body** 的 `_split_000` 才是广告残片。
 
+**生僻字图人工确认工作流**（本书即用此法，140 处一次替换完）：
+
+1. 把行内图拼成若干张带编号的对照表（PIL，每张 5×5、放大到 240px）**自查字形**；
+2. 逐张记录「图 → 拟定字 + 把握度（确定/较可信/存疑/未知）+ 上下文线索」；
+3. 生成一个**交互式确认页**（`rare_review.html`，一行一张图：图 ｜ 判定+线索+上下文 ｜ 勾选「确认」/ 输入框填正确字，
+   顶部有进度、全选、**导出结果**按钮把 JSON 复制到剪贴板）；
+4. 用浏览器面板打开（本地 `python -m http.server` 提供 http 地址，file:// 不被接受）；
+5. 收回确认结果 → 写成 `<dir>/rare_map.json`（键是 **img 的 src 全名**如 `Image00003.jpg`）→ 重跑 profile 即替换并计数。
+
+**注意**：`content.opf` 的 manifest 需把旧 css 项换成 `OEBPS/styles.css`；`.html→.xhtml` 与删除广告残片后要同步 opf/ncx
+（ncx 里 `.html#锚点` 也要改，别只改 `.html"` 结尾的）；文本完整性核对时要把 `rare_map` 的值从两侧剔除（属预期新增）。
+
 ## 人民邮电 / 得到（`p.content` 系）profile 约定（epub_clean_ptpress.py）
 
 源：人民邮电出版社授权「得到」电子版（`xml:lang="zh-hans"`），`../Styles/stylesheets.css`；
