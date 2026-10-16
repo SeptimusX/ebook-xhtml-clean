@@ -548,7 +548,8 @@ id 唯一；**源 id 一个不丢**（TOC 锚点 `secNNN`、`calibre_pb_0` 等�
   `<p class="fnote" id="foot-K"><a href="#back-K">[K]</a> 注文</p>`**（**去掉注文外层的 `<p>`**，否则 XML 断裂；`：` 分隔符去掉）；
   **每文件（= 合并后每章）从 1 重排**
 - 图 `<div class="mg-str_10pr mg-end_10pr" id="_idContainer*">` → `<div class="chatu"><p class="image"><img …/></p></div>`
-- 引文框 `<div class="bd-w_1px … box" id="_idContainer*">` → `<div class="box">`（styles.css 已有 `.box`）
+- 引文框 `<div class="bd-w_1px … box" id="_idContainer*">` → **`<blockquote class="intro">`**（含配对的 `</div>`→`</blockquote>`，深度计数；
+  里面通常是整段引文，故用 `intro` 而非保留 `<div class="box">`）
 - 空行段 `<p class="…">　</p>` → `<p class="bodytext"><br/></p>`（连续折为一个）
 - 未在映射里的 `p.ff_*` 兜底为 `bodytext` 并计数（process 日志会列出，便于补规则）
 

@@ -225,8 +225,23 @@ def step_figures(c, name, ctx):
     return re.sub(r'<div\b[^>]*class="mg-str_10pr mg-end_10pr"[^>]*>\s*(<img[^>]*/>)\s*</div>', repl, c, flags=re.S)
 
 def step_box(c, name, ctx):
-    ctx["box"] += len(re.findall(r'<div\b[^>]*\bbox\b[^>]*>', c))
-    return re.sub(r'<div\b[^>]*class="[^"]*\bbox\b[^"]*"[^>]*>', '<div class="box">', c)
+    """引文框 <div class="… box">…</div> -> <blockquote class="intro">…</blockquote>（含配对闭合标签）"""
+    pat = re.compile(r'<div\b[^>]*class="[^"]*\bbox\b[^"]*"[^>]*>')
+    while True:
+        m = pat.search(c)
+        if not m:
+            break
+        tok = re.compile(r"<div\b[^>]*>|</div>")
+        depth, j, close = 1, m.end(), None
+        while depth:
+            m2 = tok.search(c, j)
+            if not m2:
+                raise RuntimeError("%s: div.box 不配对" % name)
+            depth += -1 if m2.group(0).startswith("</") else 1
+            j = m2.end(); close = m2
+        c = c[:m.start()] + '<blockquote class="intro">' + c[m.end():close.start()] + "</blockquote>" + c[close.end():]
+        ctx["box"] += 1
+    return c
 
 def unwrap_div(c, cls_re, name, ctx):
     pat = re.compile(r'<div\b([^>]*)>')
