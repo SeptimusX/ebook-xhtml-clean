@@ -515,6 +515,11 @@ id 唯一；**源 id 一个不丢**（TOC 锚点 `secNNN`、`calibre_pb_0` 等�
 **注意**：`content.opf` 的 manifest 需把旧 css 项换成 `OEBPS/styles.css`；`.html→.xhtml` 与删除广告残片后要同步 opf/ncx
 （ncx 里 `.html#锚点` 也要改，别只改 `.html"` 结尾的）；文本完整性核对时要把 `rare_map` 的值从两侧剔除（属预期新增）。
 
+**删广告残片时别顺手删目录条目**：源 ncx/opf 里常有指向广告残片的条目（本书「序言」「绪论」两条 navPoint 都指向
+被删的 `text00004_split_000`，而真正的内容在同名 `_split_001`／下一文件）。**先看 navLabel 是不是真实内容**：
+是则把 src **改指**真实文件（本书：序言→`text00004_split_001.xhtml`、绪论→`text00005.xhtml`），删完记得重排
+`playOrder`、并把 `guide` 里的 `type="text"`(Start) 一并改指。判据：源 ncx 的形状不一定可信（「绪论」那条本来就指错）。
+
 ## 人民邮电 / 得到（`p.content` 系）profile 约定（epub_clean_ptpress.py）
 
 源：人民邮电出版社授权「得到」电子版（`xml:lang="zh-hans"`），`../Styles/stylesheets.css`；
