@@ -535,9 +535,12 @@ id 唯一；**源 id 一个不丢**（TOC 锚点 `secNNN`、`calibre_pb_0` 等�
 - css 链 → `styles.css`；`<body>` 去 class（保留 id）；**无 class 的 `<div>` 深度计数解包**（带 class 的不动）
 - `<title>` 改成该文件第一个 `h1` 的文字（源里常被自动填成正文首句）
 - `h1.ff_serif.fz_1-9em…` → `<h1>`（保留 `id="_idParaDest-N"`，`toc.xhtml`/`toc.ncx` 按它跳转）；
-  **h1 内的 span**：短标签（如「導讀」）或以 `──`/`——` 开头的副题 → `<span class="subtitle">`，其余拆掉，`<br/>` 保留
+  **h1 内的 span**：**只有「分行」才用 `<span class="subtitle">`**——即该 span 后紧跟 `<br/>`（如 `<span>導讀</span>　<br/>書名…`），
+  或以 `──`/`——` 开头的副题；其余（如 `<h1><span>前言</span></h1>`、`<span>I　出入愛戀</span>`）**一律拆掉**，`<br/>` 保留
 - 正文 `p.ff_serif.fz_1-0em.ti_2em`（及 `mg-str_2-0em`）→ `p.bodytext`；`.ta_left` → `p.bodytext-noindent`；`.ta_right` → `p.right`
-- 楷体引文（连续 `p.ff_cursive.fz_1-0em.mg-str_2-0em`）→ `<blockquote>` + 各段 `p.bodytext`
+- 楷体引文（连续 `p.ff_cursive.fz_1-0em.mg-str_2-0em`）→ `<blockquote>` + 各段 `p.bodytext`；
+  **整段 `<b>` 包着的引文段 + 紧随其后的 `p.right` 以 `──`/`——` 开头（落款）→ `<blockquote class="intro">`**（落款留在 blockquote 外；
+  已在 blockquote 内的不再套，避免误伤手工结构）
 - `p.ff_serif.fz_1-6em.ta_left`（如「參考書目」）→ `<h3>`；`p.ff_sans.fz_1-0em.ta_center` → `<p class="sprt">`
 - 行内：`span.ff_serif|ff_sans.fw_900` → `<b>`；`span.ff_cursive.fs_italic` → `<i>`（+fw_900 则 `<b><i>`）；`span.ff_cursive` → `<span class="kai">`；
   其余 span 去 class（**兜底不要把 `kai`/`italic`/`bold`/`small`/`subtitle` 也剥掉**）
@@ -550,10 +553,12 @@ id 唯一；**源 id 一个不丢**（TOC 锚点 `secNNN`、`calibre_pb_0` 等�
 - 图 `<div class="mg-str_10pr mg-end_10pr" id="_idContainer*">` → `<div class="chatu"><p class="image"><img …/></p></div>`
 - 引文框 `<div class="bd-w_1px … box" id="_idContainer*">` → **`<blockquote class="intro">`**（含配对的 `</div>`→`</blockquote>`，深度计数；
   里面通常是整段引文，故用 `intro` 而非保留 `<div class="box">`）
-- 空行段 `<p class="…">　</p>` → `<p class="bodytext"><br/></p>`（连续折为一个）
+- 空行段 `<p class="…">　</p>` → `<p class="bodytext"><br/></p>`（连续折为一个）；
+  **blockquote 前后紧邻的空行段删掉**（blockquote 自带间距，源里常在引文前后各留一个空行）
 - 未在映射里的 `p.ff_*` 兜底为 `bodytext` 并计数（process 日志会列出，便于补规则）
+- 尾注 append 时若末尾**已是** `<hr/>` 则不再补一根（避免双 hr）
 
-**处理顺序**：css → title → headings → footnotes → quotes → paras → spans → figures → box → unwrap → body → tidy → append
+**处理顺序**：css → title → headings → footnotes → quotes → paras → spans → intro → figures → box → spacers → unwrap → body → tidy → append
 
 **校验**：XML 良构；无残留（`ff_*`/`fz_*`/`ti_*`/`ta_*`/`_idFootnote*`/`HorizontalRule`/`footnote-NNN` id/旧 css）；
 id 唯一；**源 id 不丢**（`_idContainer*` 随解包消失可除外）；ref↔注 配对；`styles.css` 已链。

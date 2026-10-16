@@ -97,7 +97,9 @@ def step_headings(c, name, ctx):
         # h1 内的 span：短标签、或以 ──/—— 开头的副题 -> span.subtitle；其余拆掉
         def sp(sm):
             t = re.sub(r"<[^>]+>", "", sm.group(1)).strip()
-            if len(t) <= 6 or t.startswith(("──", "——")):
+            after = inner[sm.end():]
+            # 只有「分行」（span 后紧跟 <br/>）或「──/—— 副题」才用 span.subtitle
+            if re.search(r"<br\s*/?>", after) or t.startswith(("──", "——")):
                 ctx["subtitle"] += 1
                 return '<span class="subtitle">%s</span>' % sm.group(1)
             return sm.group(1)
@@ -146,11 +148,19 @@ def step_footnotes(c, name, ctx):
         ctx["fnote_out"] = notes
     return c
 
+def step_dedup(c, name, ctx):
+    """连续多根 <hr/> 合成一根"""
+    c, n = re.subn(r'(?:[ \t]*<hr/>[ \t]*\n?){2,}', "<hr/>\n", c)
+    ctx["hr_dedup"] += n
+    return c
+
 def step_append(c, name, ctx):
     notes = ctx.get("fnote_out") or []
     if not notes:
         return c
-    block = "<hr/>\n" + "\n".join(notes) + "\n"
+    tail = c[:c.find("</body>")].rstrip()
+    pre = "<hr/>\n" if not tail.endswith("<hr/>") else ""      # 末尾已有分隔线就不再加
+    block = pre + "\n".join(notes) + "\n"
     return c.replace("</body>", block + "</body>")
 
 def step_quotes(c, name, ctx):
@@ -214,6 +224,26 @@ def step_spans(c, name, ctx):
     c = re.sub(r'<span class="(?!(?:kai|italic|bold|small|subtitle|lefttitle|jiazhu)\b)[^"]*">(.*?)</span>',
                lambda m: "<span>%s</span>" % m.group(1), c, flags=re.S)
     c = re.sub(r"<span></span>", "", c)
+    return c
+
+def step_intro(c, name, ctx):
+    """引文段（整段 <b> 包着）+ 紧随的 ──/—— 落款 -> <blockquote class="intro">（落款留在外面）
+    已在 <blockquote> 里的不动，避免误伤手工结构。"""
+    def repl(m):
+        head = c[:m.start()]
+        if head.count("<blockquote") > head.count("</blockquote>"):
+            return m.group(0)
+        ctx["intro"] += 1
+        return '<blockquote class="intro">\n<p class="bodytext">%s</p>\n</blockquote>\n%s' % (
+            m.group(1), m.group(2))
+    return re.sub(r'<p class="bodytext"><b>(.*?)</b></p>\s*(<p class="right">(?:<b>)?(?:──|——)[^\n]*?</p>)',
+                  repl, c, flags=re.S)
+
+def step_spacers(c, name, ctx):
+    """blockquote 前后紧邻的空行段删掉（blockquote 自带间距，不必再空一行）"""
+    c, n1 = re.subn(r'</blockquote>\s*<p class="bodytext"><br/></p>\s*', "</blockquote>\n", c)
+    c, n2 = re.subn(r'<p class="bodytext"><br/></p>\s*(?=<blockquote)', "", c)
+    ctx["spacer_rm"] += n1 + n2
     return c
 
 def step_figures(c, name, ctx):
@@ -296,9 +326,9 @@ def step_tidy(c, name, ctx):
 
 STEPS = [("css", step_css), ("title", step_title), ("headings", step_headings),
          ("footnotes", step_footnotes), ("quotes", step_quotes), ("paras", step_paras),
-         ("spans", step_spans), ("figures", step_figures), ("box", step_box),
-         ("unwrap", step_unwrap), ("body", step_body), ("tidy", step_tidy),
-         ("append", step_append)]
+         ("spans", step_spans), ("intro", step_intro), ("figures", step_figures),
+         ("box", step_box), ("spacers", step_spacers), ("unwrap", step_unwrap),
+         ("body", step_body), ("tidy", step_tidy), ("append", step_append), ("dedup", step_dedup)]
 
 # ---------- 校验 ----------
 
@@ -370,7 +400,7 @@ def process(dirpath, dry=False):
         src_ids = set(re.findall(r'\bid="([^"]+)"', c))
         keep = {i for i in src_ids if not i.startswith(("footnote-", "_idContainer")) and "-backlink" not in i}
         ctx = dict.fromkeys(["css", "title", "heads", "notes", "orphan", "fnote_out", "quotes", "subtitle",
-                             "paras", "author", "fallback", "span_left", "chatu", "box",
+                             "paras", "author", "fallback", "span_left", "chatu", "box", "intro", "spacer_rm", "hr_dedup",
                              "unwrap", "body"], 0)
         ctx["fnote_out"] = []
         for s, fn in STEPS:
