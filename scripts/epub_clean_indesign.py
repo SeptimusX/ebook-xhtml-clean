@@ -32,6 +32,7 @@ epub_clean_indesign.py — Adobe InDesign / Adept 导出 EPUB xhtml 清洗
 """
 import argparse, datetime, glob, os, re, shutil, sys
 import xml.etree.ElementTree as ET
+from epub_clean_common import strip_sprt_between_chatu
 
 CONFIG = {
     "css_href": "styles.css",
@@ -368,6 +369,7 @@ def process(dirpath, dry=False):
                    author_right=0, sig_blank=0, kai=0, zerocircle=0, blank=0)
         for s in STEP_ORDER:
             c = BUILTIN[s](c, name, CONFIG, ctx)
+        c = strip_sprt_between_chatu(c)
         probs, info = verify_content(c, name, CONFIG, dirpath)
         if probs:
             all_ok = False

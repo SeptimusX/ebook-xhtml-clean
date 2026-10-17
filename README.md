@@ -33,7 +33,8 @@ An opencode skill / CLI for cleaning EPUB xhtml from sixteen common Chinese e-bo
 - **脚注 → 章末尾注**：正文 `<sup><a epub:type="noteref" href="#foot-N" id="back-N">[N]</a></sup>`，
   章末 `<hr/>` + `<p class="fnote" id="foot-N"><a href="#back-N">[N]</a> 注文</p>`，**双向回链成对**
 - **引文 → `<blockquote>`**：连续引文段合并成一个块；楷体引文不加 `span.kai`；题词/引文 + `──落款` → `<blockquote class="intro">`（落款留在块外）；诗句 → `<blockquote class="poem">`
-- **插图 → `<div class="chatu"><p class="image"><img/></p>…</div>`**；图注 → `p.caption`；图片页同格式
+- **插图 → `<div class="chatu"><p class="image"><img/></p>…</div>`**；图注 → `p.caption`；图片页同格式；
+  **两个 `chatu` 之间不放 `p.sprt`**（有则删），由 `scripts/epub_clean_common.py` 统一处理
 - **标题**：章 `h1`、节 `h2`/`h3`（按源层级归一到 h1–h4）；`span.subtitle` **只在"分行"时用**（标签 span 后紧跟 `<br/>`，或以 `──`/`──` 开头的副题）；`<h1><span>前言</span></h1>` 这类一律拆成纯文本
 - **空行段**：保留源书空行（`<p class="bodytext"><br/></p>`），但**连续多个折一个**、**blockquote 前后紧邻的删掉**
 - **编号**：同一本书两套脚注用**不同数字体系**区分（如文件内小写罗马 / 跨文件阿拉伯）；单一体系时每文件（= 每章）从 `[1]` 重排
@@ -93,9 +94,17 @@ python scripts/epub_clean.py verify  <dir>           # 独立复检
 把 `epub_clean.py` 换成上表对应的 profile 脚本即可；子命令完全一致。
 KADOKAWA 的 Kobo 导出版本额外加 `--strip-kobo --drop-scripts --drop-kobo-style`。
 
+通用后处理（对任意已清洗目录补跑共同规则，例如「删 chatu 之间的 `p.sprt`」）：
+
+```bash
+python scripts/epub_clean_fix.py process <dir> [--dry-run]
+python scripts/epub_clean_fix.py verify  <dir>
+```
+
 ## 要求
 
 - Python 3（只用标准库，无第三方依赖；生僻字拼图自查需 Pillow）
+- 各 profile 会 `from epub_clean_common import strip_sprt_between_chatu`，**请连同 `scripts/epub_clean_common.py` 一起安装**（`epub_clean_fix.py` 同样依赖它）
 - 目标目录为书籍解包后的文本目录，同目录应有 `styles.css`
 - 脚本会自动把原文件备份到系统临时目录；目录里的 `.bak` 只读跳过
 
@@ -105,6 +114,7 @@ KADOKAWA 的 Kobo 导出版本额外加 `--strip-kobo --drop-scripts --drop-kobo
 
 ## 变更记录（本轮）
 
+- **通用规则：两个 `chatu` 之间不放 `p.sprt`**（有则删）—— 实现于 `scripts/epub_clean_common.py`，16 个 profile 写出前自动调用；旧成果可用 `scripts/epub_clean_fix.py process <dir>` 补跑
 - **新增 profile P**（八旗文化 繁中 InDesign）：无 class 的 `<p>` 正文、`span.num/num2`→subtitle 分行、`p.kai`/`div.kai`→blockquote、`ol.footnote`+`img.pw` 回链箭头→`hr`+fnote、`p.sec`→sprt、`p.ref/item/title`→bodytext-noindent
 - **新增 profile O**（文景/上海人民 `bodyContent-1`）：跨文件 `jz_X`/`jzyy_X` 脚注原样保留并双向化、楷体引文→blockquote、`contents-1/2`→toc1/toc2（三级只留前两级）、标题保持 h1/h3/h4 原层级；新增**目录级跨文件锚点校验**
 - **新增 profile N**（bookcrafter 生成版 / 磨铁·Z-Library）：`p.bookcrafter-body-paragraph`、纯文本 `(N)` 脚注（含孤儿注保留不回链）、占位标题 `正文 28`→`28`、`div.toc-list` → `p.toc1`

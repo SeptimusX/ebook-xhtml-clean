@@ -39,6 +39,7 @@ epub_clean_kindle_cn.py — Kindle-cn（亚马逊中国）+ calibre 混合源 xh
 """
 import argparse, datetime, glob, json, os, re, shutil, sys
 import xml.etree.ElementTree as ET
+from epub_clean_common import strip_sprt_between_chatu
 
 CONFIG = {
     "css_href": "styles.css",
@@ -345,6 +346,7 @@ def process(dirpath, dry=False):
         ctx["rare"] = rare
         for s, fn in STEPS:
             c = fn(c, name, ctx)
+        c = strip_sprt_between_chatu(c)
         probs = verify_content(c, name, dirpath)
         lost = sorted(keep - set(re.findall(r'\bid="([^"]+)"', c)))
         if lost:

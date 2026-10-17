@@ -75,6 +75,9 @@ description: 电子书 EPUB xhtml 清洗流水线（十六套 profile：得到/�
   编号每文件从 [1] 重新开始；重复的 footnote id 输出时加 `-2`/`-3` 后缀消歧
   （noteref→aside 按 alt 文本精确配对，aside 正文为权威文本）。
 - 插图：`<div class="chatu">` + `<p class="image"><img src=... alt=""/></p>` + `<p class="caption">`。
+  **两个 `chatu` 之间不放 `<p class="sprt">`**（连续插图之间不需要分隔符），已有则删 ——
+  由 `scripts/epub_clean_common.py` 的 `strip_sprt_between_chatu()` 统一实现，各 profile 写出前调用；
+  只处理「chatu → sprt → chatu」这一种，其余 sprt（如 chatu 后接正文的分隔）保留。
 - 引文：整段 FZFangSong 仿宋引文，连续段合并为一个 `<blockquote>`，内部段落保留
   `class="bodytext"`，段内 noteref 保留。**blockquote 内不用 `<br/>` 分行：每一行各自
   成一个 `<p class="bodytext">`**（诗歌、多行引文按行拆段）。
@@ -790,3 +793,12 @@ $sc16= "$sk/epub_clean_baqi.py"      # profile P 八旗文化繁中（p.kai / ol
 & $py -X utf8 $sc  process <dir>                       # 正式处理（自动备份+校验）
 & $py -X utf8 $sc  verify <dir>                        # 独立复检
 ```
+
+**通用后处理**（对任意已清洗目录补跑共同规则，如「删 chatu 之间的 sprt」）：
+
+```
+& $py -X utf8 "$sk/epub_clean_fix.py" process <dir> [--dry-run]
+& $py -X utf8 "$sk/epub_clean_fix.py" verify  <dir>
+```
+
+共同规则集中在 `scripts/epub_clean_common.py`，各 profile 已自动调用；`epub_clean_fix.py` 用于旧成果补跑。

@@ -31,6 +31,7 @@ epub_clean_indesign_calibre.py — InDesign→calibre（繁中·重注释）EPUB
 """
 import argparse, datetime, glob, os, re, shutil, sys
 import xml.etree.ElementTree as ET
+from epub_clean_common import strip_sprt_between_chatu
 
 CONFIG = {
     "css_href": "styles.css",
@@ -436,6 +437,7 @@ def process(dirpath, dry=False):
         ctx["fnotes"] = []
         for s, fn in STEPS:
             c = fn(c, name, ctx)
+        c = strip_sprt_between_chatu(c)
         probs = verify_content(c, name, dirpath)
         if probs:
             ok = False
