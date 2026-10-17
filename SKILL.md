@@ -627,7 +627,10 @@ id 唯一、`ref↔annot` 锚点可解析、图片存在、注释标记数 == �
 处理（脚本 STEPS，顺序不可乱）：css → headings → footnotes → toc → body → tidy
 
 1. **css**：删 `../Styles/style.css` 链接与**全部内联 `<style>`**，加同目录 `styles.css`
-2. **标题**：`<h1 style="…">` → `<h1>`（去内联样式，保留文本）
+2. **标题**：`<h1 style="…">` → `<h1>`（去内联样式）；
+   **占位标题归一**：`正文 28` / `正文28` → `28`，同步改 `<title>` 与目录项
+   （规则见 `CONFIG["placeholder_title_re"]`，换书占位式样不同就改这里；
+   `序幕` / `尾声` / `版权信息` 等非占位标题原样保留）
 3. **脚注**：从文末**倒序**收集「整段以 `(N)` 开头」的连续段落（须为 1..N 连续，否则报错）；先删这些段，
    再把正文 `(N)` → `<sup><a epub:type="noteref" href="#footnote-N" id="noteref-N">[N]</a></sup>`，
    最后在 `</body>` 前插 `<hr/>` + `<p class="fnote" id="footnote-N"><a href="#noteref-N">[N]</a> 注文</p>`。
@@ -640,7 +643,9 @@ id 唯一、`ref↔annot` 锚点可解析、图片存在、注释标记数 == �
 脚本仍保留为尾注，但**不加回链**（输出 `<p class="fnote" id="footnote-N">[N] 注文</p>`），
 编号沿用源书数字，不做压缩——否则正文里的 `[3]` 会与尾注编号错位。`process` 报告里的「孤儿注」列即此数。
 
-⚠ 源书 h1 可能是「正文1 / 正文 2 / …」这类占位标题；只要 `body-toc.xhtml` 与 h1 一致，就属源书本身，**勿擅自改写**。
+⚠ 源书 h1 是「正文1 / 正文 2 / …」这类**占位标题**（生成工具留下）：脚本按
+`CONFIG["placeholder_title_re"]`（默认 `^正文[ \t]*(\d+)$`）把整条标题归一为纯数字 `N`，
+h1、`<title>`、目录项三处同步；非占位标题（序幕/尾声/版权信息/目录）不动。
 
 **校验**：XML 良构、无残留（`bookcrafter` / 内联 style / `<style>` / 旧 css / `toc-list` / `div` / `(N)`）、
 `styles.css` 链接存在、id 唯一、`href="#…"` 均可解析、noteref 均有对应 fnote。

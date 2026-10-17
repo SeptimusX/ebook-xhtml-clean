@@ -37,10 +37,19 @@ CONFIG = {
     "para_class": "bookcrafter-body-paragraph",
     "bodytext_class": "bodytext",
     "toc_class": "toc1",
+    # 生成工具留下的占位标题：「正文 28」->「28」（h1 / <title> / 目录项同步）
+    "placeholder_title_re": r"^正文[ \t]*(\d+)$",
 }
 
 P_PARA = re.compile(r'<p class="%s">(.*?)</p>' % CONFIG["para_class"], re.S)
 DEF_HEAD = re.compile(r'^\((\d+)\)[ \t\u3000]*(.*)$', re.S)
+PLACEHOLDER = re.compile(CONFIG["placeholder_title_re"])
+
+
+def plain_title(text):
+    """占位标题归一化：返回纯数字，非占位标题返回 None"""
+    m = PLACEHOLDER.match(text.strip())
+    return m.group(1) if m else None
 
 # ---------- 基础 ----------
 
@@ -77,8 +86,20 @@ def step_headings(c, name, ctx):
     def repl(m):
         ctx["h1"] += 1
         attrs = re.sub(r'\s+style="[^"]*"', "", m.group(1))
-        return "<h1%s>" % attrs
-    c = re.sub(r"<h1([^>]*)>", repl, c)
+        text = m.group(2)
+        t = plain_title(re.sub(r"<[^>]+>", "", text))
+        if t:
+            ctx["title"] += 1
+            text = t
+        return "<h1%s>%s</h1>" % (attrs, text)
+    c = re.sub(r"<h1([^>]*)>(.*?)</h1>", repl, c, flags=re.S)
+
+    def repl_title(m):
+        t = plain_title(m.group(1))
+        if t:
+            return "<title>%s</title>" % t
+        return m.group(0)
+    c = re.sub(r"<title>(.*?)</title>", repl_title, c, flags=re.S)
     return c
 
 def step_footnotes(c, name, ctx):
@@ -138,8 +159,16 @@ def step_toc(c, name, ctx):
     j = c.find("</div>", i)
     if j >= 0:
         c = c[:j] + c[j + 6:]
-    c, n = re.subn(r"<p>(<a\b[^>]*>.*?</a>)</p>",
-                   r'<p class="%s">\1</p>' % CONFIG["toc_class"], c, flags=re.S)
+
+    def repl(m):
+        text = m.group(2)
+        t = plain_title(text)
+        if t:
+            ctx["title"] += 1
+            text = t
+        return '<p class="%s">%s%s%s</p>' % (CONFIG["toc_class"], m.group(1), text, m.group(3))
+
+    c, n = re.subn(r"<p>(<a\b[^>]*>)(.*?)(</a>)</p>", repl, c, flags=re.S)
     ctx["toc"] += n
     return c
 
@@ -182,6 +211,8 @@ def verify_content(c, name, dirpath):
         (r"toc-list", "残留 toc-list"),
         (r"<div\b", "残留 div"),
         (r"\(\d+\)", "残留 (N) 编号"),
+        (r"<h1[^>]*>正文", "残留占位标题 h1"),
+        (r"<title>正文", "残留占位 <title>"),
     ]:
         if re.search(pat, c):
             probs.append(msg)
@@ -256,7 +287,7 @@ def process(d, dry=False):
         c = read(fp)
         if not dry:
             shutil.copy2(fp, os.path.join(base, name))
-        ctx = dict.fromkeys(["css", "h1", "notes", "defs", "orphan", "unmatched", "toc", "bodytext"], 0)
+        ctx = dict.fromkeys(["css", "h1", "title", "notes", "defs", "orphan", "unmatched", "toc", "bodytext"], 0)
         try:
             for sname, fn in STEPS:
                 c = fn(c, name, ctx)
@@ -270,9 +301,9 @@ def process(d, dry=False):
             print("%-20s FAIL: %s" % (name, "; ".join(probs)))
             continue
         write(os.path.join(outdir, name) if dry else fp, c)
-        print("%-20s bodytext=%-4d 尾注=%-2d 引用=%-2d 孤儿注=%-2d 目录项=%-2d h1=%-2d" % (
+        print("%-20s bodytext=%-4d 尾注=%-2d 引用=%-2d 孤儿注=%-2d 目录项=%-2d 标题归一=%-2d h1=%-2d" % (
             name, ctx["bodytext"], ctx["defs"], ctx["notes"],
-            ctx["orphan"], ctx["toc"], ctx["h1"]))
+            ctx["orphan"], ctx["toc"], ctx["title"], ctx["h1"]))
     print("RESULT:", "OK" if ok else "FAIL（有文件未通过校验，未写回）")
     sys.exit(0 if ok else 1)
 

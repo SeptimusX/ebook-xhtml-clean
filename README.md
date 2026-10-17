@@ -103,7 +103,7 @@ KADOKAWA 的 Kobo 导出版本额外加 `--strip-kobo --drop-scripts --drop-kobo
 
 ## 变更记录（本轮）
 
-- **新增 profile N**（bookcrafter 生成版 / 磨铁·Z-Library）：`p.bookcrafter-body-paragraph`、纯文本 `(N)` 脚注（含孤儿注保留不回链）、`div.toc-list` → `p.toc1`
+- **新增 profile N**（bookcrafter 生成版 / 磨铁·Z-Library）：`p.bookcrafter-body-paragraph`、纯文本 `(N)` 脚注（含孤儿注保留不回链）、占位标题 `正文 28`→`28`、`div.toc-list` → `p.toc1`
 - **新增 profile J**（InDesign→calibre 繁中重注本）、**K**（掌阅）、**L**（Kindle-cn，含 `rare_map.json`）、**M**（InDesign EPUB3 新版）
 - 脚注编号体系：文件内 vs 跨文件用不同数字体系区分；注文去掉外层 `<p>` 与 `：`
 - 章首作者行 → `p.author`；h1 内 `span.subtitle` 收紧为"仅分行"；引文/图注/脚注内不用 `span.kai`
