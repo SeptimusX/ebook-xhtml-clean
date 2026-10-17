@@ -1,9 +1,9 @@
 # ebook-xhtml-clean
 
 把各类来源的电子书章节 XHTML 清洗为统一的语义化格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
-An opencode skill / CLI for cleaning EPUB xhtml from fifteen common Chinese e-book sources.
+An opencode skill / CLI for cleaning EPUB xhtml from sixteen common Chinese e-book sources.
 
-## 支持的源格式（十五套 profile）
+## 支持的源格式（十六套 profile）
 
 | # | profile | 脚本 | 典型特征 |
 |---|---|---|---|
@@ -22,6 +22,7 @@ An opencode skill / CLI for cleaning EPUB xhtml from fifteen common Chinese e-bo
 | M | InDesign EPUB3 新版（`ff_serif/fz_*/ti_*`） | `scripts/epub_clean_indesign_epub3.py` | `body#BK7026X-N` + 无 class 外层 `div`、`css/YYYY.N.h.css`、`h1.ff_serif.fz_1-9em.ta_left[id=_idParaDest-N]`、`p.ff_serif.fz_1-0em.ti_2em`、`p.ff_cursive.fz_1-0em.mg-str_2-0em`、`ta_right`、`p.ff_serif.fz_1-6em`、`p.ff_sans.fz_1-0em.ta_center`、`span.ff_serif/ff_sans.fw_900`、`span.ff_cursive.fs_italic`、`a._idFootnoteLink[role=doc-noteref]` + `hr.HorizontalRule-1` + `section._idFootnotes>ol>li._idFootnote>a._idFootnoteAnchor`、`div.mg-str_10pr.mg-end_10pr`、`div[class~=box]`、`<p>　</p>` |
 | N | bookcrafter 生成版（磨铁 / Z-Library） | `scripts/epub_clean_bookcrafter.py` | `../Styles/style.css` + 内联 `<style>`(duokan-text-indent)、`h1[style]`、`p.bookcrafter-body-paragraph`、**纯文本编号脚注**（正文 `(1)`、章末 `p.bookcrafter-body-paragraph` 以 `(N)` 开头）、目录页 `div.toc-list` |
 | O | 文景 / 上海人民（`bodyContent-1`，跨文件注） | `scripts/epub_clean_bodycontent.py` | `../Styles/stylesheet.css`+`stylesheet-1.css`、`h1.chaptertitle-c/parttitle-c/prefacetitle-c/backtitle-c[id=isbn…]`、`h3.txtheading-1-c`/`h4.txtheading-2-c`、`p.bodyContent-1(-top/-top-2/-c)`、`p.noindent-copyContent-1`、`p.hang-bodyContent-1`、`p.bodyContent-2-kaiti(-top-4)`、跨文件注 `a[href=partNNNN.xhtml#jz_X][id=jzyy_X]>sup.(N)` + `p.fnContent-1>a[id=jz_X]`、`div.chatu_img/title_img>img.pic-img`、`p.contents-1/2/3` |
+| P | 八旗文化（繁中 InDesign，`p.kai`/`ol.footnote`） | `scripts/epub_clean_baqi.py` | `../Styles/Style.css`(+`Copyright.css`)、`h1/h2[title]` 内 `span.num`+`span.num2`、`h3.h3.sigil_not_in_toc`、正文 `<p>` 无 class、`p.kai`/`div.kai`、`p.sec`、`div.pic/pic-c>img+span.caption`、`a.footnote[href=#fnX-N][id=fX-N]` + `ol.footnote>li[id=fnX-N]`(+`img.pw` 回链箭头)、`p.ref`、`p.title`+`p.item`、`div.boxend`、`<p><br/></p>` |
 
 先跑 `analyze` 判断属于哪一套，再选脚本。类名对不上时：改该脚本顶部的 `CONFIG`（若能覆盖）或另立一套。
 
@@ -104,6 +105,7 @@ KADOKAWA 的 Kobo 导出版本额外加 `--strip-kobo --drop-scripts --drop-kobo
 
 ## 变更记录（本轮）
 
+- **新增 profile P**（八旗文化 繁中 InDesign）：无 class 的 `<p>` 正文、`span.num/num2`→subtitle 分行、`p.kai`/`div.kai`→blockquote、`ol.footnote`+`img.pw` 回链箭头→`hr`+fnote、`p.sec`→sprt、`p.ref/item/title`→bodytext-noindent
 - **新增 profile O**（文景/上海人民 `bodyContent-1`）：跨文件 `jz_X`/`jzyy_X` 脚注原样保留并双向化、楷体引文→blockquote、`contents-1/2`→toc1/toc2（三级只留前两级）、标题保持 h1/h3/h4 原层级；新增**目录级跨文件锚点校验**
 - **新增 profile N**（bookcrafter 生成版 / 磨铁·Z-Library）：`p.bookcrafter-body-paragraph`、纯文本 `(N)` 脚注（含孤儿注保留不回链）、占位标题 `正文 28`→`28`、`div.toc-list` → `p.toc1`
 - **新增 profile J**（InDesign→calibre 繁中重注本）、**K**（掌阅）、**L**（Kindle-cn，含 `rare_map.json`）、**M**（InDesign EPUB3 新版）
