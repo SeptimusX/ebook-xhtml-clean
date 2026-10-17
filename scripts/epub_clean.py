@@ -15,7 +15,7 @@ epub_clean.py — EPUB xhtml 清洗流水线（得到/中华书局系 xhtml → 
 """
 import argparse, datetime, glob, html, importlib.util, json, os, re, shutil, sys
 import xml.etree.ElementTree as ET
-from epub_clean_common import strip_sprt_between_chatu
+from epub_clean_common import postprocess
 
 DEFAULT_CONFIG = {
     "css_href": "styles.css",
@@ -585,7 +585,7 @@ def process(dirpath, cfg, dry=False):
                "joined": 0, "glyphs": 0}
         for sname, fn in steps:
             c = fn(c, name, cfg, ctx)
-        c = strip_sprt_between_chatu(c)
+        c = postprocess(c)
         probs, info = verify_content(c, name, cfg, dirpath)
         if probs:
             all_ok = False

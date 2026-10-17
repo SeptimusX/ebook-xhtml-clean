@@ -3,23 +3,30 @@
 r"""
 epub_clean_fix.py — 通用后处理（对已清洗过的目录补跑共同规则）
 
-当前规则:
-  1) 两个 <div class="chatu"> 之间不保留 <p class="sprt">…</p>（有则删）
+当前规则（见 epub_clean_common.py）:
+  1) 正文 chatu 去重：同一 (img src + 图注) 只保留首次出现（跨文件；彩图页整体跳过）
+  2) 两个 <div class="chatu"> 之间不保留 <p class="sprt">…</p>（有则删）
 
 用法:
   python epub_clean_fix.py process <dir> [--dry-run]
   python epub_clean_fix.py verify  <dir>
 """
-import argparse, datetime, glob, os, shutil, sys
+import argparse, datetime, glob, os, re, shutil, sys
 
-from epub_clean_common import strip_sprt_between_chatu, count_sprt_between_chatu
+from epub_clean_common import (postprocess, reset_dedupe, register_chatu,
+                               count_dupe_chatu, count_sprt_between_chatu,
+                               is_gallery, _CHATU)
 
 
 def list_files(d):
     files = []
     for pat in ("*.xhtml", "*.html"):
         files += [f for f in glob.glob(os.path.join(d, pat)) if not f.endswith(".bak")]
-    return sorted(set(files))
+
+    def key(p):
+        m = re.search(r"(\d+)", os.path.basename(p))
+        return (0, int(m.group(1))) if m else (1, os.path.basename(p))
+    return sorted(set(files), key=key)
 
 
 def read(fp):
@@ -43,34 +50,50 @@ def process(d, dry=False):
     outdir = os.path.join(base, "out") if dry else base
     os.makedirs(outdir, exist_ok=True)
     print("备份/输出目录: %s" % outdir)
-    total = 0
+
+    reset_dedupe()
+    tdup = tsprt = 0
     for fp in files:
         name = os.path.basename(fp)
         c = read(fp)
-        before = count_sprt_between_chatu(c)
-        if not before:
+        if is_gallery(c):
+            print("%-20s 彩图页，跳过（%d 张图）" % (name, len(_CHATU.findall(c))))
             continue
-        n = c
+        nd = count_dupe_chatu(c)
+        ns = count_sprt_between_chatu(c)
+        if not nd and not ns:
+            register_chatu(c)          # 记入 seen，供后续文件比对
+            continue
         if not dry:
             shutil.copy2(fp, os.path.join(base, name))
-        n = strip_sprt_between_chatu(c)
+        n = postprocess(c)
         write(os.path.join(outdir, name) if dry else fp, n)
-        total += before
-        print("%-20s 删除 chatu 之间的 sprt: %d" % (name, before))
-    print("合计删除: %d" % total)
+        tdup += nd
+        tsprt += ns
+        print("%-20s 删重复 chatu: %-2d 删 chatu 间 sprt: %d" % (name, nd, ns))
+    print("合计: 重复 chatu %d 处，chatu 间 sprt %d 处" % (tdup, tsprt))
     print("RESULT: OK")
 
 
 def verify_dir(d):
-    bad = 0
+    reset_dedupe()
+    bad_d = bad_s = 0
     for fp in list_files(d):
         c = read(fp)
-        k = count_sprt_between_chatu(c)
-        if k:
-            bad += k
-            print("%-20s 仍有 %d 处 chatu 之间的 sprt" % (os.path.basename(fp), k))
-    print("RESULT:", "PASS" if not bad else "FAIL（%d 处）" % bad)
-    sys.exit(0 if not bad else 1)
+        if is_gallery(c):
+            continue
+        nd = count_dupe_chatu(c)
+        ns = count_sprt_between_chatu(c)
+        register_chatu(c)
+        if nd:
+            bad_d += nd
+            print("%-20s 仍有 %d 处重复 chatu" % (os.path.basename(fp), nd))
+        if ns:
+            bad_s += ns
+            print("%-20s 仍有 %d 处 chatu 间 sprt" % (os.path.basename(fp), ns))
+    print("RESULT:", "PASS" if not (bad_d or bad_s) else
+          "FAIL（重复 chatu %d，chatu 间 sprt %d）" % (bad_d, bad_s))
+    sys.exit(0 if not (bad_d or bad_s) else 1)
 
 
 def main():

@@ -30,7 +30,7 @@ epub_clean_duokan.py — 多看(duokan) 原生导出 xhtml 清洗（图片式注
 """
 import argparse, datetime, glob, os, re, shutil, sys
 import xml.etree.ElementTree as ET
-from epub_clean_common import strip_sprt_between_chatu
+from epub_clean_common import postprocess
 
 CONFIG = {
     "css_href": "styles.css",
@@ -312,7 +312,7 @@ def process(d, dry=False):
             ok = False
             print("%-16s FAIL: %s" % (name, e))
             continue
-        c = strip_sprt_between_chatu(c)
+        c = postprocess(c)
         probs, info = verify_content(c, name, d)
         if probs:
             ok = False

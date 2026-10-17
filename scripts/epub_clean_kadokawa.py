@@ -17,7 +17,7 @@ epub_clean_kadokawa.py — KADOKAWA 竖排 / 固定版式 EPUB 清洗（阶段�
 """
 import argparse, datetime, glob, os, re, shutil, sys
 import xml.etree.ElementTree as ET
-from epub_clean_common import strip_sprt_between_chatu
+from epub_clean_common import postprocess
 
 CONFIG = {
     "fullwidth_letters_digits": True,   # 阶段二 1
@@ -228,7 +228,7 @@ def process(d, dry=False):
         ctx = {"fw": 0, "key2": 0, "key1": 0, "kobo": 0}
         for sname, fn in STEPS:
             c = fn(c, name, ctx)
-        c = strip_sprt_between_chatu(c)
+        c = postprocess(c)
         probs, info = verify_content(c, name, d, orig)
         if not identity(orig, c):
             probs.append("恒等校验失败")

@@ -41,7 +41,7 @@ epub_clean_baqi.py — 八旗文化（繁中 InDesign 导出）xhtml 清洗
 """
 import argparse, datetime, glob, os, re, shutil, sys
 import xml.etree.ElementTree as ET
-from epub_clean_common import strip_sprt_between_chatu
+from epub_clean_common import postprocess
 
 CONFIG = {
     "css_href": "styles.css",
@@ -350,7 +350,7 @@ def process(d, dry=False):
             ok = False
             print("%-16s FAIL: %s" % (name, e))
             continue
-        c = strip_sprt_between_chatu(c)
+        c = postprocess(c)
         probs, _ = verify_content(c, name, d)
         if probs:
             ok = False

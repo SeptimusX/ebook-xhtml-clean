@@ -24,7 +24,7 @@ epub_clean_weread.py — 微信读书 / QQ阅读 导出 EPUB xhtml 清洗
 """
 import argparse, datetime, glob, os, re, shutil, sys
 import xml.etree.ElementTree as ET
-from epub_clean_common import strip_sprt_between_chatu
+from epub_clean_common import postprocess
 
 CONFIG = {
     "css_href": "styles.css",
@@ -329,7 +329,7 @@ def process(d, dry=False):
         ctx = collections_defaults()
         for sname, fn in STEPS:
             c = fn(c, name, ctx)
-        c = strip_sprt_between_chatu(c)
+        c = postprocess(c)
         probs, info = verify_content(c, name, d)
         if not integrity(orig, c):
             probs.append("正文文本完整性校验失败")

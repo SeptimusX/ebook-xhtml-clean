@@ -38,7 +38,7 @@ epub_clean_ptpress.py — 人民邮电出版社 / 得到电子版（p.content �
 """
 import argparse, datetime, glob, os, re, shutil, sys
 import xml.etree.ElementTree as ET
-from epub_clean_common import strip_sprt_between_chatu
+from epub_clean_common import postprocess
 
 CONFIG = {
     "css_href": "styles.css",
@@ -351,7 +351,7 @@ def process(dirpath, dry=False):
                    center=0, noindent=0, bodytext=0, kai=0, h1_sub=0, h1_sub2=0, sup=0, blank=0)
         for s in STEP_ORDER:
             c = BUILTIN[s](c, name, CONFIG, ctx)
-        c = strip_sprt_between_chatu(c)
+        c = postprocess(c)
         probs, info = verify_content(c, name, CONFIG, dirpath)
         if probs:
             all_ok = False

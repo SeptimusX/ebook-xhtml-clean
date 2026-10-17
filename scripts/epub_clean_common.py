@@ -3,13 +3,75 @@
 r"""
 epub_clean_common.py — 各 profile 共用的后处理规则
 
-strip_sprt_between_chatu(c):
-  两个 <div class="chatu"> 之间若夹着 <p class="sprt">…</p>，删去该 sprt
-  （连续插图之间不需要分隔符；只删「chatu → sprt → chatu」这一种，其余 sprt 保留）
+postprocess(c) 依次执行:
+  1) dedupe_chatu(c)            正文去重：同一 (img src + 图注) 只保留首次出现。
+                                · 「彩图页」（整页插图墙：chatu>=3 且正文段<=2）整体跳过：
+                                  既不去重，也不计入 seen，图版照旧保留。
+                                · 其余文件（正文）跨文件去重，保留第一次出现。
+                                · seen 为模块级集合，一次 process＝一个书目录＝一个进程，天然复位。
+  2) strip_sprt_between_chatu   两个 <div class="chatu"> 之间不保留 <p class="sprt">…</p>
 
-各 profile 在写出前调用它；也可单独用 epub_clean_fix.py 对已清洗过的目录补跑。
+各 profile 在写出前调用 postprocess(c)；也可用 epub_clean_fix.py 对已清洗目录补跑。
 """
 import re
+
+# ---------- 1) 正文 chatu 去重（彩图页除外，保留首次） ----------
+
+_CHATU = re.compile(
+    r'<div class="chatu">\s*<p class="image"><img src="([^"]*)"[^>]*/></p>\s*'
+    r'(?:<p class="caption">(.*?)</p>\s*)?</div>', re.S)
+
+_seen_chatu = set()
+
+
+def _chatu_key(m):
+    return (m.group(1), re.sub(r"\s+", "", m.group(2) or ""))
+
+
+def reset_dedupe():
+    _seen_chatu.clear()
+
+
+def is_gallery(c):
+    """整页插图墙（彩图页）：chatu 多、正文段极少"""
+    chatu = len(_CHATU.findall(c))
+    body = len(re.findall(r'class="bodytext(?:-noindent)?"', c))
+    return chatu >= 3 and body <= 2
+
+
+def dedupe_chatu(c):
+    if is_gallery(c):
+        return c                      # 彩图页：不去重、不登记
+
+    def repl(m):
+        key = _chatu_key(m)
+        if key in _seen_chatu:
+            return ""
+        _seen_chatu.add(key)
+        return m.group(0)
+
+    c = _CHATU.sub(repl, c)
+    return re.sub(r"\n(?:[ \t]*\n){2,}", "\n\n", c)
+
+
+def register_chatu(c):
+    """把本文件的 chatu 记入 seen（供 verify 模拟处理顺序）"""
+    for m in _CHATU.finditer(c):
+        _seen_chatu.add(_chatu_key(m))
+
+
+def count_dupe_chatu(c):
+    """只统计、不修改 seen：本文件内与已见（或本文件内重复）的 chatu 数"""
+    n, local = 0, set()
+    for m in _CHATU.finditer(c):
+        k = _chatu_key(m)
+        if k in _seen_chatu or k in local:
+            n += 1
+        local.add(k)
+    return 0 if is_gallery(c) else n
+
+
+# ---------- 2) chatu 之间不保留 sprt ----------
 
 _SPRT_BETWEEN_CHATU = re.compile(
     r'(<div class="chatu">(?:(?!</div>).)*?</div>)\s*'
@@ -28,3 +90,11 @@ def strip_sprt_between_chatu(c):
 
 def count_sprt_between_chatu(c):
     return len(_SPRT_BETWEEN_CHATU.findall(c))
+
+
+# ---------- 组合 ----------
+
+def postprocess(c):
+    c = dedupe_chatu(c)
+    c = strip_sprt_between_chatu(c)
+    return c

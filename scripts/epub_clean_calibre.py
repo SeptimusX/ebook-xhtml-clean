@@ -22,7 +22,7 @@ epub_clean_calibre.py — calibre(+多看 duokan) 源 EPUB xhtml 清洗（配置
 """
 import argparse, datetime, glob, html, json, os, re, shutil, sys
 import xml.etree.ElementTree as ET
-from epub_clean_common import strip_sprt_between_chatu
+from epub_clean_common import postprocess
 
 DEFAULT_CONFIG = {
     "css_href": "styles.css",
@@ -578,7 +578,7 @@ def process(dirpath, dry=False, cfgpath=None):
         ctx = new_ctx(dirpath)
         for s in STEP_ORDER:
             c = BUILTIN[s](c, name, ctx, cfg)
-        c = strip_sprt_between_chatu(c)
+        c = postprocess(c)
         probs = verify_content(c, name, cfg, dirpath)
         if probs:
             ok = False

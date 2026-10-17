@@ -76,8 +76,11 @@ description: 电子书 EPUB xhtml 清洗流水线（十六套 profile：得到/�
   （noteref→aside 按 alt 文本精确配对，aside 正文为权威文本）。
 - 插图：`<div class="chatu">` + `<p class="image"><img src=... alt=""/></p>` + `<p class="caption">`。
   **两个 `chatu` 之间不放 `<p class="sprt">`**（连续插图之间不需要分隔符），已有则删 ——
-  由 `scripts/epub_clean_common.py` 的 `strip_sprt_between_chatu()` 统一实现，各 profile 写出前调用；
   只处理「chatu → sprt → chatu」这一种，其余 sprt（如 chatu 后接正文的分隔）保留。
+  **正文中同一 (img src + 图注) 的 chatu 只保留首次出现**（跨文件去重）；
+  **彩图页**（整页插图墙：chatu ≥ 3 且正文段 ≤ 2）整体跳过：不去重、也不参与后续比对。
+  以上两条统一由 `scripts/epub_clean_common.py`（`dedupe_chatu()` / `strip_sprt_between_chatu()`，
+  入口 `postprocess()`）实现，各 profile 写出前调用。
 - 引文：整段 FZFangSong 仿宋引文，连续段合并为一个 `<blockquote>`，内部段落保留
   `class="bodytext"`，段内 noteref 保留。**blockquote 内不用 `<br/>` 分行：每一行各自
   成一个 `<p class="bodytext">`**（诗歌、多行引文按行拆段）。

@@ -31,7 +31,7 @@ epub_clean_zhangyue.py — 掌阅（ZHANGYUE）+ SigilFootnoteUltimate 源 xhtml
 """
 import argparse, datetime, glob, os, re, shutil, sys
 import xml.etree.ElementTree as ET
-from epub_clean_common import strip_sprt_between_chatu
+from epub_clean_common import postprocess
 
 CONFIG = {
     "css_href": "styles.css",
@@ -304,7 +304,7 @@ def process(dirpath, dry=False):
         keep_ids = {i for i in src_ids if not i.startswith(("noteref_", "note_"))}
         for s, fn in STEPS:
             c = fn(c, name, ctx)
-        c = strip_sprt_between_chatu(c)
+        c = postprocess(c)
         probs = verify_content(c, name, dirpath)
         lost = sorted(keep_ids - set(re.findall(r'\bid="([^"]+)"', c)))
         if lost:

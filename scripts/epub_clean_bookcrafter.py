@@ -30,7 +30,7 @@ epub_clean_bookcrafter.py — bookcrafter 生成版 xhtml 清洗（磨铁 / Z-Li
 """
 import argparse, datetime, glob, os, re, shutil, sys
 import xml.etree.ElementTree as ET
-from epub_clean_common import strip_sprt_between_chatu
+from epub_clean_common import postprocess
 
 CONFIG = {
     "css_href": "styles.css",
@@ -296,7 +296,7 @@ def process(d, dry=False):
             ok = False
             print("%-20s FAIL: %s" % (name, e))
             continue
-        c = strip_sprt_between_chatu(c)
+        c = postprocess(c)
         probs, _ = verify_content(c, name, d)
         if probs:
             ok = False
