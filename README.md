@@ -1,9 +1,9 @@
 # ebook-xhtml-clean
 
 把各类来源的电子书章节 XHTML 清洗为统一的语义化格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
-An opencode skill / CLI for cleaning EPUB xhtml from thirteen common Chinese e-book sources.
+An opencode skill / CLI for cleaning EPUB xhtml from fourteen common Chinese e-book sources.
 
-## 支持的源格式（十三套 profile）
+## 支持的源格式（十四套 profile）
 
 | # | profile | 脚本 | 典型特征 |
 |---|---|---|---|
@@ -20,6 +20,7 @@ An opencode skill / CLI for cleaning EPUB xhtml from thirteen common Chinese e-b
 | K | 掌阅 ZHANGYUE（`text-title-*`，已语义化稿） | `scripts/epub_clean_zhangyue.py` | `h1.text-title-1-c/-r`、`div.zhangyue-c80>h2.text-title-2[id=sigil_toc_id_N]`、`h3.text-title-3`、`p.bodytext`(本已语义化)、`sup>a[href=#note_N][id=noteref_N]` + 文末 `pre>code` `[注释]`、`p.bodytext>span>a[id=note_N]`、`div.zhangyue-c>img.zhangyue-img`+`p.bodytext-no`+`p.img-note`、`span.fangsong`、`../Styles/Style0001.css`+`jianrong.css`、内联 style |
 | L | Kindle-cn 亚马逊中国（`kindle-cn-*`） | `scripts/epub_clean_kindle_cn.py` | `body.calibre`、`../stylesheet.css`+`../page_styles1.css`、`h1.kindle-cn-heading[id=calibre_pb_0]`、`h2.kindle-cn-heading2`(内嵌空锚 `a[id=sec001].calibre6`)、`h3.kindle-cn-heading3`、`p.calibre1`/`p.kindle-cn-para-2em-indent`/`-no-indent(1)`、`p.kindle-cn-poem-left`、`p.kindle-cn-signature(1)`、尾注 `a[id=chN-back][href=file#chN]>sup.calibre5` + `p.fnote>a[id=chN]`、`div.empty`+20×U+2014、`div.kindle-cn-toc-level(1)`、`div.kindle-cn-bodycontent-div-alone`、`img.kindle-cn-inline-character`、`div.chatu_img`+`gaiword.png` |
 | M | InDesign EPUB3 新版（`ff_serif/fz_*/ti_*`） | `scripts/epub_clean_indesign_epub3.py` | `body#BK7026X-N` + 无 class 外层 `div`、`css/YYYY.N.h.css`、`h1.ff_serif.fz_1-9em.ta_left[id=_idParaDest-N]`、`p.ff_serif.fz_1-0em.ti_2em`、`p.ff_cursive.fz_1-0em.mg-str_2-0em`、`ta_right`、`p.ff_serif.fz_1-6em`、`p.ff_sans.fz_1-0em.ta_center`、`span.ff_serif/ff_sans.fw_900`、`span.ff_cursive.fs_italic`、`a._idFootnoteLink[role=doc-noteref]` + `hr.HorizontalRule-1` + `section._idFootnotes>ol>li._idFootnote>a._idFootnoteAnchor`、`div.mg-str_10pr.mg-end_10pr`、`div[class~=box]`、`<p>　</p>` |
+| N | bookcrafter 生成版（磨铁 / Z-Library） | `scripts/epub_clean_bookcrafter.py` | `../Styles/style.css` + 内联 `<style>`(duokan-text-indent)、`h1[style]`、`p.bookcrafter-body-paragraph`、**纯文本编号脚注**（正文 `(1)`、章末 `p.bookcrafter-body-paragraph` 以 `(N)` 开头）、目录页 `div.toc-list` |
 
 先跑 `analyze` 判断属于哪一套，再选脚本。类名对不上时：改该脚本顶部的 `CONFIG`（若能覆盖）或另立一套。
 
@@ -102,6 +103,7 @@ KADOKAWA 的 Kobo 导出版本额外加 `--strip-kobo --drop-scripts --drop-kobo
 
 ## 变更记录（本轮）
 
+- **新增 profile N**（bookcrafter 生成版 / 磨铁·Z-Library）：`p.bookcrafter-body-paragraph`、纯文本 `(N)` 脚注（含孤儿注保留不回链）、`div.toc-list` → `p.toc1`
 - **新增 profile J**（InDesign→calibre 繁中重注本）、**K**（掌阅）、**L**（Kindle-cn，含 `rare_map.json`）、**M**（InDesign EPUB3 新版）
 - 脚注编号体系：文件内 vs 跨文件用不同数字体系区分；注文去掉外层 `<p>` 与 `：`
 - 章首作者行 → `p.author`；h1 内 `span.subtitle` 收紧为"仅分行"；引文/图注/脚注内不用 `span.kai`
