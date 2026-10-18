@@ -31,7 +31,7 @@ epub_clean_indesign_calibre.py — InDesign→calibre（繁中·重注释）EPUB
 """
 import argparse, datetime, glob, os, re, shutil, sys
 import xml.etree.ElementTree as ET
-from epub_clean_common import postprocess
+from epub_clean_common import postprocess, ensure_styles
 
 CONFIG = {
     "css_href": "styles.css",
@@ -415,6 +415,9 @@ def analyze(dirpath, out=None):
         sys.stdout.write(rep)
 
 def process(dirpath, dry=False):
+    _st = ensure_styles(dirpath)          # 先把 skill 内的 styles.css 放到目标目录
+    if _st not in ("same", "copied"):
+        print("styles.css: %s" % _st)
     files = list_files(dirpath)
     if not files:
         print("!! 未找到 *.xhtml")

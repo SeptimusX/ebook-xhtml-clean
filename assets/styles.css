@@ -1,0 +1,307 @@
+body {
+	font-size: 1em;
+	text-align: justify;
+	line-height: 1.4em;
+}
+
+h1, h2, h3, h4, h5 {
+	font-weight: bold;
+	text-align: center;
+	margin: 0 auto;
+	line-height: 1.4em;
+	width: 80%;
+}
+h1 {
+	font-size: 1.35em;
+	padding: 4.2em 0 1.4em;
+	page-break-before: always;
+	margin-left: auto;
+	margin-right: auto;
+}
+h1 img {
+	max-width: 100%;
+}
+h2 {
+	font-size: 1.25em;
+	padding: 2.8em 0 1.4em;
+	page-break-before: always;
+}
+h3 {
+	font-size: 1.15em;
+	padding: 1.4em 0 .7em;
+}
+h4 {
+	font-size: 1.1em;
+	padding: 1.4em 0 .7em;
+}
+h5 {
+	font-size: 1.05em;
+	padding-top: 0em;
+	padding-bottom: 0em;
+}
+.subtitle {
+	font-size: 80%;
+}
+
+p {
+	text-align: justify;
+	line-height: 1.4em;
+	margin: 0;
+}
+.bodytext {
+	text-indent: 2em;
+}
+.fnote {
+	font-size: 0.9em;
+	text-indent: 2em;
+}
+.fnotel {
+	font-size: 0.9em;
+	text-indent: 0;
+}
+.left,
+.bodytext-noindent {
+	text-indent: 0 !important;
+}
+.left2 {
+	text-indent: 0 !important;
+	margin-left: 4em;
+}
+.right {
+	text-align: right;
+}
+.center {
+	text-align: center;
+	text-indent: 0;
+}
+.sprt {
+	font-weight: bold;
+	text-align: center;
+	text-indent: 0;
+	padding-top: 1.4em;
+	padding-bottom: 1.4em;
+}
+.sprt img {
+	height: 1.4em;
+}
+.caption,
+.image {
+	text-indent: 0;
+	font-size: 0.9em;
+	font-family: 'times new roman', 'STKaiti', kaiti, serif;
+	text-align: center;
+	margin-top: .2em;
+	line-height: 1.2;
+}
+.date,
+.author {
+	text-indent: 0;
+	font-family: 'times new roman', 'STKaiti', kaiti, serif;
+	text-align: center;
+	margin-top: .7em;
+	margin-bottom: 1.4em;
+}
+
+span.italic {
+	font-style: italic;
+}
+span.bold {
+	font-weight: bold;
+}
+span.underline {
+	text-decoration: underline;
+}
+span.small,
+span.smallcaps {
+	font-size: 88%;
+}
+span.lefttitle {
+	display: block;
+	text-align: left;
+	font-size: 85%;
+	padding-bottom: 1.4em;
+	font-weight: normal;
+}
+span.jiazhu {
+	font-size: 0.9em;
+	font-family: 'times new roman', 'STKaiti', kaiti, serif;
+	color: #555;
+}
+span.del {
+	text-decoration: line-through;
+}
+span.kai,
+span.kaiti {
+	font-family: 'STKaiti', kaiti, kai, cursive;
+}
+span.name {
+	font-family: Pingfang SC, Heiti, sans-serif;
+	font-weight: bold;
+}
+
+blockquote {
+	padding-left: .75em;
+	border-left: .25em solid #555;
+	margin: .7em 0;
+}
+blockquote.intro {
+	font-family: "Times New Roman", 'STKaiti', kaiti, serif;
+	margin: .7em 1em;
+	padding: 0;
+	border: none;
+}
+blockquote.poem,
+blockquote.blockcenter {
+	margin: .7em 1em;
+	padding: 0;
+	border: none;
+}
+blockquote.menu {
+	margin: .7em auto;
+	padding: .7em;
+	border: 1px solid #555;
+	border-radius: .25em;
+}
+blockquote.menu h4 {
+	margin-top: 0 !important;
+	padding-top: 0;
+	margin-bottom: 0.7em;
+}
+blockquote.poem p,
+blockquote.blockcenter p {
+	text-indent: 0;
+	text-align: center;
+}
+
+
+.chatu {
+	padding: 1em;
+	/*max-width: 90%;*/
+	/*margin: 1.4em auto;*/
+	text-align: center;
+}
+.toutu {
+	padding-top: 1.4em;
+	padding-bottom: 1.4em;
+	max-width: 50%;
+	margin: 0 auto;
+	text-align: center;	
+}
+.chatu img,
+.toutu img {
+	max-width: 100%;
+	margin: 0 auto;
+	display: block;
+}
+
+ol, ul {
+	margin: 0;
+	padding-top: .7em;
+	padding-bottom: .7em;
+	padding-left: 2em;
+}
+li {
+	margin-left: 2em;
+}
+ol.Note-content {
+	font-size: 90%;
+}
+
+table {
+	text-align: center;
+	margin: 1.4em auto;
+	border-collapse: collapse;
+}
+p.center + table {
+	margin-top: 0.2em;
+}
+p.caption + table {
+	margin-top: 0.2em;
+}
+td,
+th {
+  border: 1px solid rgb(160 160 160);
+  padding: .25em;
+  border-collapse: collapse;
+  vertical-align: middle;
+}
+tr:nth-of-type(odd) td {
+  background-color: #DDD;
+}
+tr th[scope="row"] {
+  background-color: #EEE;
+}
+table p {
+	text-align: center;
+}
+
+
+.box {
+	width: 80%;
+	margin: .7em auto;
+	border: 1px solid #555;
+	padding: .7em;
+}
+
+sup,
+span.super,
+span.super1,
+.ref,
+a.Note,
+a._idfootnoteLink,
+a._idFootnoteLink,
+a.noteref,
+span.math-super,
+.footnoteup,
+.subscript1 {
+	font-size: 0.75em;
+	vertical-align: text-top;
+	line-height: initial;
+	margin-left: 0.12em;
+	margin-right: 0.12em;
+}
+sub,
+span.sub {
+	font-size: 0.75em;
+	vertical-align: text-bottom;
+	line-height: initial;
+}
+
+a {
+	text-decoration: none;
+}
+
+hr {
+	margin: 1em auto;
+}
+
+.pgbrk {
+	page-break-before: always;
+}
+
+span.reader_footer_note {
+	position: relative;
+	display: inline-block;
+	width: .8em;
+	height: .8em;
+	background-color: black;
+	vertical-align: baseline;
+	border-radius: 50%;
+	cursor: pointer;
+	margin: 0 3px;
+	background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAQAAAACNCElAAACuUlEQVR42q2WTWgTQRTHX4v1UNFiDgVFPEmRXETbS0V6yKESpMGLl3rw7MGLBizoTTAXmx78wAUpIvHSFAq7JqbGpjWm1kA/Y2I/qOgam1qbLNbEJDXNPpmuS5PMbJqtu//Lzhveb3fmvZn3ALQfE1jBDg7gwA1u4MABdrCCCXQ+DWCDXhA01As2aKgNVA8W6NcEqeoHC9TvhmqGvl1BqvqguRrKDK6aUUQuMGuhOmBIF4poCDrYf6UfpeDM9F659oRSFttcHsGSbW/xD355sNAVUscnXi3/nFy/P3/UVyUUJZG1lE8+XUZEnPxxyKOML45vFRGzBVtIE2fZSdGKvNr/IpEhuJszqoVbJOOVtDrPyLt/aWyjv9Qzi1iUu0I9s8q4yfv7D2Iyq8xFUsfoJdsUmJOG1QmdwbZAW8ARbfQoujbli1961+hpH81vISYyZwLUIds+zmXGe7E7H86/Vd55kVsa/Ew0/p0sE2VlRHRrlvoFE4C13HQljDLi1Pphb4t/XlKt3ROEVSxWTRErgL3S+GaVODqizz89XtQFswM4Ko2X35MFXZ/OFzqDumAOAI42nxtrH+UWpVydwIJ1T2ikLwfgZk2YvJlNXgQGrDWQKyQyrQGGlxtggAVzfkS8OgnC7TleJAqvKdHkxa9pWZblVO74MOU1wFxmk3cjj/IRHwi69oxjBACEJ0uI4q9SS60BqEiNs2PBVZJpwVXdMDuVtOQYSznESEo3zEodJ6KZJKIsnx7RCduuqFSFjCSJ66MFNuykP5o6NcKopuwrKJ4mri/jLNg+IZJC3Ni8EGJfQdTlmC0Q14cLd6NKlvHi65WYFJOiEi8OfyNvMSm8dtDDuhypa/vG9Fzy2fIBj46iYtEoKHtQX3mrYGCpM7gIG9weGNy4GNxSGdzs7bShTk2Qs/Y29D8a5L99J97IcV5pLgAAAABJRU5ErkJggg==');
+	background-size: 100%;
+	background-repeat: no-repeat;
+}
+
+/* TOC */
+.toc1 {
+	font-size: 1.05em;
+	margin-left: 2em;
+	margin-top: 0.7em;
+	font-weight: bold;
+}
+.toc2 {
+	font-size: 1em;
+	margin-left: 4em;
+}

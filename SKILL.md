@@ -47,6 +47,10 @@ description: 电子书 EPUB xhtml 清洗流水线（十六套 profile：得到/�
 
 ## 工作流
 
+0. **先放 styles.css**：skill 自带 `assets/styles.css`（规范版，以此为准）。处理前把它复制到目标目录
+   （各 profile 的 `process()` 已自动调用 `ensure_styles(dirpath)`：缺则复制、不同则覆盖、相同不动；
+   `process` 日志里出现 `styles.css: updated/copied` 即生效）。目标目录的 `styles.css` 一律以这里为准，
+   不要在书里另维护一份。
 1. **读规则**：读目标目录的 `2do.md`（或用户口述）。没有 2do.md 就把用户需求映射到
    默认约定（下节），有出入再问用户。
 2. **体检**：`SCRIPT analyze <dir> -o <临时目录>\report.txt`，Read 报告。重点看：

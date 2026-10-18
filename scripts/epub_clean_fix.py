@@ -15,7 +15,7 @@ import argparse, datetime, glob, os, re, shutil, sys
 
 from epub_clean_common import (postprocess, reset_dedupe, register_chatu,
                                count_dupe_chatu, count_sprt_between_chatu,
-                               is_gallery, _CHATU)
+                               is_gallery, _CHATU, ensure_styles)
 
 
 def list_files(d):
@@ -40,6 +40,9 @@ def write(fp, c):
 
 
 def process(d, dry=False):
+    _st = ensure_styles(d)          # 先把 skill 内的 styles.css 放到目标目录
+    if _st not in ("same", "copied"):
+        print("styles.css: %s" % _st)
     files = list_files(d)
     if not files:
         print("!! 未找到 *.xhtml / *.html")

@@ -22,7 +22,7 @@ epub_clean_calibre.py — calibre(+多看 duokan) 源 EPUB xhtml 清洗（配置
 """
 import argparse, datetime, glob, html, json, os, re, shutil, sys
 import xml.etree.ElementTree as ET
-from epub_clean_common import postprocess
+from epub_clean_common import postprocess, ensure_styles
 
 DEFAULT_CONFIG = {
     "css_href": "styles.css",
@@ -557,6 +557,9 @@ def analyze(dirpath, out=None, cfgpath=None):
 # ---------- process / verify ----------
 
 def process(dirpath, dry=False, cfgpath=None):
+    _st = ensure_styles(dirpath)          # 先把 skill 内的 styles.css 放到目标目录
+    if _st not in ("same", "copied"):
+        print("styles.css: %s" % _st)
     cfg, used = load_config(dirpath, cfgpath)
     files = list_files(dirpath)
     if not files:

@@ -106,7 +106,10 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 - Python 3（只用标准库，无第三方依赖；生僻字拼图自查需 Pillow）
 - 各 profile 会 `from epub_clean_common import strip_sprt_between_chatu`，**请连同 `scripts/epub_clean_common.py` 一起安装**（`epub_clean_fix.py` 同样依赖它）
-- 目标目录为书籍解包后的文本目录，同目录应有 `styles.css`
+- 目标目录为书籍解包后的文本目录
+- **`styles.css` 由 skill 提供**：`assets/styles.css` 是规范版（**以此为准**）。各 profile 的 `process()`
+  已内置 `ensure_styles(dirpath)`：缺则复制、不同则覆盖、相同不动（日志出现 `styles.css: copied/updated`
+  即生效）。**不要在书里另维护一份 css**
 - 脚本会自动把原文件备份到系统临时目录；目录里的 `.bak` 只读跳过
 
 ## 文档
@@ -115,6 +118,8 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
+- **`styles.css` 收进 skill**：新增 `assets/styles.css`（规范版，以此为准）+ `epub_clean_common.ensure_styles(dirpath)`；
+  17 个脚本的 `process()` 都会在处理前自动复制/覆盖到目标目录（缺则复制、不同则覆盖、相同不动），**书里不再另维护 css**
 - **通用规则：`chatu` 处理** —— ① 两个 `chatu` 之间不放 `p.sprt`（有则删）；② 正文中同一 (img src + 图注) 的 `chatu` 只保留首次出现（跨文件），**彩图页（整页插图墙）整体跳过不计**。实现于 `scripts/epub_clean_common.py`，16 个 profile 写出前自动调用；旧成果可用 `scripts/epub_clean_fix.py process <dir>` 补跑
 - **新增 profile P**（八旗文化 繁中 InDesign）：无 class 的 `<p>` 正文、`span.num/num2`→subtitle 分行、`p.kai`/`div.kai`→blockquote、`ol.footnote`+`img.pw` 回链箭头→`hr`+fnote、`p.sec`→sprt、`p.ref/item/title`→bodytext-noindent
 - **新增 profile O**（文景/上海人民 `bodyContent-1`）：跨文件 `jz_X`/`jzyy_X` 脚注原样保留并双向化、楷体引文→blockquote、`contents-1/2`→toc1/toc2（三级只留前两级）、标题保持 h1/h3/h4 原层级；新增**目录级跨文件锚点校验**

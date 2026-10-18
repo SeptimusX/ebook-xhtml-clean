@@ -12,8 +12,32 @@ postprocess(c) 依次执行:
   2) strip_sprt_between_chatu   两个 <div class="chatu"> 之间不保留 <p class="sprt">…</p>
 
 各 profile 在写出前调用 postprocess(c)；也可用 epub_clean_fix.py 对已清洗目录补跑。
+
+另有 ensure_styles(dirpath)：处理前把 skill 内的 assets/styles.css（规范版，以此为准）
+复制到目标目录；各 profile 的 process() 会自动调用，不需手动找 css。
 """
+import os
 import re
+import shutil
+
+ASSET_STYLES = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "styles.css"))
+
+
+def ensure_styles(dirpath):
+    """确保目标目录有最新 styles.css（skill 的 assets/styles.css 为准）。返回状态字符串。"""
+    if not os.path.exists(ASSET_STYLES):
+        return "missing-asset"
+    dst = os.path.join(dirpath, "styles.css")
+    try:
+        if os.path.exists(dst):
+            if open(ASSET_STYLES, "rb").read() == open(dst, "rb").read():
+                return "same"
+            shutil.copyfile(ASSET_STYLES, dst)
+            return "updated"
+        shutil.copyfile(ASSET_STYLES, dst)
+        return "copied"
+    except OSError as e:
+        return "error:%s" % e
 
 # ---------- 1) 正文 chatu 去重（彩图页除外，保留首次） ----------
 

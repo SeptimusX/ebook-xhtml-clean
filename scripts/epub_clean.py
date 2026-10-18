@@ -15,7 +15,7 @@ epub_clean.py — EPUB xhtml 清洗流水线（得到/中华书局系 xhtml → 
 """
 import argparse, datetime, glob, html, importlib.util, json, os, re, shutil, sys
 import xml.etree.ElementTree as ET
-from epub_clean_common import postprocess
+from epub_clean_common import postprocess, ensure_styles
 
 DEFAULT_CONFIG = {
     "css_href": "styles.css",
@@ -545,6 +545,9 @@ def analyze(dirpath, cfg, out=None):
 # ---------- process ----------
 
 def process(dirpath, cfg, dry=False):
+    _st = ensure_styles(dirpath)          # 先把 skill 内的 styles.css 放到目标目录
+    if _st not in ("same", "copied"):
+        print("styles.css: %s" % _st)
     files = list_files(dirpath)
     if not files:
         print("!! 未找到 *.xhtml")
