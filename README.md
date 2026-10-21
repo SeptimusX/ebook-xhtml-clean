@@ -3,7 +3,7 @@
 把各类来源的电子书章节 XHTML 清洗为统一的语义化格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
 An opencode skill / CLI for cleaning EPUB xhtml from sixteen common Chinese e-book sources.
 
-## 支持的源格式（十六套 profile）
+## 支持的源格式（十七套 profile）
 
 | # | profile | 脚本 | 典型特征 |
 |---|---|---|---|
@@ -23,6 +23,7 @@ An opencode skill / CLI for cleaning EPUB xhtml from sixteen common Chinese e-bo
 | N | bookcrafter 生成版（磨铁 / Z-Library） | `scripts/epub_clean_bookcrafter.py` | `../Styles/style.css` + 内联 `<style>`(duokan-text-indent)、`h1[style]`、`p.bookcrafter-body-paragraph`、**纯文本编号脚注**（正文 `(1)`、章末 `p.bookcrafter-body-paragraph` 以 `(N)` 开头）、目录页 `div.toc-list` |
 | O | 文景 / 上海人民（`bodyContent-1`，跨文件注） | `scripts/epub_clean_bodycontent.py` | `../Styles/stylesheet.css`+`stylesheet-1.css`、`h1.chaptertitle-c/parttitle-c/prefacetitle-c/backtitle-c[id=isbn…]`、`h3.txtheading-1-c`/`h4.txtheading-2-c`、`p.bodyContent-1(-top/-top-2/-c)`、`p.noindent-copyContent-1`、`p.hang-bodyContent-1`、`p.bodyContent-2-kaiti(-top-4)`、跨文件注 `a[href=partNNNN.xhtml#jz_X][id=jzyy_X]>sup.(N)` + `p.fnContent-1>a[id=jz_X]`、`div.chatu_img/title_img>img.pic-img`、`p.contents-1/2/3` |
 | P | 八旗文化（繁中 InDesign，`p.kai`/`ol.footnote`） | `scripts/epub_clean_baqi.py` | `../Styles/Style.css`(+`Copyright.css`)、`h1/h2[title]` 内 `span.num`+`span.num2`、`h3.h3.sigil_not_in_toc`、正文 `<p>` 无 class、`p.kai`/`div.kai`、`p.sec`、`div.pic/pic-c>img+span.caption`、`a.footnote[href=#fnX-N][id=fX-N]` + `ol.footnote>li[id=fnX-N]`(+`img.pw` 回链箭头)、`p.ref`、`p.title`+`p.item`、`div.boxend`、`<p><br/></p>` |
+| Q | Kindle（AZW3 经 calibre 转码，`calibre_4/7/13/18`） | `scripts/epub_clean_kindle_calibre.py` | `body.calibre`、`stylesheet.css`+`page_styles.css`、无 h 标签（`p.calibre_4` 内 `span.bold`=标题 / 内 `img`=插图、`p.calibre_7` 正文内层 `span.calibre_18` 为整段壳、`p.calibre_13` 落款、`p.calibre_9` 书内目录、`p.calibre_3` 空 `fileposN` 锚点块须保留）、`div.calibre_14`/`div.mbp_pagebreak`、`titlepage.xhtml` 内联 `<style>@page` 封面（转 `body.cover`）、ref 为同一张「注」圆圈图标（**无数字**，按出现顺序编号）+ `ol.calibre_15/17>li[value=1]` 注文（value 恒为 1，按 `ol` 顺序重排 `[1]..[M]`）、章标题常拆成 `第N章`／`章名`／`副标题` 多条（用 `<br/>` 合并）、无注文文件里的文字 `sup` 是表格上标数字残渣（须原样解包，不加 `[N]`） |
 
 先跑 `analyze` 判断属于哪一套，再选脚本。类名对不上时：改该脚本顶部的 `CONFIG`（若能覆盖）或另立一套。
 
@@ -118,8 +119,11 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
+- **新增 profile Q**（Kindle AZW3 经 calibre 转码）：标题/图/正文全压在 `p.calibre_4/7/13` 上（靠内层 `span.bold`、`img` 分辨）、章标题跨 `第N章`／`章名`／`副标题` 多条时用 `<br/>` 合并、ref 为同一张「注」圆圈图标按出现顺序编号、`ol.calibre_15/17>li[value=1]` 注文按 `ol` 顺序重排 `[1]..[M]`、**无注文文件里的文字 `sup` 是表格上标数字残渣**（原样解包，不误加 `[N]`）、`p.calibre_3` 空 `fileposN` 锚点块保留（书内目录链接目标）、封面页内联 `<style>@page` → `body.cover`
+- `assets/styles.css` 增补 `body.cover`（封面页整页居中、零页边距）
+
 - **`styles.css` 收进 skill**：新增 `assets/styles.css`（规范版，以此为准）+ `epub_clean_common.ensure_styles(dirpath)`；
-  17 个脚本的 `process()` 都会在处理前自动复制/覆盖到目标目录（缺则复制、不同则覆盖、相同不动），**书里不再另维护 css**
+  17 个 profile 的 `process()` 都会在处理前自动复制/覆盖到目标目录（缺则复制、不同则覆盖、相同不动），**书里不再另维护 css**
 - **通用规则：`chatu` 处理** —— ① 两个 `chatu` 之间不放 `p.sprt`（有则删）；② 正文中同一 (img src + 图注) 的 `chatu` 只保留首次出现（跨文件），**彩图页（整页插图墙）整体跳过不计**。实现于 `scripts/epub_clean_common.py`，16 个 profile 写出前自动调用；旧成果可用 `scripts/epub_clean_fix.py process <dir>` 补跑
 - **新增 profile P**（八旗文化 繁中 InDesign）：无 class 的 `<p>` 正文、`span.num/num2`→subtitle 分行、`p.kai`/`div.kai`→blockquote、`ol.footnote`+`img.pw` 回链箭头→`hr`+fnote、`p.sec`→sprt、`p.ref/item/title`→bodytext-noindent
 - **新增 profile O**（文景/上海人民 `bodyContent-1`）：跨文件 `jz_X`/`jzyy_X` 脚注原样保留并双向化、楷体引文→blockquote、`contents-1/2`→toc1/toc2（三级只留前两级）、标题保持 h1/h3/h4 原层级；新增**目录级跨文件锚点校验**
