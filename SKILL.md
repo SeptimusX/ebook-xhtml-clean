@@ -12,7 +12,7 @@ description: 电子书 EPUB xhtml 清洗流水线（十七套 profile：得到/�
 
 | 源格式 | 脚本 | 特征 |
 |---|---|---|
-| 得到/中华书局（纯文本 aside） | `scripts/epub_clean.py` | `<aside epub:type="footnote" id="…">注文</aside>`、`<div style="display: block;text-align:center;">` 图、FZFangSong 引文、`<p><span style="…">` 内联样式、`.bak` 原始文件 |
+| 得到/中华书局（纯文本 aside） | `scripts/epub_clean.py` | `<aside epub:type="footnote" id="…">注文</aside>`、`<div style="display: block;text-align:center;">` 图、FZFangSong 引文、`<p><span style="…">` 内联样式、`.bak` 原始文件；**逐字包裹** `<b>似</b><b>是</b>`／`<i>S</i><i>o</i>`（脚本自动合并）、插图 div 的 `style="&gt;display: block;text-align:center;"` 变体（多一个 `&gt;`，`chatu` 也认）、标题 id 常挂在 `h1>span[id=sigil_toc_id_N]` |
 | calibre + 多看(duokan) | `scripts/epub_clean_calibre.py` | `<body class="calibre2">`、`<p class="calibre7"><span class="calibre10">`、`calibre23` 引文、`<aside…><ol class="duokan-footnote-content"><li>` 脚注、`<div class="calibre13">` 图 |
 | 微信读书 / QQ阅读 | `scripts/epub_clean_weread.py` | `<section class="readerChapterContent"><div data-wr-bd="1">`、`<span data-wr-id="layout">`、`<p class="content">` / `<p class="quotation">`、`<span class="reader_footer_note" data-wr-footernote="注释">`、`styles/common.css` + 内联 `<style>` |
 | KADOKAWA 竖排/固定版式 | `scripts/epub_clean_kadokawa.py`（**只做阶段二**） | `<html … xml:lang="zh-TW" class="hltr">`、`../style/book-style.css`、`<p class="mfont font-1em10">` 空段、`<p>　　<br/></p>` 版式空行、`class="kfont"` 引文、`class="key1"/"key2"` 注释锚点、`mokuji-` 锚点 |
@@ -103,9 +103,10 @@ description: 电子书 EPUB xhtml 清洗流水线（十七套 profile：得到/�
 - h1–h3 去 `<b>`，同时去掉 h 内 span 的内联样式（保留 id）。
 - 保留不动：空 `<div id="文件名">` 容器、已有的其他 css 链接（如 cover.css）。
 - 处理顺序固定不可变：pre_strip → inline_glyphs → chatu → footnotes → blockquote →
-  unwrap → h1_subtitle → bold_bodytext → bodytext → join_multiline_p → h_fix →
+  unwrap → merge_emphasis → h1_subtitle → bold_bodytext → bodytext → join_multiline_p → h_fix →
   css → append（chatu 先于引文规则消费 fangsong caption；footnotes 先于引文规则
-  以免 aside 割裂连续性；unwrap 先于 bodytext/h1_subtitle）。
+  以免 aside 割裂连续性；unwrap 先于 bodytext/h1_subtitle；merge_emphasis 在 unwrap 后、
+  bold_bodytext 前，把逐字 `<b>/<i>` 合并成一个标签）。
 
 ## calibre + duokan profile 约定（epub_clean_calibre.py，**配置驱动**）
 

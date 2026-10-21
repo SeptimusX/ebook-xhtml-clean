@@ -39,7 +39,7 @@ DEFAULT_CONFIG = {
 }
 
 STEP_ORDER = ["pre_strip", "inline_glyphs", "chatu", "footnotes", "blockquote_quotes",
-              "unwrap", "h1_subtitle", "bold_bodytext", "bodytext", "join_multiline_p",
+              "unwrap", "merge_emphasis", "h1_subtitle", "bold_bodytext", "bodytext", "join_multiline_p",
               "h_fix", "css_link", "append_fnotes"]
 
 # ---------- 基础工具 ----------
@@ -100,7 +100,7 @@ def step_chatu(c, name, cfg, ctx):
     style = rule.get("div_style", "display: block;text-align:center;")
     # 注意：img 与 </div> 通常同一行（alt=""/></div>），caption 紧随其后一行
     pat = re.compile(
-        r'<div style="' + re.escape(style) + r'">\n'
+        r'<div style="(?:\s*&gt;)?' + re.escape(style) + r'">\n'
         r'(<img[^>]*?src="([^"]+)"[^>]*?/>)</div>\n'
         r'<p><span[^>]*>(.*?)</span></p>((?:</div>)*)')
 
@@ -219,6 +219,24 @@ def step_unwrap(c, name, cfg, ctx):
     ctx["unwrapped"] += n
     return c
 
+def step_merge_emphasis(c, name, cfg, ctx):
+    """逐字包裹的 <b>/<i> 合并（<b>似</b><b>是</b> → <b>似是</b>，<i>S</i><i>o</i> → <i>So</i>）"""
+    def merge_one(text, tag):
+        pat = re.compile(r'<%s>([^<]*)</%s>\s*<%s>([^<]*)</%s>' % (tag, tag, tag, tag))
+        for _ in range(4000):
+            t2 = pat.sub(lambda m: '<%s>%s%s</%s>' % (tag, m.group(1), m.group(2), tag), text)
+            if t2 == text:
+                break
+            text = t2
+        return text
+
+    n0 = len(re.findall(r'</b>\s*<b>|</i>\s*<i>', c))
+    for _ in range(2):
+        c = merge_one(c, "b")
+        c = merge_one(c, "i")
+    ctx["merged_emph"] = n0
+    return c
+
 def step_h1_subtitle(c, name, cfg, ctx):
     """h1 后紧跟的居中样式副标题段 → 并入 h1：<h1>标题<br/><span class="subtitle">副题</span></h1>"""
     rule = cfg.get("h1_subtitle", {})
@@ -321,7 +339,7 @@ def step_append_fnotes(c, name, cfg, ctx):
 BUILTIN_STEPS = {
     "pre_strip": step_pre_strip, "inline_glyphs": step_inline_glyphs,
     "chatu": step_chatu, "footnotes": step_footnotes,
-    "blockquote_quotes": step_blockquote_quotes, "unwrap": step_unwrap,
+    "blockquote_quotes": step_blockquote_quotes, "unwrap": step_unwrap, "merge_emphasis": step_merge_emphasis,
     "h1_subtitle": step_h1_subtitle, "bold_bodytext": step_bold_bodytext,
     "bodytext": step_bodytext, "join_multiline_p": step_join_multiline_p,
     "h_fix": step_h_fix, "css_link": step_css_link,
@@ -585,7 +603,7 @@ def process(dirpath, cfg, dry=False):
             shutil.copy2(fp, os.path.join(backup_dir, name))
         ctx = {"chatu": 0, "fnotes": [], "fs_quotes": 0, "bodytext": 0,
                "unwrapped": 0, "h_b": 0, "pre_strip": 0, "subtitle": 0, "bold": 0,
-               "joined": 0, "glyphs": 0}
+               "joined": 0, "glyphs": 0, "merged_emph": 0}
         for sname, fn in steps:
             c = fn(c, name, cfg, ctx)
         c = postprocess(c)
