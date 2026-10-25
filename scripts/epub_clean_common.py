@@ -118,7 +118,24 @@ def count_sprt_between_chatu(c):
 
 # ---------- 组合 ----------
 
+def _fix_text_node(t):
+    t = t.replace("\u00a0", " ")                       # NBSP -> 普通空格
+    t = re.sub(r"(?<=[0-9A-Za-z])\s+(?=[\u4e00-\u9fff])", "", t)   # A4 大小 -> A4大小
+    t = re.sub(r"(?<=[\u4e00-\u9fff])\s+(?=[0-9A-Za-z])", "", t)   # 中文 ABC -> 中文ABC
+    t = re.sub(r"(?<=[A-Za-z])\s+(?=[.\-])", "", t)                # T .S . -> T.S.
+    return t
+
+
+def normalize_typography(c):
+    """文本节点规范化：NBSP→空格、中英之间空格、缩写点前空格；并合并逐字 <i>、一段一行"""
+    c = re.sub(r">([^<]+)<", lambda m: ">" + _fix_text_node(m.group(1)) + "<", c)
+    c = re.sub(r"</i>\s*<i>", "", c)                    # <i>阿</i><i>提</i> -> <i>阿提</i>
+    c = re.sub(r"</p>\s*<p", "</p>\n<p", c)             # 两个 <p> 不挤在同一行
+    return c
+
+
 def postprocess(c):
     c = dedupe_chatu(c)
     c = strip_sprt_between_chatu(c)
+    c = normalize_typography(c)
     return c

@@ -42,6 +42,7 @@ An opencode skill / CLI for cleaning EPUB xhtml from sixteen common Chinese e-bo
 - **编号**：同一本书两套脚注用**不同数字体系**区分（如文件内小写罗马 / 跨文件阿拉伯）；单一体系时每文件（= 每章）从 `[1]` 重排
 - **锚点必须保留**：`_idParaDest-N` / `secNNN` / `sigil_toc_id_N` / `calibre_pb_0` / `_idContainer*`（后者可随解包消失）——`toc` / `ncx` 按它们跳转
 - **正字与细节**：`○`(U+25CB) → `〇`(U+3007)；`<img>` 一律自闭合并统一属性顺序；必要处给 `<html>` 补 `xmlns:epub`
+- **排版规范化**（`epub_clean_common.normalize_typography`）：NBSP→空格、中英文之间不留空格、缩写点前空格去掉、逐字 `<i>` 合并、一段一行
 
 ## 通用机制与校验
 
@@ -117,6 +118,13 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 完整约定（各 profile 的处理顺序、默认输出格式、已知陷阱）见 [`SKILL.md`](SKILL.md)。
 
+## 人工精修（脚本不自动做，见到照办）
+
+- 居中题记/献词 → `<p class="center">`；信件称呼 → `<p class="left">`
+- 作者简介「人名 + 外文名」→ `<h3>人名<br/><span class="subtitle">外文名（生卒）</span></h3>`
+- 报纸标题+正文、邀请函、手稿片段等**引文整体包 `<blockquote>`**，块内标题/落款用 `p.center`
+- 逐字拆开的拉丁词（`i P a d`、`V-2 火箭`）→ `iPad`、`V-2火箭`
+
 ## 变更记录（本轮）
 
 - **profile A（得到/中华书局）增补两条通用规则**：① 新增内置步骤 `merge_emphasis`（`unwrap` 之后、`h1_subtitle` 之前），把逐字包裹的 `<b>似</b><b>是</b>`、`<i>S</i><i>o</i>` 合并为 `<b>似是</b>`、`<i>So</i>`（嵌套 `<b><i>x</i></b>` 也收敛）；② `chatu` 步骤兼容 `style="&gt;display: block;text-align:center;"` 变体（源文件里 style 值前多一个 `&gt;`）
@@ -125,6 +133,7 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 - **`styles.css` 收进 skill**：新增 `assets/styles.css`（规范版，以此为准）+ `epub_clean_common.ensure_styles(dirpath)`；
   17 个 profile 的 `process()` 都会在处理前自动复制/覆盖到目标目录（缺则复制、不同则覆盖、相同不动），**书里不再另维护 css**
+- **排版规范化**（`normalize_typography`）：NBSP→空格、中英文之间不留空格、缩写点前空格去掉、逐字 `<i>` 合并、两段不挤一行；新增「人工精修清单」（center / left / 作者名 h3+subtitle / 引文包 blockquote）
 - **通用规则：`chatu` 处理** —— ① 两个 `chatu` 之间不放 `p.sprt`（有则删）；② 正文中同一 (img src + 图注) 的 `chatu` 只保留首次出现（跨文件），**彩图页（整页插图墙）整体跳过不计**。实现于 `scripts/epub_clean_common.py`，16 个 profile 写出前自动调用；旧成果可用 `scripts/epub_clean_fix.py process <dir>` 补跑
 - **新增 profile P**（八旗文化 繁中 InDesign）：无 class 的 `<p>` 正文、`span.num/num2`→subtitle 分行、`p.kai`/`div.kai`→blockquote、`ol.footnote`+`img.pw` 回链箭头→`hr`+fnote、`p.sec`→sprt、`p.ref/item/title`→bodytext-noindent
 - **新增 profile O**（文景/上海人民 `bodyContent-1`）：跨文件 `jz_X`/`jzyy_X` 脚注原样保留并双向化、楷体引文→blockquote、`contents-1/2`→toc1/toc2（三级只留前两级）、标题保持 h1/h3/h4 原层级；新增**目录级跨文件锚点校验**
