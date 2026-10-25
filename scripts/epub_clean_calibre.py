@@ -79,6 +79,11 @@ def write(fp, c):
 def text(inner):
     return re.sub(r"\s+", "", re.sub(r"</?[^>]+>", "", inner))
 
+def text_sp(inner):
+    """去标签、保留单词间单个空格（用于标题，如「第一章 输入法女士」）"""
+    s = re.sub(r"</?[^>]+>", "", inner)
+    return re.sub(r"\s+", " ", s).strip()
+
 def img_keep(img):
     src = re.search(r'src="([^"]*)"', img)
     alt = re.search(r'alt="([^"]*)"', img)
@@ -126,10 +131,15 @@ def step_footnotes(c, name, ctx, cfg):
             acc.append(cand[0]); used.add(cand[0])
         pairs = acc
     if pairs is None:
-        if all(html.unescape(r[1]).strip() == a[1] for r, a in zip(refs, asides)):
+        def norm(s):
+            s = re.sub(r"<[^>]+>", "", s)
+            return re.sub(r"\s+", "", html.unescape(s))
+        if all(norm(r[1]) == norm(a[1]) for r, a in zip(refs, asides)):
             pairs = asides
         else:
-            raise RuntimeError("%s: 无法配对 noteref/aside" % name)
+            # 数量一致时按文档顺序配对（源书常见的缺 id / 文本微差，顺序仍是对的）
+            pairs = asides
+            ctx["orphan"] += 1
     # 生成唯一 fnote id
     used, fids = set(), []
     for i, (aid, txt) in enumerate(pairs, 1):
@@ -202,7 +212,7 @@ def step_figures(c, name, ctx, cfg):
     d = ctx["dir"]
     fig = re.escape(cfg["fig_div"])
     caps = "|".join(re.escape(x) for x in (cfg.get("caption_spans") or []))
-    cap_re = (r'(?:\s*<p class="%s"><span class="(?:%s)">(.*?)</span></p>)*'
+    cap_re = (r'((?:\s*<p class="%s"><span class="(?:%s)">.*?</span></p>)*)'
               % (re.escape(cfg["p_para"]), caps)) if caps else r'()'
     pat = re.compile(r'<div class="%s">\s*(<img[^>]*?/>)\s*</div>%s' % (fig, cap_re), re.S)
 
@@ -218,7 +228,7 @@ def step_figures(c, name, ctx, cfg):
 
     def repl(m):
         img, capblock = m.group(1), (m.group(2) or "")
-        caps2 = [text(x) for x in re.findall(r'<span class="[^"]*">(.*?)</span>', capblock, re.S)]
+        caps2 = [text_sp(x) for x in re.findall(r'<span class="[^"]*">(.*?)</span>', capblock, re.S)]
         orn = is_orn(img)
         if orn:
             adj = (bool(re.search(r"</h[1-4]>\s*(?:</div>\s*|<div[^>]*>\s*)*$", c[:m.start()]))
@@ -292,7 +302,7 @@ def step_lead(c, name, ctx, cfg):
     def repl(m):
         ctx["lead"] += 1
         return '<p class="bodytext"%s><span><b>%s</b></span></p>' % (
-            (' id="%s"' % m.group(1)) if m.group(1) else "", text(m.group(2)))
+            (' id="%s"' % m.group(1)) if m.group(1) else "", m.group(2))
     return pat.sub(repl, c)
 
 def step_bodytext(c, name, ctx, cfg):
@@ -349,7 +359,7 @@ def step_h1(c, name, ctx, cfg):
     if hs:
         def repl_txt(m):
             ctx["h1"] += 1
-            return "<h1%s>%s</h1>" % ((' id="%s"' % m.group(1)) if m.group(1) else "", text(m.group(2)))
+            return "<h1%s>%s</h1>" % ((' id="%s"' % m.group(1)) if m.group(1) else "", text_sp(m.group(2)))
         c = re.sub(r'<h1[^>]*>\s*<span(?: id="([^"]*)")? class="(?:%s)">\s*(.*?)\s*</span>\s*</h1>' % hs,
                    repl_txt, c, flags=re.S)
     return c
@@ -367,7 +377,7 @@ def step_strip_b(c, name, ctx, cfg):
     return c
 
 def step_strip_spans(c, name, ctx, cfg):
-    """清除残余的 calibre span（含嵌套）"""
+    """清除残余的 calibre span（含嵌套）+ 其它行内标签上的残余 calibre 类"""
     pat = re.compile(r'<span(?: id="([^"]*)")? class="calibre[^"]*">((?:(?!<span).)*?)</span>', re.S)
     while True:
         c, k = pat.subn(
@@ -375,6 +385,9 @@ def step_strip_spans(c, name, ctx, cfg):
         ctx["spans"] += k
         if not k:
             break
+    # <a>/<i>/<em>/<sub>/<sup>/<u> 上残留的 calibre 类：只去类，保留标签
+    c, n2 = re.subn(r'<(a|i|em|sub|sup|u)\b([^>]*?)\s+class="calibre[^"]*"', r'<\1\2', c)
+    ctx["spans"] += n2
     return c
 
 def step_cover(c, name, ctx, cfg):
@@ -423,6 +436,20 @@ def step_join(c, name, ctx, cfg):
     return re.sub(r"(<p\b[^>]*>)(.*?)</p>", repl, c, flags=re.S)
 
 def step_tidy(c, name, ctx, cfg):
+    # 兜底 1：未紧跟插图的孤立图注
+    if cfg.get("caption_spans"):
+        caps = "|".join(re.escape(x) for x in cfg["caption_spans"])
+        c, n = re.subn(r'<p class="%s"><span[^>]*class="(?:%s)"[^>]*>(.*?)</span></p>'
+                       % (re.escape(cfg["p_para"]), caps),
+                       r'<p class="caption">\1</p>', c, flags=re.S)
+        ctx["chatu"] += n
+    # 兜底 2：残余 p.p_para -> bodytext
+    if cfg.get("p_para"):
+        c = re.sub(r'<p class="%s"[^>]*?>' % re.escape(cfg["p_para"]),
+                   '<p class="bodytext">', c)
+    # 兜底 3：任何元素上残留的 calibre 类一律去掉（保内容）
+    c = re.sub(r'\s+class="calibre[^"]*"', "", c)
+
     hm = re.search(r"<head>.*?</head>", c, re.S)
     if hm:
         head = re.sub(r"\n(?:[ \t]*\n)+", "\n", hm.group(0))
