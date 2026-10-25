@@ -1,9 +1,9 @@
 # ebook-xhtml-clean
 
 把各类来源的电子书章节 XHTML 清洗为统一的语义化格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
-An opencode skill / CLI for cleaning EPUB xhtml from sixteen common Chinese e-book sources.
+An opencode skill / CLI for cleaning EPUB xhtml from eighteen common Chinese e-book sources.
 
-## 支持的源格式（十七套 profile）
+## 支持的源格式（十八套 profile）
 
 | # | profile | 脚本 | 典型特征 |
 |---|---|---|---|
@@ -25,6 +25,7 @@ An opencode skill / CLI for cleaning EPUB xhtml from sixteen common Chinese e-bo
 | P | 八旗文化（繁中 InDesign，`p.kai`/`ol.footnote`） | `scripts/epub_clean_baqi.py` | `../Styles/Style.css`(+`Copyright.css`)、`h1/h2[title]` 内 `span.num`+`span.num2`、`h3.h3.sigil_not_in_toc`、正文 `<p>` 无 class、`p.kai`/`div.kai`、`p.sec`、`div.pic/pic-c>img+span.caption`、`a.footnote[href=#fnX-N][id=fX-N]` + `ol.footnote>li[id=fnX-N]`(+`img.pw` 回链箭头)、`p.ref`、`p.title`+`p.item`、`div.boxend`、`<p><br/></p>` |
 | Q | Kindle（AZW3 经 calibre 转码，`calibre_4/7/13/18`） | `scripts/epub_clean_kindle_calibre.py` | `body.calibre`、`stylesheet.css`+`page_styles.css`、无 h 标签（`p.calibre_4` 内 `span.bold`=标题 / 内 `img`=插图、`p.calibre_7` 正文内层 `span.calibre_18` 为整段壳、`p.calibre_13` 落款、`p.calibre_9` 书内目录、`p.calibre_3` 空 `fileposN` 锚点块须保留）、`div.calibre_14`/`div.mbp_pagebreak`、`titlepage.xhtml` 内联 `<style>@page` 封面（转 `body.cover`）、ref 为同一张「注」圆圈图标（**无数字**，按出现顺序编号）+ `ol.calibre_15/17>li[value=1]` 注文（value 恒为 1，按 `ol` 顺序重排 `[1]..[M]`）、章标题常拆成 `第N章`／`章名`／`副标题` 多条（用 `<br/>` 合并）、无注文文件里的文字 `sup` 是表格上标数字残渣（须原样解包，不加 `[N]`） |
 
+| R | 旧成果收尾（legacy `content`/`picture`/`fnotecontent`） | `scripts/epub_clean_legacy.py` | `p.content`、`div.picture`+`p.imgIntro`、`sup>a[id=chN][href=file#chN-back]` + 章末 `hr`+`p.fnotecontent`、`p.contents1/2`、`p.inscribe`、`div.copyright.margin-left2`、书名页 `bookTitle/booksubname/author/publish`、`style0001.css` |
 先跑 `analyze` 判断属于哪一套，再选脚本。类名对不上时：改该脚本顶部的 `CONFIG`（若能覆盖）或另立一套。
 
 ## 输出规范（所有 profile 统一）

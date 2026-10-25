@@ -1,6 +1,6 @@
 ---
 name: ebook-xhtml-clean
-description: 电子书 EPUB xhtml 清洗流水线（十七套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept、人民邮电/得到 p.content 系、多看原生内文/标题 neiwen/biaoti、Kobo 导出·多看式排版 koboSpan/book-columns、InDesign→calibre 繁中重注本 _idParaDest/div.foot、掌阅 ZHANGYUE 已语义化稿 text-title-*/noteref_N、Kindle-cn 亚马逊中国 calibre 混合 kindle-cn-*/chatu_img、InDesign EPUB3 新版导出 ff_serif/fz_*/ti_*、bookcrafter 生成版 bookcrafter-body-paragraph/(N) 纯文本尾注、文景/上海人民 bodyContent-1/fnContent-1 跨文件注、八旗文化繁中 p.kai/ol.footnote、Kindle→calibre 转码版 calibre_4/calibre_7/calibre_18/mbp_pagebreak）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、按 h1 合并章节、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG/图片生僻字替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』、『得到/人邮导出清理』、『Kobo 导出清理』、『掌阅导出清理』、『Kindle 导出清理』、『bookcrafter 导出清理』、『文景导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1、firstTitle、kt_104、annot、neiwen、biaoti、duokan-image-single、xian、koboSpan、book-columns、kobostylehacks、_idParaDest、div.foot、ref1、text-title-1-c、zhangyue-c80、sigil_toc_id、noteref_N、kindle-cn-heading、kindle-cn-inline-character、chatu_img、gaiword、ff_serif、fz_1-0em、ti_2em、doc-noteref、_idFootnotes、bookcrafter-body-paragraph、toc-list、bodyContent-1、fnContent-1、chaptertitle-c、txtheading-1-c、contents-1、jzyy_、noindent-copyContent、ol.footnote、fnX-、img.pw、pic-c、span.num2、sigil_not_in_toc、book-title-main、calibre_4、calibre_7、calibre_18、mbp_pagebreak、filepos、calibre:cover 时使用。
+description: 电子书 EPUB xhtml 清洗流水线（十八套 profile：得到/中华书局、calibre+多看、微信读书/QQ阅读、KADOKAWA 竖排、多看原生图片式注释、InDesign/Adept、人民邮电/得到 p.content 系、多看原生内文/标题 neiwen/biaoti、Kobo 导出·多看式排版 koboSpan/book-columns、InDesign→calibre 繁中重注本 _idParaDest/div.foot、掌阅 ZHANGYUE 已语义化稿 text-title-*/noteref_N、Kindle-cn 亚马逊中国 calibre 混合 kindle-cn-*/chatu_img、InDesign EPUB3 新版导出 ff_serif/fz_*/ti_*、bookcrafter 生成版 bookcrafter-body-paragraph/(N) 纯文本尾注、文景/上海人民 bodyContent-1/fnContent-1 跨文件注、八旗文化繁中 p.kai/ol.footnote、Kindle→calibre 转码版 calibre_4/calibre_7/calibre_18/mbp_pagebreak、旧成果收尾 legacy content/picture/fnotecontent）——脚注提取为 fnote 尾注列表（[N] 编号、双向回链、符号注分组）、按 h1 合并章节、插图 div 转 chatu（装饰图删除/降级）、引文段合并转 blockquote、内嵌 SVG/图片生僻字替换为实际字符、正文加 bodytext、章副标题并入 h1、解包 header/part div、h 标签去 b、链接 styles.css、全角转半角与注释编号方括号化，并自动校验 XML/链接/编号/正文完整性。当用户说『按照 2do.md 处理 xhtml』、『处理/提取脚注（尾注、注释）』、『清洗/规范化 EPUB xhtml』、『微信读书导出清理』、『KADOKAWA 竖排书处理』、『InDesign/Adept 导出清理』、『得到/人邮导出清理』、『Kobo 导出清理』、『掌阅导出清理』、『Kindle 导出清理』、『bookcrafter 导出清理』、『文景导出清理』，或提到 fnote、bodytext、chatu、noteref、data-wr-footernote、duokan-footnote、note.png、kfont、key1/key2、_idfootnotelink、f_1、firstTitle、kt_104、annot、neiwen、biaoti、duokan-image-single、xian、koboSpan、book-columns、kobostylehacks、_idParaDest、div.foot、ref1、text-title-1-c、zhangyue-c80、sigil_toc_id、noteref_N、kindle-cn-heading、kindle-cn-inline-character、chatu_img、gaiword、ff_serif、fz_1-0em、ti_2em、doc-noteref、_idFootnotes、bookcrafter-body-paragraph、toc-list、bodyContent-1、fnContent-1、chaptertitle-c、txtheading-1-c、contents-1、jzyy_、noindent-copyContent、ol.footnote、fnX-、img.pw、pic-c、span.num2、sigil_not_in_toc、book-title-main、calibre_4、calibre_7、calibre_18、mbp_pagebreak、filepos、calibre:cover 时使用。
 ---
 
 # EPUB xhtml 清洗流水线
@@ -8,7 +8,7 @@ description: 电子书 EPUB xhtml 清洗流水线（十七套 profile：得到/�
 把 EPUB 的 xhtml 转换为标准格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
 目标目录通常是书籍解包后的 `<项目>/xhtml` 或 `<项目>/EPUB/xhtml`（同目录应已有 `styles.css`）。
 
-## 十七套 profile（先 analyze 判断，再选脚本）
+## 十八套 profile（先 analyze 判断，再选脚本）
 
 | 源格式 | 脚本 | 特征 |
 |---|---|---|
@@ -29,11 +29,12 @@ description: 电子书 EPUB xhtml 清洗流水线（十七套 profile：得到/�
 | 文景/上海人民（`bodyContent-1`，跨文件注） | `scripts/epub_clean_bodycontent.py` | `<html … xml:lang="zh-cn">`、`../Styles/stylesheet.css`+`stylesheet-1.css`、`h1.chaptertitle-c/parttitle-c/prefacetitle-c/backtitle-c[id=isbn…]`、`h3.txtheading-1-c`/`h4.txtheading-2-c`、`p.bodyContent-1(-top/-top-2/-c)`、`p.noindent-copyContent-1`、`p.hang-bodyContent-1`（译名表）、`p.bodyContent-2-kaiti(-top-4)` 楷体引文、**跨文件脚注** `<a href="partNNNN.xhtml#jz_X" id="jzyy_X"><sup>(N)</sup></a>` + `<p class="fnContent-1"><a href="…" id="jz_X">(N)</a>`、`div.chatu_img/title_img>img.pic-img`、`p.contents-1/2/3` 三级目录 |
 | 八旗文化（繁中 InDesign，`p.kai`/`ol.footnote`） | `scripts/epub_clean_baqi.py` | `<html … xmlns:epub>（无 lang）`、`../Styles/Style.css`(+`Copyright.css`)、`h1/h2[title]` 内 `<span class="num">`+`<span class="num2">`、`h3.h3.sigil_not_in_toc`、正文 `<p>` 无 class、`p.kai`/`div.kai` 楷体引文、`p.sec`（* * *）、`div.pic/pic-c>img+span.caption`、**章末** `<a class="footnote" href="#fnX-N" id="fX-N">[N]</a>` + `<ol class="footnote"><li id="fnX-N">…<a href="#fX-N"><img class="pw" src="../Images/back.png"/></a></li>`、`p.ref`（书目）、`p.title`+`p.item`（名词释义）、`div.boxend`、`<p><br/></p>` |
 | Kindle（AZW3 经 calibre 转码，`calibre_4/7/13/18`） | `scripts/epub_clean_kindle_calibre.py` | `<body class="calibre">`、`stylesheet.css`+`page_styles.css`、**几乎无 h 标签**：标题/图/正文全压在同一批组合类上——`p.calibre_4`（内 `<span class="bold">`=标题 / 内 `<img>`=插图）、`p.calibre_7`（正文，内层 `span.calibre_18` 只是整段字体壳）、`p.calibre_13`（引文落款）、`p.calibre_9`（书内目录）、`p.calibre_3`（空 `<p id="fileposN">` 锚点块，书内目录的链接目标，**须保留**）、`div.calibre_14`（空）、`div.mbp_pagebreak`（分页符，`id="calibre_pb_N"`）、`titlepage.xhtml` 带 `<style>@page` 的封面页（转 `body.cover`）、脚注 ref 为**同一张「注」圆圈图标**（4 个文件名同图，`<sup class="calibre7"><small class="calibre8"><img …/></small></sup>`，**不含数字**）+ 注文 `<ol class="calibre_15|17"><li value="1" class="calibre_16">`（value 恒为 1）；章标题常拆成 `第N章`／`章名`／`副标题` 连续多条，用 `<br/>` 合并；**无注文文件中**同形态文字 `sup` 是表格上标数字残渣（一个字符一个 sup，如 `9,847,009`），须原样解包不加 `[N]` |
+| 旧成果收尾（legacy `content`/`picture`/`fnotecontent`） | `scripts/epub_clean_legacy.py` | `<p class="content">`、`<div class="picture">`+`p.imgIntro`、`<sup><a id=chN href=file#chN-back>[N]</a></sup>`+章末 `<hr/>`+`p.fnotecontent`、`p.contents1/2`、`p.inscribe`、`div.copyright.margin-left2`、书名页 `bookTitle/booksubname/author/publish`、`style0001.css` |
 
 **注意**：KADOKAWA 书几乎没有语义标签，需**先人工做阶段一语义化重排**（规则见下），脚本只做阶段二
 （全角→半角 + 注释编号方括号化）。
 
-十六套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
+十八套脚本的子命令、备份、校验机制相同（analyze / process / verify，`--dry-run` 试跑）。
 所有脚本同时收录 `*.xhtml` 与 `*.html`（部分书目标目录用 `.html` 扩展名）。
 
 ## 环境要点
@@ -764,6 +765,26 @@ h1、`<title>`、目录项三处同步；非占位标题（序幕/尾声/版权�
   —— 这类是内容本身的错排，脚本不猜，人工改
 - 段落在源码里被 `</p>\t<p>` 挤在一行的，拆成一行一段（脚本已自动做）
 
+## 旧成果收尾 profile 约定（epub_clean_legacy.py）
+
+源：**本 skill 早期输出**（当年处理到一半的书），不是出版社原始格式。特征都是旧约定：
+
+- `<p class="content">`、`<div class="picture"><img/><p class="imgIntro">图注</p></div>`
+- 注：`<sup><a id="chN" href="file#chN-back">[N]</a></sup>` + 章末 `<hr/>` +
+  `<p class="fnotecontent"><a id="chN-back" href="file#chN">[N]</a>注文</p>`（链接后**没有空格**）
+- 目录 `<p class="contents1|2">`、题词 `<blockquote><p>…</p><p class="inscribe">——某某</p></blockquote>`
+- 版权页 `<div class="copyright margin-left2">…</div>`（内含 `<hr/>`）
+- 书名页 `<div class="bookTitle"></div><div class="booksubname">…</div><div class="author">…</div><div class="publish"><img/></div>`
+- 标题 h1 / h2 / h3.sigil_not_in_toc、`<link href="../Styles/style0001.css"/>`
+
+升级到最新约定：`content`→`bodytext`；`picture`(+`imgIntro`)→`chatu`(+`caption`；
+`contents1/2`→`toc1/toc2`；注号/注文→标准 noteref/fnote（补齐链接后空格、重编 noteref-N）；
+题词 blockquote → `class="intro"` + 落款 `<p class="right">`；版权页→`bodytext-noindent`（独占一行的 `<hr/>` 保留）；
+书名页→`<h1>书名</h1>` + `p.author` + chatu；其余交给 `postprocess()`（NBSP/中英空格/逐字 i 合并/chatu 去重/chatu 间 sprt）。
+
+**校验**：XML 良构、无残留旧 class（content/fnotecontent/picture/imgIntro/contents1-2/inscribe/copyright…）、
+旧 css、id 唯一、`#锚点` 可解析、noteref 数 == fnote 数。
+
 ## 已知陷阱（脚本已处理，分析报告出现异常时按此排查）
 
 - 插图 div 的 img 和 `</div>` 在同一行（`alt=""/></div>`），`</div>` 不单独成行。
@@ -814,7 +835,8 @@ $sc12= "$sk/epub_clean_kindle_cn.py" # profile L Kindle-cn 亚马逊中国（kin
 $sc13= "$sk/epub_clean_indesign_epub3.py" # profile M InDesign EPUB3 新版导出（ff_serif/fz_*/ti_*）
 $sc14= "$sk/epub_clean_bookcrafter.py" # profile N bookcrafter 生成版（bookcrafter-body-paragraph + 纯文本 (N) 尾注）
 $sc15= "$sk/epub_clean_bodycontent.py" # profile O 文景/上海人民（bodyContent-1 + 跨文件 jz/jzyy 注）
-$sc16= "$sk/epub_clean_baqi.py"      # profile P 八旗文化繁中（p.kai / ol.footnote fnX- / img.pw 回链箭头）
+$sc16= "$sk/epub_clean_baqi.py"
+$sc17= "$sk/epub_clean_legacy.py" # profile R 旧成果收尾（content/picture/fnotecontent）      # profile P 八旗文化繁中（p.kai / ol.footnote fnX- / img.pw 回链箭头）
 & $py -X utf8 $sc  analyze <dir> -o <tmp>/report.txt   # 体检（只读）
 & $py -X utf8 $sc  process <dir> --dry-run             # 试处理→临时目录
 & $py -X utf8 $sc  process <dir>                       # 正式处理（自动备份+校验）
