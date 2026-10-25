@@ -110,13 +110,15 @@ def step_footnotes(c, name, ctx, cfg):
     def aside(m):
         asides.append((m.group(1) or "", re.sub(r"</?span[^>]*>", "", m.group(2)).strip()))
         return ""
-    c = re.sub(r'<aside epub:type="footnote"(?: id="([^"]*)")?><ol class="duokan-footnote-content">'
+    c = re.sub(r'<aside (?:epub:)?type="footnote"(?: id="([^"]*)")?><ol class="duokan-footnote-content">'
                r'<li class="duokan-footnote-item">(.*?)</li></ol></aside>\n?', aside, c, flags=re.S)
-    nref_re = re.compile(r'<sup[^>]*><a epub:type="noteref" href="#([^"]*)">\s*'
+    nref_re = re.compile(r'<sup[^>]*><a (?:epub:)?type="noteref" href="(?:[^"#]*)?#([^"]*)">\s*'
                          r'<img[^>]*?alt="([^"]*)"[^>]*?/>\s*</a></sup>')
     refs = nref_re.findall(c)
     if len(refs) != len(asides):
         raise RuntimeError("%s: noteref(%d) != aside(%d)" % (name, len(refs), len(asides)))
+    if refs and "xmlns:epub" not in c:
+        c = re.sub(r"<html\b([^>]*)>", r'<html\1 xmlns:epub="http://www.idpf.org/2007/ops">', c, count=1)
     # 配对：优先按 id（且正文一致）；否则回退按文档顺序（源里可能有缺 id / 重复 id）
     pairs = None
     by_id = {}
@@ -194,15 +196,16 @@ def step_heads(c, name, ctx, cfg):
             ctx["heads"] += 1
             return '<%s%s>%s</%s>' % (tag, (' id="%s"' % m.group(1)) if m.group(1) else '', text(m.group(2)), tag)
         c = pat_a.sub(ra, c)
-        # (b) <tag … class="…cls…" …>…</tag>
-        pat_b = re.compile(r'<%s\b([^>]*)>(.*?)</%s>' % (tag, tag), re.S)
+        # (b) <hN … class="…cls…" …>…</hN>  -> 映射到目标标签（可跨级，如 h2 -> h1）
+        pat_b = re.compile(r'<h([1-6])\b([^>]*)>(.*?)</h\1>', re.S)
         def rb(m):
-            attrs, inner = m.group(1), m.group(2)
+            attrs, inner = m.group(2), m.group(3)
             cm = re.search(r'class="([^"]*)"', attrs)
             if not cm or cls not in cm.group(1).split():
                 return m.group(0)
             sid = re.search(r'\bid="([^"]*)"', attrs) or re.search(r'\bid="([^"]*)"', inner)
             attrs2 = re.sub(r'\s+class="[^"]*"', "", attrs)
+            attrs2 = re.sub(r'\s+id="[^"]*"', "", attrs2)   # 避免与原 attrs 里的 id 重复
             ctx["heads"] += 1
             return '<%s%s%s>%s</%s>' % (tag, attrs2, (' id="%s"' % sid.group(1)) if sid else "", text(inner), tag)
         c = pat_b.sub(rb, c)
@@ -543,8 +546,8 @@ def analyze(dirpath, out=None, cfgpath=None):
     for fp in files:
         c = read(fp)
         name = os.path.basename(fp)
-        a = len(re.findall(r'<aside epub:type="footnote"', c))
-        n = len(re.findall(r'epub:type="noteref"', c))
+        a = len(re.findall(r'<aside (?:epub:)?type="footnote"', c))
+        n = len(re.findall(r'(?:epub:)?type="noteref"', c))
         f = len(re.findall(r'<div class="%s">' % re.escape(cfg["fig_div"]), c))
         for k, v in collections.Counter(re.findall(r'<p class="([^"]+)"', c)).items():
             pc[k] += v
