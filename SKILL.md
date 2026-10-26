@@ -144,7 +144,12 @@ calibre 的 `calibreNN` 类号**每本书都不同**（按首次出现顺序分�
 其余固定行为：
 
 - `aside`（`<ol><li>`）+ noteref → 章末 `<hr/>` + `<p class="fnote">`，`[N]` 每文件从 1、双向回链；
-  **配对优先按 id，失败回退按文档顺序**（源里常有缺 id / 重复 id，但 noteref 的 alt 与 aside 正文逐条一致）
+  **配对优先按 id，失败回退按文档顺序**（源里常有缺 id / 重复 id，但 noteref 的 alt 与 aside 正文逐条一致）；
+  `aside > ol > li` 之间允许任意空白（源里常写成 `</li> </ol> </aside>`）
+- **支持 `<dir>/custom_clean.py` 钩子**（与 profile A 一致）：`extra_steps() -> [(name, fn)]`，
+  `fn(c, name, ctx, cfg) -> c`；插入位置由 `clean_config.json` 的 `custom_steps_position`
+  指定（内置步骤名 / `"pre"` / `"post"`，默认 `"post"`）。本书特有的结构（图注正文用 `<sub>` 排小字、
+  引文内嵌正文 span、参考文献条目、生僻字图、标题页合并后的层级）优先写进这里，不改内置规则
 - css 链接 → `styles.css`（删除 `styleNNNN/stylesheet/page_styles/fonts.css`）
 - `<body class="…">` → `<body>`；`wrapper_div`（默认 `calibre3`）解包；清理空行与行首缩进
 - 源文件可能是 **CRLF**，读取时统一为 LF

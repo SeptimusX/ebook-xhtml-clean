@@ -50,7 +50,24 @@ DEFAULT_CONFIG = {
     "hr": True,
     "ornament_max_bytes": 51200,                  # 小于该字节数视为装饰图
     "drop_images": [],
+    "custom_steps_position": "post",   # custom_clean.py 插入位置：内置步骤名 / "pre" / "post"
 }
+
+
+def load_custom(dirpath):
+    """<dir>/custom_clean.py 可定义 extra_steps() -> [(name, fn)]；fn(c, name, ctx, cfg) -> c"""
+    p = os.path.join(dirpath, "custom_clean.py")
+    if not os.path.exists(p):
+        return []
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("custom_clean", p)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    steps = mod.extra_steps()
+    if not isinstance(steps, list) or not all(
+            isinstance(t, tuple) and len(t) == 2 for t in steps):
+        raise RuntimeError("custom_clean.py: extra_steps() 须返回 [(name, fn)]")
+    return steps
 
 
 def load_config(dirpath, path=None):
@@ -110,8 +127,8 @@ def step_footnotes(c, name, ctx, cfg):
     def aside(m):
         asides.append((m.group(1) or "", re.sub(r"</?span[^>]*>", "", m.group(2)).strip()))
         return ""
-    c = re.sub(r'<aside (?:epub:)?type="footnote"(?: id="([^"]*)")?><ol class="duokan-footnote-content">'
-               r'<li class="duokan-footnote-item">(.*?)</li></ol></aside>\n?', aside, c, flags=re.S)
+    c = re.sub(r'<aside (?:epub:)?type="footnote"(?: id="([^"]*)")?>\s*<ol class="duokan-footnote-content">'
+               r'\s*<li class="duokan-footnote-item">(.*?)</li>\s*</ol>\s*</aside>\s*', aside, c, flags=re.S)
     nref_re = re.compile(r'<sup[^>]*><a (?:epub:)?type="noteref" href="(?:[^"#]*)?#([^"]*)">\s*'
                          r'<img[^>]*?alt="([^"]*)"[^>]*?/>\s*</a></sup>')
     refs = nref_re.findall(c)
@@ -591,6 +608,21 @@ def process(dirpath, dry=False, cfgpath=None):
     if _st not in ("same", "copied"):
         print("styles.css: %s" % _st)
     cfg, used = load_config(dirpath, cfgpath)
+    custom = load_custom(dirpath)
+    pos = cfg.get("custom_steps_position", "post")
+    steps = []
+    for s in STEP_ORDER:
+        steps.append((s, BUILTIN[s]))
+        if custom and pos == s:
+            steps.extend(custom)
+    if custom and pos == "pre":
+        steps = custom + steps
+    elif custom and pos == "post":
+        steps = steps + custom
+    elif custom and pos not in STEP_ORDER + ["pre", "post"]:
+        print("!! custom_steps_position=%r 无效（可为 %s / pre / post），自定义步骤被忽略"
+              % (pos, ", ".join(STEP_ORDER)))
+        steps = [(s, BUILTIN[s]) for s in STEP_ORDER]
     files = list_files(dirpath)
     if not files:
         print("!! 未找到 *.xhtml")
@@ -609,8 +641,8 @@ def process(dirpath, dry=False, cfgpath=None):
         if not dry:
             shutil.copy2(fp, os.path.join(base, name))
         ctx = new_ctx(dirpath)
-        for s in STEP_ORDER:
-            c = BUILTIN[s](c, name, ctx, cfg)
+        for sname, fn in steps:
+            c = fn(c, name, ctx, cfg)
         c = postprocess(c)
         probs = verify_content(c, name, cfg, dirpath)
         if probs:

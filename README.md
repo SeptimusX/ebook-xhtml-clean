@@ -128,6 +128,8 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
+- **profile B（calibre）增补**：① 支持 `<dir>/custom_clean.py` 钩子（`extra_steps()` + `custom_steps_position`，与 profile A 一致，位置可为内置步骤名 / `pre` / `post`）；② `aside` 的 `<ol><li>` 之间允许空白（源里 `</li> </ol> </aside>` 这种写法以前匹配不到，导致 `noteref(1) != aside(0)`）
+
 - **profile A（得到/中华书局）增补两条通用规则**：① 新增内置步骤 `merge_emphasis`（`unwrap` 之后、`h1_subtitle` 之前），把逐字包裹的 `<b>似</b><b>是</b>`、`<i>S</i><i>o</i>` 合并为 `<b>似是</b>`、`<i>So</i>`（嵌套 `<b><i>x</i></b>` 也收敛）；② `chatu` 步骤兼容 `style="&gt;display: block;text-align:center;"` 变体（源文件里 style 值前多一个 `&gt;`）
 - **新增 profile Q**（Kindle AZW3 经 calibre 转码）：标题/图/正文全压在 `p.calibre_4/7/13` 上（靠内层 `span.bold`、`img` 分辨）、章标题跨 `第N章`／`章名`／`副标题` 多条时用 `<br/>` 合并、ref 为同一张「注」圆圈图标按出现顺序编号、`ol.calibre_15/17>li[value=1]` 注文按 `ol` 顺序重排 `[1]..[M]`、**无注文文件里的文字 `sup` 是表格上标数字残渣**（原样解包，不误加 `[N]`）、`p.calibre_3` 空 `fileposN` 锚点块保留（书内目录链接目标）、封面页内联 `<style>@page` → `body.cover`
 - `assets/styles.css` 增补 `body.cover`（封面页整页居中、零页边距）
