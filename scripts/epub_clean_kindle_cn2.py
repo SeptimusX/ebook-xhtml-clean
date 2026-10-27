@@ -195,6 +195,40 @@ def _unwrap_div(c, cls):
     return "".join(out), n
 
 
+def _h2_titles(c):
+    return [re.sub(r"<[^>]+>", "", x).strip() for x in re.findall(r"<h2[^>]*>(.*?)</h2>", c, re.S)]
+
+
+def step_intro(c, name, ctx, rare):
+    """章首「小节标题 + 一句话概述」列表 -> blockquote.intro（标题 p.center+b，概述 p.bodytext）"""
+    m = re.search(r"(<h1[^>]*>.*?</h1>)(.*?)(?=<h2\b)", c, re.S)
+    if not m:
+        return c
+    seg = m.group(2)
+    if 'blockquote class="intro"' in seg:
+        return c
+    h3s = re.findall(r"<h3>(.*?)</h3>", seg, re.S)
+    if not h3s:
+        return c
+    norm = [re.sub(r"\s+", "", re.sub(r"<[^>]+>", "", x)) for x in h3s]
+    tnorm = [re.sub(r"\s+", "", t) for t in _h2_titles(c)]
+    if not all(n in tnorm for n in norm):
+        return c      # 不是提要块（如“参考书举要”的分类标题）
+
+    def repl(m2):
+        t = re.sub(r"<[^>]+>", "", m2.group(1)).strip()
+        p = m2.group(2).strip()
+        return '<p class="center"><b>%s</b></p>\n<p class="bodytext">%s</p>\n' % (t, p)
+    new_seg = re.sub(r'<h3>(.*?)</h3>\s*<p class="bodytext">(.*?)</p>\s*', repl, seg, flags=re.S)
+    new_seg = re.sub(r'<p id="calibre_pb_\d+"></p>\s*', "", new_seg)
+    new_seg = new_seg.strip()
+    if not new_seg:
+        return c
+    ctx["intro"] = ctx.get("intro", 0) + 1
+    block = '<blockquote class="intro">\n%s\n</blockquote>\n' % new_seg
+    return c[:m.start(2)] + block + c[m.end(2):]
+
+
 def step_paras(c, name, ctx, rare):
     c, n = _unwrap_div(c, "kindle-cn-toc-level1")
     ctx["unwrap"] += n
@@ -250,6 +284,21 @@ def step_figures(c, name, ctx, rare):
         return c
     out.append(c[pos:])
     c = "".join(out)
+    # 双图表格 -> chatu（插图一律不得用 table 包裹）
+    def tbl(m):
+        tbl_html = m.group(1)
+        if '<img' not in tbl_html:
+            return m.group(0)
+        imgs = re.findall(r'<img[^>]*?/>', tbl_html)
+        cap = m.group(2) or ""
+        ctx["chatu"] += 1
+        out = '<div class="chatu">\n' + "\n".join('<p class="image">%s</p>' % x for x in imgs)
+        if cap:
+            ctx["caption"] += 1
+            out += "\n" + cap
+        return out + "\n</div>"
+    c = re.sub(r'<table[^>]*>(.*?)</table>\s*(<p class="caption">.*?</p>)?', tbl, c, flags=re.S)
+
     # 表格双图后的图注
     def lone(m):
         ctx["caption"] += 1
@@ -282,6 +331,7 @@ def step_tables(c, name, ctx, rare):
 def step_misc(c, name, ctx, rare):
     c = re.sub(r'<hr class="calibre10"/>?', "<hr/>", c)
     c = re.sub(r'<p class="page-break"[^>]*>\s*</p>\s*', "", c)
+    c = re.sub(r'<p id="calibre_pb_\d+">\s*</p>\s*', "", c)
     # split 文件已合并：partNNNN_split_MMM.xhtml -> partNNNN.xhtml
     c = re.sub(r'(part\d+)_split_\d+\.x?html', r'\1.xhtml', c)
     c = re.sub(r'<div class="calibre2"[^>]*>\s*</div>\s*', "", c)
@@ -355,7 +405,7 @@ def step_append(c, name, ctx, rare):
 
 
 STEPS = [("css", step_css), ("body", step_body), ("toc", step_toc), ("footnotes", step_footnotes),
-         ("headings", step_headings), ("paras", step_paras), ("figures", step_figures),
+         ("headings", step_headings), ("intro", step_intro), ("paras", step_paras), ("figures", step_figures),
          ("inline_imgs", step_inline_imgs), ("tables", step_tables), ("misc", step_misc), ("classes", step_classes),
          ("ns", step_ns), ("tidy", step_tidy), ("append", step_append)]
 

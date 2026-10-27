@@ -776,6 +776,11 @@ h1、`<title>`、目录项三处同步；非占位标题（序幕/尾声/版权�
   引文里的标题/落款行用 `<p class="center">`（可含 `<b>`）
 - **正文里引用的古籍/文献原文** → `<blockquote><p class="bodytext">原文</p></blockquote>`：
   不加 class（**不用 `intro`**）、**不用 `span.kai`**、块内不出现 `<br/>`（多行原文每行一个 `p.bodytext`）
+- **章首「内容概述」（小节标题 + 一句话提要的列表）** → 整块包 `<blockquote class="intro">`：
+  每条的标题写成 `<p class="center"><b>一 平民家世</b></p>`，提要正文紧跟 `<p class="bodytext">…</p>`；
+  块内**不再用 `<h3>`**（真正的节标题在正文里另有 `<h2>`）
+- **插图一律不得用 `<table>` 包裹**：双图并排也做成一个 `<div class="chatu">` 里两条 `<p class="image">`；
+  纯数据表（年表、月表等）保留 `<table>`
 - **章首/篇末题词（带落款）** →
   `<blockquote class="intro"><p class="bodytext">题词</p><p class="right">——落款</p></blockquote>`
 - **「原文 + 今译」对照的列传体**：原文 `<p class="bodytext">…</p>`（不加楷体）；
