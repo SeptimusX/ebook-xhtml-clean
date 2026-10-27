@@ -159,6 +159,13 @@ calibre 的 `calibreNN` 类号**每本书都不同**（按首次出现顺序分�
 - 编辑判断（不自动化，遇到时照做）：
   - **章首图**（章节第一张图）按惯例手工改成 `<h1 title="第X章 …"><img/></h1>`（skill 的图片页约定）
   - 诗歌引文若与相邻正文诗行混标 → 统一处理
+  - **年表/大事记类文件的条目**（`<p><span class="calibre25">年份</span></p>` + 条目段）不映射成 h3/h4：
+    年份行做成 `<p class="bodytext"><b>年份</b></p>`，条目段 `p.bodytext`，每组之间插空行段
+  - **参考文献/书目条目**用 `p.bodytext`（不用 `bodytext-noindent`，书里不另设悬挂缩进类）
+  - **列传体章节**（古籍原文 + 今译对照）：原文 `p.bodytext`、今译 `p.bodytext > span.kai`，中间插空行段
+  - **正文引用的古籍原文**包 `<blockquote><p class="bodytext">`（不加 class、不加 `span.kai`）
+  - **节标题「一、xxx」** 编号并入标题一行（`<h2>一、…</h2>`），不用 `subtitle` 分行
+  - 详见「人工精修清单」——同类内容一律按该清单处理
 
 
 ## Kobo 导出 · 多看式排版 profile 约定（epub_clean_kobo.py）
@@ -766,6 +773,20 @@ h1、`<title>`、目录项三处同步；非占位标题（序幕/尾声/版权�
   `<h3>人名<br/><span class="subtitle">外文名（生卒年）</span></h3>`
 - **引文性内容整体包 `<blockquote>`**：报纸标题+报道正文、邀请函、手稿片段、信件等；
   引文里的标题/落款行用 `<p class="center">`（可含 `<b>`）
+- **正文里引用的古籍/文献原文** → `<blockquote><p class="bodytext">原文</p></blockquote>`：
+  不加 class（**不用 `intro`**）、**不用 `span.kai`**、块内不出现 `<br/>`（多行原文每行一个 `p.bodytext`）
+- **章首/篇末题词（带落款）** →
+  `<blockquote class="intro"><p class="bodytext">题词</p><p class="right">——落款</p></blockquote>`
+- **「原文 + 今译」对照的列传体**：原文 `<p class="bodytext">…</p>`（不加楷体）；
+  今译 `<p class="bodytext"><span class="kai">…</span></p>`（楷体）；每对之间插 `<p class="bodytext"><br/></p>` 空行段
+- **年表 / 大事记**：年与条目行用加粗独立段 `<p class="bodytext"><b>秦昭王元年</b></p>`
+  （表内一人称年表可写成 `<p class="bodytext"><b>秦王政九年</b>&#160;&#160;34岁，…</p>`），
+  条目正文用 `p.bodytext`，每组之间插 `<p class="bodytext"><br/></p>`；**不要做成 `h3/h4`，也不要 `bodytext-noindent`**
+- **参考文献条目**同样用 `<p class="bodytext">`（不另设悬挂缩进类）
+- **节标题「一、xxx」**：编号与标题合成一行 `<h2>一、吕不韦真的是秦始皇父亲吗？</h2>`；
+  只有**真正的副题**（与标题内容重复/补充说明的两行结构）才用 `<span class="subtitle">`
+- **图注** `<p class="caption">` 只用纯文本，不加 `<b>`/`<i>`
+- 源码里无 class 的 `<p>书分享V：XXXX</p>` 这类**盗版水印段**整段删除（去掉后不必再校验）
 - **逐字拆开的拉丁词**（源码里被拆成 `i P a d`、`V-2 火箭`）要合成 `iPad`、`V-2火箭`
   —— 这类是内容本身的错排，脚本不猜，人工改
 - 段落在源码里被 `</p>\t<p>` 挤在一行的，拆成一行一段（脚本已自动做）

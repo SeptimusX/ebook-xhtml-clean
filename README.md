@@ -128,6 +128,7 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
+- **学习《秦谜》手工精修口径**（写进「人工精修清单」+ profile B 的编辑判断）：① 正文引用的古籍原文 → 裸 `blockquote`（不用 `intro`、不用 `span.kai`、块内不换行）；② 章首题词 → `blockquote.intro` + 落款 `p.right`；③ 「原文+今译」列传体 → 原文 `p.bodytext`、今译 `p.bodytext > span.kai`，中间插 `<p class="bodytext"><br/></p>`；④ 年表/大事记 → `<p class="bodytext"><b>年份</b></p>` + 条目 `p.bodytext` + 空行段，**不做 h3/h4、不用 bodytext-noindent**；⑤ 参考文献条目用 `p.bodytext`；⑥ 节标题「一、xxx」编号并入一行 `<h2>`，只有真副题才用 `span.subtitle`；⑦ 图注只放纯文本；⑧ 无 class 的 `<p>书分享V：XXXX</p>` 盗版水印整段删
 - **profile B（calibre）增补**：① 支持 `<dir>/custom_clean.py` 钩子（`extra_steps()` + `custom_steps_position`，与 profile A 一致，位置可为内置步骤名 / `pre` / `post`）；② `aside` 的 `<ol><li>` 之间允许空白（源里 `</li> </ol> </aside>` 这种写法以前匹配不到，导致 `noteref(1) != aside(0)`）
 
 - **profile A（得到/中华书局）增补两条通用规则**：① 新增内置步骤 `merge_emphasis`（`unwrap` 之后、`h1_subtitle` 之前），把逐字包裹的 `<b>似</b><b>是</b>`、`<i>S</i><i>o</i>` 合并为 `<b>似是</b>`、`<i>So</i>`（嵌套 `<b><i>x</i></b>` 也收敛）；② `chatu` 步骤兼容 `style="&gt;display: block;text-align:center;"` 变体（源文件里 style 值前多一个 `&gt;`）
