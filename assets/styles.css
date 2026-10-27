@@ -95,6 +95,12 @@ p {
 .sprt img {
 	height: 1.4em;
 }
+
+.image-inline {
+	height: 1.4em;
+	vertical-align: middle;
+}
+
 .caption,
 .image {
 	text-indent: 0;

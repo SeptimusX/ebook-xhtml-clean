@@ -130,6 +130,7 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
+- **ssets/styles.css 换版**：以《秦崩》	ext/styles.css 为准（含 ody.cover，新增行内字图用的 .image-inline { height:1.4em; vertical-align:middle }）
 - **两条新口径**（来自《秦崩》手工修改）：① 章首「小节标题 + 一句话提要」列表整块 → `<blockquote class="intro">`，标题 `<p class="center"><b>…</b></p>`、提要 `p.bodytext`，块内不用 `h3`；② 插图一律不用 `<table>` 包裹（双图并排 → 一个 chatu 里两条 `p.image`），数据表保留。profile S 已实现（`step_intro` 与新 `table→chatu` 分支，提要块用「标题是否与后文 h2 同名」做安全判定）
 - **新增 profile S**（Kindle-cn 三联/学术注释版，`epub_clean_kindle_cn2.py`）：与 profile L 同源但 calibre 类号不同（正文 `p.calibre8`、小节 `p.kindle-cn-noindent`、`div.kindle-cn-toc-level1` 在正文里是段落外壳），另增图注、双图表格、版权页、年表年行、**嵌套图页**（一个图块里多张图）、行内字图（`rare_map.json`）处理；按人工精修口径：年表年行「`<p class="bodytext"><b>年份</b><span class="kai">·纪年</span></p>`」、小节 `h3`、图注纯文本
 - **学习《秦谜》手工精修口径**（写进「人工精修清单」+ profile B 的编辑判断）：① 正文引用的古籍原文 → 裸 `blockquote`（不用 `intro`、不用 `span.kai`、块内不换行）；② 章首题词 → `blockquote.intro` + 落款 `p.right`；③ 「原文+今译」列传体 → 原文 `p.bodytext`、今译 `p.bodytext > span.kai`，中间插 `<p class="bodytext"><br/></p>`；④ 年表/大事记 → `<p class="bodytext"><b>年份</b></p>` + 条目 `p.bodytext` + 空行段，**不做 h3/h4、不用 bodytext-noindent**；⑤ 参考文献条目用 `p.bodytext`；⑥ 节标题「一、xxx」编号并入一行 `<h2>`，只有真副题才用 `span.subtitle`；⑦ 图注只放纯文本；⑧ 无 class 的 `<p>书分享V：XXXX</p>` 盗版水印整段删
