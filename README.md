@@ -3,7 +3,7 @@
 把各类来源的电子书章节 XHTML 清洗为统一的语义化格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
 An opencode skill / CLI for cleaning EPUB xhtml from eighteen common Chinese e-book sources.
 
-## 支持的源格式（十八套 profile）
+## 支持的源格式（十九套 profile）
 
 | # | profile | 脚本 | 典型特征 |
 |---|---|---|---|
@@ -126,8 +126,11 @@ python scripts/epub_clean_fix.py verify  <dir>
 - 报纸标题+正文、邀请函、手稿片段等**引文整体包 `<blockquote>`**，块内标题/落款用 `p.center`
 - 逐字拆开的拉丁词（`i P a d`、`V-2 火箭`）→ `iPad`、`V-2火箭`
 
+| R | Kindle-cn 三联/学术注释版（`p.calibre8` + `kindle-cn-noindent`） | `scripts/epub_clean_kindle_cn2.py` | `body.calibre`+id、`p.calibre8`/`kindle-cn-para-no-indent`/`-2em-indent` 正文、`p.kindle-cn-noindent` 小节（年表年行同 class）、`div.kindle-cn-toc-level1` 正文外壳、`h2.calibre6`、`a#chN-back`+`p.fnote` 尾注、`div.kindle-cn-bodycontent-div-alone` 图页（可嵌套）、`p.kindle-cn-picture-txt-*` 图注、`table.kindle-cn-picture-parallel` 双图、`p.kindle-cn-copyright-text`、`span.kindle-cn-bold/hei/kai1`、`img.kindle-cn-inline-image1` |
+
 ## 变更记录（本轮）
 
+- **新增 profile R**（Kindle-cn 三联/学术注释版，`epub_clean_kindle_cn2.py`）：与 profile L 同源但 calibre 类号不同（正文 `p.calibre8`、小节 `p.kindle-cn-noindent`、`div.kindle-cn-toc-level1` 在正文里是段落外壳），另增图注、双图表格、版权页、年表年行、**嵌套图页**（一个图块里多张图）、行内字图（`rare_map.json`）处理；按人工精修口径：年表年行「`<p class="bodytext"><b>年份</b><span class="kai">·纪年</span></p>`」、小节 `h3`、图注纯文本
 - **学习《秦谜》手工精修口径**（写进「人工精修清单」+ profile B 的编辑判断）：① 正文引用的古籍原文 → 裸 `blockquote`（不用 `intro`、不用 `span.kai`、块内不换行）；② 章首题词 → `blockquote.intro` + 落款 `p.right`；③ 「原文+今译」列传体 → 原文 `p.bodytext`、今译 `p.bodytext > span.kai`，中间插 `<p class="bodytext"><br/></p>`；④ 年表/大事记 → `<p class="bodytext"><b>年份</b></p>` + 条目 `p.bodytext` + 空行段，**不做 h3/h4、不用 bodytext-noindent**；⑤ 参考文献条目用 `p.bodytext`；⑥ 节标题「一、xxx」编号并入一行 `<h2>`，只有真副题才用 `span.subtitle`；⑦ 图注只放纯文本；⑧ 无 class 的 `<p>书分享V：XXXX</p>` 盗版水印整段删
 - **profile B（calibre）增补**：① 支持 `<dir>/custom_clean.py` 钩子（`extra_steps()` + `custom_steps_position`，与 profile A 一致，位置可为内置步骤名 / `pre` / `post`）；② `aside` 的 `<ol><li>` 之间允许空白（源里 `</li> </ol> </aside>` 这种写法以前匹配不到，导致 `noteref(1) != aside(0)`）
 
