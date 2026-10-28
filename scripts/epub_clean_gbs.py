@@ -396,6 +396,11 @@ def verify_content(c, name):
         if "<img" not in m.group(1):
             probs.append("chatu 缺图")
             break
+    for m in re.finditer(r'<(h1|h2|h3)[^>]*>(.*?)</\1>', c, re.S):   # 标题「」成对
+        t = re.sub(r'<[^>]+>', '', m.group(2))
+        if t.count('「') != t.count('」'):
+            probs.append("标题引号不成对: %s" % t[:24])
+            break
     for cls in set(re.findall(r'class="([^"]+)"', c)):
         for one in cls.split():
             if one not in ALLOWED_CLASSES:
