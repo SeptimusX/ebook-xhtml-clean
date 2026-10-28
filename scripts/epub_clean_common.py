@@ -116,6 +116,22 @@ def count_sprt_between_chatu(c):
     return len(_SPRT_BETWEEN_CHATU.findall(c))
 
 
+# ---------- 3) blockquote 内的 <p> 默认 bodytext ----------
+
+_BQ = re.compile(r'(<blockquote\b[^>]*>)(.*?)(</blockquote>)', re.S)
+
+
+def blockquote_bodytext(c):
+    """引文块里没有 class 的 <p> 一律补成 <p class="bodytext">（poem/menu 等由 css 覆盖）"""
+    def repl(m):
+        return m.group(1) + re.sub(r"<p\s*>", '<p class="bodytext">', m.group(2)) + m.group(3)
+    return _BQ.sub(repl, c)
+
+
+def count_blockquote_bare_p(c):
+    return sum(len(re.findall(r"<p\s*>", m.group(2))) for m in _BQ.finditer(c))
+
+
 # ---------- 组合 ----------
 
 def _fix_text_node(t):
@@ -138,5 +154,6 @@ def normalize_typography(c):
 def postprocess(c):
     c = dedupe_chatu(c)
     c = strip_sprt_between_chatu(c)
+    c = blockquote_bodytext(c)
     c = normalize_typography(c)
     return c

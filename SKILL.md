@@ -84,6 +84,8 @@ description: 电子书 EPUB xhtml 清洗流水线（二十套 profile：得到/�
   中英文/数字之间不留空格（`A4 大小`→`A4大小`）；
   缩写点前不留空格（`T .S .`→`T.S.`）；逐字 `<i>` 合并（`<i>阿</i><i>提</i>`→`<i>阿提</i>`）；
   两个 `<p>` 不挤在同一行。
+- **`<blockquote>` 内的 `<p>` 一律带 `class="bodytext"`**（默认规则，`epub_clean_common.blockquote_bodytext()`
+  自动补；`blockquote.poem/menu` 等特例由 css 的 `blockquote.poem p` 覆盖，不用另写 class）。
 - 脚注：正文 `<sup><a epub:type="noteref" href="#footnote-x" id="noteref-N">[N]</a></sup>`；
   章末 `<hr/>` 后 `<p class="fnote" id="footnote-x"><a href="#noteref-N">[N]</a> 注文</p>`；
   编号每文件从 [1] 重新开始；重复的 footnote id 输出时加 `-2`/`-3` 后缀消歧
@@ -95,9 +97,9 @@ description: 电子书 EPUB xhtml 清洗流水线（二十套 profile：得到/�
   **彩图页**（整页插图墙：chatu ≥ 3 且正文段 ≤ 2）整体跳过：不去重、也不参与后续比对。
   以上两条统一由 `scripts/epub_clean_common.py`（`dedupe_chatu()` / `strip_sprt_between_chatu()`，
   入口 `postprocess()`）实现，各 profile 写出前调用。
-- 引文：整段 FZFangSong 仿宋引文，连续段合并为一个 `<blockquote>`，内部段落保留
-  `class="bodytext"`，段内 noteref 保留。**blockquote 内不用 `<br/>` 分行：每一行各自
-  成一个 `<p class="bodytext">`**（诗歌、多行引文按行拆段）。
+- 引文：整段 FZFangSong 仿宋引文，连续段合并为一个 `<blockquote>`，内部每段一律
+  `<p class="bodytext">`（脚本自动补，见上），段内 noteref 保留。**blockquote 内不用 `<br/>` 分行：
+  每一行各自成一个 `<p class="bodytext">`**（诗歌、多行引文按行拆段）。
 - 章副标题：h1 后紧跟的居中样式段并入 h1 →
   `<h1>标题<br/><span class="subtitle">——副题</span></h1>`（h1 内原有 span/b 标签去掉）。
   **例外**：若源标题分「章号行 + 书名行」两行（如多看 `biaoti1`+`biaoti2`），

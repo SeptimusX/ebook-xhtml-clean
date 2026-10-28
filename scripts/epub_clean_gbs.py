@@ -134,7 +134,9 @@ def _quote_run(m):
     ps = re.findall(r'<p class="(?:sans0|sans|skai)">(.*?)</p>', m.group(0), re.S)
     if not ps:
         return m.group(0)
-    return "<blockquote>\n" + "\n".join("<p>%s</p>" % p.strip() for p in ps) + "\n</blockquote>"
+    return ("<blockquote>\n"
+            + "\n".join('<p class="bodytext">%s</p>' % p.strip() for p in ps)
+            + "\n</blockquote>")
 
 
 def clean_body(inner, name):
