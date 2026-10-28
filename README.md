@@ -131,6 +131,8 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
+- **`assets/styles.css` 换版（2026-10-28）**：以《意外的國度》手工修改为准（5732 B / MD5 `CCD6B717DBA13BF0FDC8228B5F5179A7`）：`.caption/.image` 字号 0.9em→0.95em、行高 1.2→1.4，并加 `max-width:90%`、`margin:0 auto`（图注/图版不再贴版心边缘）。原《秦崩》版（5716 B / `8C24BC37…`）作废；同版的两本（《秦崩》《蒋经国的台湾时代》）已同步。
+
 - **ssets/styles.css 换版**：以《秦崩》	ext/styles.css 为准（含 ody.cover，新增行内字图用的 .image-inline { height:1.4em; vertical-align:middle }）
 - **两条新口径**（来自《秦崩》手工修改）：① 章首「小节标题 + 一句话提要」列表整块 → `<blockquote class="intro">`，标题 `<p class="center"><b>…</b></p>`、提要 `p.bodytext`，块内不用 `h3`；② 插图一律不用 `<table>` 包裹（双图并排 → 一个 chatu 里两条 `p.image`），数据表保留。profile S 已实现（`step_intro` 与新 `table→chatu` 分支，提要块用「标题是否与后文 h2 同名」做安全判定）
 - **新增 profile S**（Kindle-cn 三联/学术注释版，`epub_clean_kindle_cn2.py`）：与 profile L 同源但 calibre 类号不同（正文 `p.calibre8`、小节 `p.kindle-cn-noindent`、`div.kindle-cn-toc-level1` 在正文里是段落外壳），另增图注、双图表格、版权页、年表年行、**嵌套图页**（一个图块里多张图）、行内字图（`rare_map.json`）处理；按人工精修口径：年表年行「`<p class="bodytext"><b>年份</b><span class="kai">·纪年</span></p>`」、小节 `h3`、图注纯文本
