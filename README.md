@@ -131,7 +131,7 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
-- **`assets/styles.css` 换版（2026-10-28）**：以《意外的國度》手工修改为准（5732 B / MD5 `CCD6B717DBA13BF0FDC8228B5F5179A7`）：`.caption/.image` 字号 0.9em→0.95em、行高 1.2→1.4，并加 `max-width:90%`、`margin:0 auto`（图注/图版不再贴版心边缘）。原《秦崩》版（5716 B / `8C24BC37…`）作废；同版的两本（《秦崩》《蒋经国的台湾时代》）已同步。
+- **`assets/styles.css` 换版（2026-10-28）**：以《意外的國度》手工修改为准（5909 B / MD5 `EFE50F2C849FEC4A97904F40E6DF1E79`）：`.caption/.image` 字号 0.9em→0.95em、行高 1.2→1.4，并加 `max-width:90%`、`margin:0 auto`（图注/图版不再贴版心边缘）；另把《无畏之海》用过的嵌套列表规则并进来（`ul ul, ol ol, ul ol, ol ul` 只留 .5em 缩进、去掉上下 padding）。原《秦崩》版（5716 B / `8C24BC37…`）作废；12 本只用规范类的书已统一到新版（其余书自带的 `c01/c02/konghang`、`sigil_not_in_toc`、`calibre*` 等类需逐本合并，暂未动）。
 
 - **ssets/styles.css 换版**：以《秦崩》	ext/styles.css 为准（含 ody.cover，新增行内字图用的 .image-inline { height:1.4em; vertical-align:middle }）
 - **两条新口径**（来自《秦崩》手工修改）：① 章首「小节标题 + 一句话提要」列表整块 → `<blockquote class="intro">`，标题 `<p class="center"><b>…</b></p>`、提要 `p.bodytext`，块内不用 `h3`；② 插图一律不用 `<table>` 包裹（双图并排 → 一个 chatu 里两条 `p.image`），数据表保留。profile S 已实现（`step_intro` 与新 `table→chatu` 分支，提要块用「标题是否与后文 h2 同名」做安全判定）
