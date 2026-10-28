@@ -25,7 +25,7 @@ epub_clean_kindle_calibre2.py — Kindle（AZW3）经 calibre 转码的另一套
 映射:
   章   -> <h1 id="fileposNNN"><span class="subtitle">第一章</span><br/>章名</h1>（单行则 <h1>标题</h1>）
   节   -> <h2 id="fileposNNN">…</h2>（文件中第一个 p.calibre_4 且无章标题时作 h1）
-  正文 -> p.bodytext；署名 -> p.center；参考文献条目 -> p.bodytext
+  正文 -> p.bodytext；署名 -> p.author；参考文献条目 -> p.bodytext
   图+图注 -> div.chatu
   引用 -> <sup><a epub:type="noteref" href="#foot-K" id="noteref-K">[K]</a></sup>
   注文 -> 章末 <hr/> + <p class="fnote" id="foot-K"><a href="#noteref-K">[K]</a> …</p>（每文件 1..N）
@@ -225,7 +225,7 @@ def process_content(c, name, ctx):
         if cls in ("image", "caption", "fnote"):
             return m.group(0)
         if cls == "calibre_6":
-            return '<p class="center">%s</p>' % body_txt
+            return '<p class="author">%s</p>' % body_txt   # 推荐序/序跋署名
         if cls in ("calibre_4", "calibre_28"):
             if cls == "calibre_4" and sec_flag[0] == 0 and not ctx["h1"]:
                 sec_flag[0] = 1

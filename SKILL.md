@@ -778,6 +778,8 @@ h1、`<title>`、目录项三处同步；非占位标题（序幕/尾声/版权�
 出版书清洗完，用户会再手工过一遍。以下是已确认的偏好，遇到同类内容照做：
 
 - **居中的题记 / 献词 / 标语** → `<p class="center">`（不是 bodytext）
+- **推荐序 / 序跋的署名行**（「某某（职称）、某某（职称）」或单独姓名＋身份，紧跟标题/正文之后）→
+  `<p class="author">`（居中楷体、下边距 1.4em）；**不要用 `p.center`**（center 只给出题记、标语这类整句）
 - **信件称呼行**（如「我亲爱的庞德先生：」）→ `<p class="left">`
 - **作者简介的「人名 + 外文名」两行** → 合并成
   `<h3>人名<br/><span class="subtitle">外文名（生卒年）</span></h3>`
@@ -817,7 +819,7 @@ h1、`<title>`、目录项三处同步；非占位标题（序幕/尾声/版权�
   单条（導論/結語/參考書目/誌謝）→ `<h1>标题</h1>`；`id` 必须留在 h1 上（ncx / 书内目录按它跳转）。
 - 节：`<p id="fileposNNN" class="calibre_4">…<span class="bold">节名</span>…</p>` → `<h2 id="fileposNNN">节名</h2>`；
   文件中第一个 `p.calibre_4` 且前面没有章标题时（推荐序 / 导论）作 `<h1>`。`p.calibre_28` 也是二级标题（参考文献小节）。
-- 正文 `p.calibre_7/_8/_16/_20/_26/_30` → `p.bodytext`；推荐序署名 `p.calibre_6` → `p.center`；
+- 正文 `p.calibre_7/_8/_16/_20/_26/_30` → `p.bodytext`；推荐序/序跋署名 `p.calibre_6` → `p.author`（居中楷体，不用 `p.center`）；
   `p.calibre_23`、`p.calibre_31` 的空段直接丢。
 - 图：单独一行的 `<p class="calibre_">|calibre_NN` 里放 `<img>`，紧跟 `<blockquote class="calibre_18">图注</blockquote>`
   → `<div class="chatu"><p class="image"><img/></p><p class="caption">…</p></div>`（图注也可能是 `p.calibre_23`）。
