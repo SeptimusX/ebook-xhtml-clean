@@ -4,6 +4,12 @@ body {
 	line-height: 1.4em;
 }
 
+/* 图片默认：不超过容器宽度，高度按比例；只缩不放（KOReader/crengine 下小图不被拉伸） */
+img {
+	max-width: 100%;
+	height: auto;
+}
+
 /* 封面页：整页居中、无页边距 */
 body.cover {
 	text-align: center;
@@ -208,6 +214,7 @@ blockquote.blockcenter p {
 .chatu img,
 .toutu img {
 	max-width: 100%;
+	height: auto;
 	margin: 0 auto;
 	display: block;
 }
