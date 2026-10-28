@@ -85,7 +85,7 @@ def text_of(c):
     c = re.sub(r"<head>.*?</head>", "", c, flags=re.S)
     c = re.sub(r"<a[^>]*>\[(\d+)\]</a>", r"\1", c)      # 注号 [N] 视为原数字
     c = re.sub(r"<[^>]+>", "", c)
-    return re.sub(r"\s+", "", c)
+    return re.sub(r"\s+", "", c).replace("\u25cb", "\u3007")   # ○→〇 属规范化，不算文本改动
 
 
 def head_title(c):
@@ -371,6 +371,8 @@ def verify_content(c, name):
         return probs, {}
     if "GBS" in c:
         probs.append("残留 GBS 锚点")
+    if "\u25cb" in c:
+        probs.append("残留 ○(U+25CB)，应为 〇")
     for bad in ('class="footnote"', 'class="picbox"', 'class="sans', 'class="skai"',
                 "display:none", "css/fixed", "css/styles.css", "<ops:switch", "<svg"):
         if bad in c:

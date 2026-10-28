@@ -6,6 +6,7 @@ epub_clean_fix.py — 通用后处理（对已清洗过的目录补跑共同规�
 当前规则（见 epub_clean_common.py）:
   1) 正文 chatu 去重：同一 (img src + 图注) 只保留首次出现（跨文件；彩图页整体跳过）
   2) 两个 <div class="chatu"> 之间不保留 <p class="sprt">…</p>（有则删）
+  3) 文本节点规范化：NBSP→空格、○(U+25CB)→〇(U+3007)、中英之间不留空格、逐字 <i> 合并
 
 用法:
   python epub_clean_fix.py process <dir> [--dry-run]

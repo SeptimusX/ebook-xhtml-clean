@@ -42,8 +42,8 @@ An opencode skill / CLI for cleaning EPUB xhtml from eighteen common Chinese e-b
 - **空行段**：保留源书空行（`<p class="bodytext"><br/></p>`），但**连续多个折一个**、**blockquote 前后紧邻的删掉**
 - **编号**：同一本书两套脚注用**不同数字体系**区分（如文件内小写罗马 / 跨文件阿拉伯）；单一体系时每文件（= 每章）从 `[1]` 重排
 - **锚点必须保留**：`_idParaDest-N` / `secNNN` / `sigil_toc_id_N` / `calibre_pb_0` / `_idContainer*`（后者可随解包消失）——`toc` / `ncx` 按它们跳转
-- **正字与细节**：`○`(U+25CB) → `〇`(U+3007)；`<img>` 一律自闭合并统一属性顺序；必要处给 `<html>` 补 `xmlns:epub`
-- **排版规范化**（`epub_clean_common.normalize_typography`）：NBSP→空格、中英文之间不留空格、缩写点前空格去掉、逐字 `<i>` 合并、一段一行
+- **正字与细节**：`○`(U+25CB) → `〇`(U+3007)（全篇替换：正文/脚注/图注/目录/alt 都改）；`<img>` 一律自闭合并统一属性顺序；必要处给 `<html>` 补 `xmlns:epub`
+- **排版规范化**（`epub_clean_common.normalize_typography`）：NBSP→空格、**`○`→`〇`**、中英文之间不留空格、缩写点前空格去掉、逐字 `<i>` 合并、一段一行
 
 ## 通用机制与校验
 

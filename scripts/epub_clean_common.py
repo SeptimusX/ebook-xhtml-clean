@@ -120,6 +120,7 @@ def count_sprt_between_chatu(c):
 
 def _fix_text_node(t):
     t = t.replace("\u00a0", " ")                       # NBSP -> 普通空格
+    t = t.replace("\u25cb", "\u3007")                   # ○(U+25CB) -> 〇(U+3007)：年份/数量里的「零」
     t = re.sub(r"(?<=[0-9A-Za-z])\s+(?=[\u4e00-\u9fff])", "", t)   # A4 大小 -> A4大小
     t = re.sub(r"(?<=[\u4e00-\u9fff])\s+(?=[0-9A-Za-z])", "", t)   # 中文 ABC -> 中文ABC
     t = re.sub(r"(?<=[A-Za-z])\s+(?=[.\-])", "", t)                # T .S . -> T.S.
@@ -127,7 +128,7 @@ def _fix_text_node(t):
 
 
 def normalize_typography(c):
-    """文本节点规范化：NBSP→空格、中英之间空格、缩写点前空格；并合并逐字 <i>、一段一行"""
+    """文本节点规范化：NBSP→空格、○→〇、中英之间空格、缩写点前空格；并合并逐字 <i>、一段一行"""
     c = re.sub(r">([^<]+)<", lambda m: ">" + _fix_text_node(m.group(1)) + "<", c)
     c = re.sub(r"</i>\s*<i>", "", c)                    # <i>阿</i><i>提</i> -> <i>阿提</i>
     c = re.sub(r"</p>\s*<p", "</p>\n<p", c)             # 两个 <p> 不挤在同一行
