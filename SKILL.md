@@ -55,7 +55,7 @@ description: 电子书 EPUB xhtml 清洗流水线（二十一套 profile：得�
 0. **先放 styles.css**：skill 自带 `assets/styles.css`（规范版，以此为准）。处理前把它复制到目标目录
    （各 profile 的 `process()` 已自动调用 `ensure_styles(dirpath)`：缺则复制、不同则覆盖、相同不动；
    `process` 日志里出现 `styles.css: updated/copied` 即生效）。目标目录的 `styles.css` 一律以这里为准，
-   不要在书里另维护一份。当前版本 5909 B / MD5 `EFE50F2C849FEC4A97904F40E6DF1E79`（《意外的國度》手工修改：
+   不要在书里另维护一份。当前版本 6087 B / MD5 `44902CE72304D3D3E8698560CE24EB78`（《意外的國度》手工修改：
    `.caption/.image` 字号 0.95em、行高 1.4、`max-width:90%`、`margin:0 auto`；另加嵌套列表规则
    `ul ul, ol ol, ul ol, ol ul { padding-left:.5em; padding-top/bottom:0 }`，避免逐级加倍缩进。
    此前版本 5732 B / `CCD6B717…`、5716 B / `8C24BC37…`（《秦崩》版））。
