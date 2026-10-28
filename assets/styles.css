@@ -218,6 +218,15 @@ ol, ul {
 	padding-bottom: .7em;
 	padding-left: 2em;
 }
+/* 嵌套列表不再逐级加倍缩进 */
+ul ul, ul ul ul, ul ul ul ul,
+ol ol, ol ol ol,
+ul ol, ol ul {
+	margin: 0;
+	padding-left: .5em;
+	padding-top: 0;
+	padding-bottom: 0;
+}
 li {
 	margin-left: 2em;
 }
