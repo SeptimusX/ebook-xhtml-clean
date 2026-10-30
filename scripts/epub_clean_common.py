@@ -152,12 +152,13 @@ def normalize_typography(c):
 
 
 def ensure_xml_decl(c):
-    """把 XML 声明规范成 <?xml version="1.0" encoding="utf-8"?>；缺则补上。"""
+    """把 XML 声明规范成 <?xml version="1.0" encoding="utf-8"?> 独占一行；缺则补上。"""
     body = c.lstrip("\ufeff")
     canon = '<?xml version="1.0" encoding="utf-8"?>'
     m = re.match(r"<\?xml[^>]*\?>", body)
     if m:
-        new = canon + body[m.end():]
+        rest = body[m.end():].lstrip("\r\n")
+        new = canon + "\n" + rest
         return c if new == c else new
     return canon + "\n" + body
 
