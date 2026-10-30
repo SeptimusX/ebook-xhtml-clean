@@ -88,9 +88,9 @@ description: 电子书 EPUB xhtml 清洗流水线（二十二套 profile：得�
   正文/脚注/图注/书目录/alt 里的全部替换，编号 `二○○○年`→`二〇〇〇年`、`卷八○`→`卷八〇`）；
   中英文/数字之间不留空格（`A4 大小`→`A4大小`）；
   缩写点前不留空格（`T .S .`→`T.S.`）；逐字 `<i>` 合并（`<i>阿</i><i>提</i>`→`<i>阿提</i>`）；
-  两个 `<p>` 不挤在同一行；**每个 xhtml 一律以 `<?xml version="1.0" encoding="utf-8"?>` 开头**
+  两个 `<p>` 不挤在同一行；**每个 xhtml 一律以 `<?xml version="1.0" encoding="utf-8"?>` 独占一行开头**
   （`epub_clean_common.ensure_xml_decl()`：缺则补、`<?xml version='1.0'?>`
-  /`encoding="UTF-8"`/`standalone="no"` 等变体统一改写，BOM 不碰）。
+  /`encoding="UTF-8"`/`standalone="no"` 等变体统一改写，且声明后换行；BOM 不碰）。
 - **`<blockquote>` 内的 `<p>` 一律带 `class="bodytext"`**（默认规则，`epub_clean_common.blockquote_bodytext()`
   自动补；`blockquote.poem/menu` 等特例由 css 的 `blockquote.poem p` 覆盖，不用另写 class）。
 - 脚注：正文 `<sup><a epub:type="noteref" href="#footnote-x" id="noteref-N">[N]</a></sup>`；
