@@ -88,7 +88,9 @@ description: 电子书 EPUB xhtml 清洗流水线（二十二套 profile：得�
   正文/脚注/图注/书目录/alt 里的全部替换，编号 `二○○○年`→`二〇〇〇年`、`卷八○`→`卷八〇`）；
   中英文/数字之间不留空格（`A4 大小`→`A4大小`）；
   缩写点前不留空格（`T .S .`→`T.S.`）；逐字 `<i>` 合并（`<i>阿</i><i>提</i>`→`<i>阿提</i>`）；
-  两个 `<p>` 不挤在同一行。
+  两个 `<p>` 不挤在同一行；**每个 xhtml 一律以 `<?xml version="1.0" encoding="utf-8"?>` 开头**
+  （`epub_clean_common.ensure_xml_decl()`：缺则补、`<?xml version='1.0'?>`
+  /`encoding="UTF-8"`/`standalone="no"` 等变体统一改写，BOM 不碰）。
 - **`<blockquote>` 内的 `<p>` 一律带 `class="bodytext"`**（默认规则，`epub_clean_common.blockquote_bodytext()`
   自动补；`blockquote.poem/menu` 等特例由 css 的 `blockquote.poem p` 覆盖，不用另写 class）。
 - 脚注：正文 `<sup><a epub:type="noteref" href="#footnote-x" id="noteref-N">[N]</a></sup>`；
@@ -779,6 +781,7 @@ h1、`<title>`、目录项三处同步；非占位标题（序幕/尾声/版权�
 出版书清洗完，用户会再手工过一遍。以下是已确认的偏好，遇到同类内容照做：
 
 - **居中的题记 / 献词 / 标语** → `<p class="center">`（不是 bodytext）
+- **「本书获誉 / 赞誉」页**：每条书评＝`<p class="bodytext">书评</p>` + `<p class="right">——某某，某书作者</p>`，**条与条之间插一行空段 `<p class="bodytext"><br/></p>`**（最后一条后面不插）
 - **推荐序 / 序跋的署名行**（「某某（职称）、某某（职称）」或单独姓名＋身份，紧跟标题/正文之后）→
   `<p class="author">`（居中楷体、下边距 1.4em）；**不要用 `p.center`**（center 只给出题记、标语这类整句）
 - **信件称呼行**（如「我亲爱的庞德先生：」）→ `<p class="left">`
