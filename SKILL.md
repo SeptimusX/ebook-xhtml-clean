@@ -12,7 +12,7 @@ description: 电子书 EPUB xhtml 清洗流水线（二十一套 profile：得�
 
 | 源格式 | 脚本 | 特征 |
 |---|---|---|
-| 得到/中华书局（纯文本 aside） | `scripts/epub_clean.py` | `<aside epub:type="footnote" id="…">注文</aside>`、`<div style="display: block;text-align:center;">` 图、FZFangSong 引文、`<p><span style="…">` 内联样式、`.bak` 原始文件；**逐字包裹** `<b>似</b><b>是</b>`／`<i>S</i><i>o</i>`（脚本自动合并）、插图 div 的 `style="&gt;display: block;text-align:center;"` 变体（多一个 `&gt;`，`chatu` 也认）、标题 id 常挂在 `h1>span[id=sigil_toc_id_N]` |
+| 得到/中华书局（纯文本 aside） | `scripts/epub_clean.py` | `<aside epub:type="footnote" id="…">注文</aside>`、`<div style="display: block;text-align:center;">` 图、FZFangSong 引文、`<p><span style="…">` 内联样式、`.bak` 原始文件；**逐字包裹** `<b>似</b><b>是</b>`／`<i>S</i><i>o</i>`（脚本自动合并）、插图 div 的 `style="&gt;display: block;text-align:center;"` 变体（多一个 `&gt;`，`chatu` 也认）、标题 id 常挂在 `h1>span[id=sigil_toc_id_N]`；另有 InDesign 导出版：`div.header0/header1` 外壳 + `div.part` 正文容器（`unwrap_div_class_re` 解包）、脚注锚是 `<sup><a epub:type="noteref"><img class="epub-footnote" alt="注文"/>`（每章同一张「注」小圆图，`step_footnotes` 按 alt/id 配对，转成 `[N]`） |
 | calibre + 多看(duokan) | `scripts/epub_clean_calibre.py` | `<body class="calibre2">`、`<p class="calibre7"><span class="calibre10">`、`calibre23` 引文、`<aside…><ol class="duokan-footnote-content"><li>` 脚注、`<div class="calibre13">` 图 |
 | 微信读书 / QQ阅读 | `scripts/epub_clean_weread.py` | `<section class="readerChapterContent"><div data-wr-bd="1">`、`<span data-wr-id="layout">`、`<p class="content">` / `<p class="quotation">`、`<span class="reader_footer_note" data-wr-footernote="注释">`、`styles/common.css` + 内联 `<style>` |
 | KADOKAWA 竖排/固定版式 | `scripts/epub_clean_kadokawa.py`（**只做阶段二**） | `<html … xml:lang="zh-TW" class="hltr">`、`../style/book-style.css`、`<p class="mfont font-1em10">` 空段、`<p>　　<br/></p>` 版式空行、`class="kfont"` 引文、`class="key1"/"key2"` 注释锚点、`mokuji-` 锚点 |
@@ -904,6 +904,12 @@ class 全在白名单、逐文件文本与源相同（`sup`/`[N]`/`↺` 不计�
 
 ## 已知陷阱（脚本已处理，分析报告出现异常时按此排查）
 
+- **章号与章名是两个连续 `<h1>`**（各自包在 `div.header0` 里，如《第三帝国的生与死》第一~四章）：`h_fix`/`unwrap`
+  之后用 custom 钩子（`custom_steps_position: "post"`）合并为
+  `<h1><span class="subtitle">第一章</span><br/>章名</h1>`；这类文件常常**整篇只有标题、没有正文**，
+  按「纯标题页」口径并入下一节文件（本文档已确认），合并后要把 opf 的 item/itemref、ncx、nav 里的指向改到新文件。
+- **calibre/InDesign 导出的 opf 里 `<item id="…" href="…"/>` 是 id 在 href 之前**：删 manifest 项时按 `href` 匹配没问题，
+  但删 `itemref` 要按 **id**（id 常等于文件名，如 `Section0001_0003.xhtml`），否则 spine 里会留下指向已删文件的死项。
 - **标题/目录行可能丢掉开头或结尾的「」**：Kindle→calibre、Google Books 的转换偶尔会吃掉
   `「`（《意外的國度》第十章「中華民國在台灣」的永久化，正文 h1、书内目录、ncx 三处全缺左引号）。
   profile T/U 的 `verify` 已加检查：`h1/h2(/h3)` 与 `p.toc1/toc2` 里 `「` 与 `」` 必须成对，
