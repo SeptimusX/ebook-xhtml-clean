@@ -135,6 +135,7 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
+- **多则题词合并**（2026-10-31 用户手改《发现丝绸》`bodymatter_0_17.xhtml` 确认）：同一页多条题词放进**一个** `blockquote.intro`，条间插 `<p class="bodytext"><br/></p>`，每条 `p.bodytext` + `p.right` 落款。写入 SKILL.md「人工精修清单」
 - **标题级别按 nav 层级（2026-10-31，profile W）**：`nav.xhtml` 顶层条目用 `h1`，部下面的章（`<ol>` 深度 ≥ 2）改 `h2`；id 与内部 `span.subtitle` 不动。《发现丝绸》27 个章文件已由 h1 改 h2（8 个部扉仍为 h1）
 - **朝代/皇帝对照改两列表格（2026-10-31）**：《发现丝绸》`bodymatter_1_3.xhtml` 里「朝代」段与「皇帝」段交替，改成 `<table>`（表头 `朝代`/`皇帝`），每朝一行；每段开头的 `<b>皇帝</b><br/>` 与段间空行段删除。口径写进 SKILL.md「人工精修清单」
 - **html 语言统一 zh-CN（2026-10-31）**：`<html>` 上 `zh-TW` / `zh-Hant` / `zh-Hans` / `zh-HK` / `zh-cn` （`lang` 与 `xml:lang`）一律改 `zh-CN`，纯 `zh` 保持。`epub_clean_common.normalize_lang()` 并入 `postprocess()`；全库 12 本、347 个文件、448 个属性（zh-TW 160、zh-Hans 58、zh-Hant 38、zh-cn 192）已改，`epub_clean_fix.py` 的 process/verify 也会检查。`content.opf` 的 `dc:language` 未动

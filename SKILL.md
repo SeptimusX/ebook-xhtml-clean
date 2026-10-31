@@ -801,6 +801,8 @@ h1、`<title>`、目录项三处同步；非占位标题（序幕/尾声/版权�
   纯数据表（年表、月表等）保留 `<table>`
 - **章首/篇末题词（带落款）** →
   `<blockquote class="intro"><p class="bodytext">题词</p><p class="right">——落款</p></blockquote>`
+  同一页有**多则题词**时合并成**一个** `blockquote.intro`，条与条之间插一行空段 `<p class="bodytext"><br/></p>`，每条 `p.bodytext` + 紧随 `p.right` 落款
+  （例：《发现丝绸》`bodymatter_0_17.xhtml` 邱吉爾 + 甘迺迪两则）
 - **「原文 + 今译」对照的列传体**：原文 `<p class="bodytext">…</p>`（不加楷体）；
   今译 `<p class="bodytext"><span class="kai">…</span></p>`（楷体）；每对之间插 `<p class="bodytext"><br/></p>` 空行段
 - **年表 / 大事记**：年与条目行用加粗独立段 `<p class="bodytext"><b>秦昭王元年</b></p>`
