@@ -1,9 +1,9 @@
 # ebook-xhtml-clean
 
 把各类来源的电子书章节 XHTML 清洗为统一的语义化格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
-An opencode skill / CLI for cleaning EPUB xhtml from eighteen common Chinese e-book sources.
+An opencode skill / CLI for cleaning EPUB xhtml from twenty-two common Chinese e-book sources.
 
-## 支持的源格式（十九套 profile）
+## 支持的源格式（二十三套 profile）
 
 | # | profile | 脚本 | 典型特征 |
 |---|---|---|---|
@@ -24,8 +24,13 @@ An opencode skill / CLI for cleaning EPUB xhtml from eighteen common Chinese e-b
 | O | 文景 / 上海人民（`bodyContent-1`，跨文件注） | `scripts/epub_clean_bodycontent.py` | `../Styles/stylesheet.css`+`stylesheet-1.css`、`h1.chaptertitle-c/parttitle-c/prefacetitle-c/backtitle-c[id=isbn…]`、`h3.txtheading-1-c`/`h4.txtheading-2-c`、`p.bodyContent-1(-top/-top-2/-c)`、`p.noindent-copyContent-1`、`p.hang-bodyContent-1`、`p.bodyContent-2-kaiti(-top-4)`、跨文件注 `a[href=partNNNN.xhtml#jz_X][id=jzyy_X]>sup.(N)` + `p.fnContent-1>a[id=jz_X]`、`div.chatu_img/title_img>img.pic-img`、`p.contents-1/2/3` |
 | P | 八旗文化（繁中 InDesign，`p.kai`/`ol.footnote`） | `scripts/epub_clean_baqi.py` | `../Styles/Style.css`(+`Copyright.css`)、`h1/h2[title]` 内 `span.num`+`span.num2`、`h3.h3.sigil_not_in_toc`、正文 `<p>` 无 class、`p.kai`/`div.kai`、`p.sec`、`div.pic/pic-c>img+span.caption`、`a.footnote[href=#fnX-N][id=fX-N]` + `ol.footnote>li[id=fnX-N]`(+`img.pw` 回链箭头)、`p.ref`、`p.title`+`p.item`、`div.boxend`、`<p><br/></p>` |
 | Q | Kindle（AZW3 经 calibre 转码，`calibre_4/7/13/18`） | `scripts/epub_clean_kindle_calibre.py` | `body.calibre`、`stylesheet.css`+`page_styles.css`、无 h 标签（`p.calibre_4` 内 `span.bold`=标题 / 内 `img`=插图、`p.calibre_7` 正文内层 `span.calibre_18` 为整段壳、`p.calibre_13` 落款、`p.calibre_9` 书内目录、`p.calibre_3` 空 `fileposN` 锚点块须保留）、`div.calibre_14`/`div.mbp_pagebreak`、`titlepage.xhtml` 内联 `<style>@page` 封面（转 `body.cover`）、ref 为同一张「注」圆圈图标（**无数字**，按出现顺序编号）+ `ol.calibre_15/17>li[value=1]` 注文（value 恒为 1，按 `ol` 顺序重排 `[1]..[M]`）、章标题常拆成 `第N章`／`章名`／`副标题` 多条（用 `<br/>` 合并）、无注文文件里的文字 `sup` 是表格上标数字残渣（须原样解包，不加 `[N]`） |
-
 | R | 旧成果收尾（legacy `content`/`picture`/`fnotecontent`） | `scripts/epub_clean_legacy.py` | `p.content`、`div.picture`+`p.imgIntro`、`sup>a[id=chN][href=file#chN-back]` + 章末 `hr`+`p.fnotecontent`、`p.contents1/2`、`p.inscribe`、`div.copyright.margin-left2`、书名页 `bookTitle/booksubname/author/publish`、`style0001.css` |
+| S | Kindle-cn 三联/学术注释版（`p.calibre8` + `kindle-cn-noindent`） | `scripts/epub_clean_kindle_cn2.py` | `body.calibre`+id、`p.calibre8`/`kindle-cn-para-no-indent`/`-2em-indent` 正文、`p.kindle-cn-noindent` 小节（年表年行同 class）、`div.kindle-cn-toc-level1` 正文外壳、`h2.calibre6`、`a#chN-back`+`p.fnote` 尾注、`div.kindle-cn-bodycontent-div-alone` 图页（可嵌套）、`p.kindle-cn-picture-txt-*` 图注、`table.kindle-cn-picture-parallel` 双图、`p.kindle-cn-copyright-text`、`span.kindle-cn-bold/hei/kai1`、`img.kindle-cn-inline-image1` |
+| T | Google Books 增强版（GBS，`ops:switch` 固定版式页） | `scripts/epub_clean_gbs.py` | opf 里 `<meta content="GoogleEbooks" name="GBSEpubSource"/>` + `_page_map_.xml` + spine `page-map`、正文夹 4000+ 个扫描页码锚点 `<a id="GBS.0059.02"/>` 与 `<div style="display:none;">…</div>`、封面/书名页/部扉页是 `<ops:switch><ops:case><svg><image xlink:href="image/part01.jpg"/></svg></ops:case><ops:default><img src="inserted_file_…_svg_raster.jpeg"/></ops:default></ops:switch>`、正文 `<p>` 无 class、引文 `p.sans0/sans/skai`、插图 `div.picbox>p.pic>img.w100`+`p.caption`、尾注 `p.footnote[id=foot-N]`+正文 `a.ref[id=back-N]`、章首 `p.leading`（第一/第二/第三）+`h2`、书内目录 `p.chapter`（篇）/`p.part`（章）/`p`（节）、`h3.p0` 目次 |
+| U | Kindle→calibre 第二套类号（`blockquote.calibre_13/15` 标题） | `scripts/epub_clean_kindle_calibre2.py` | 32` / `div.mbp_pagebreak` |
+| V | calibre 简类号社科书（`p.note` 注文 + `p.block` 引文） | `scripts/epub_clean_calibre_simple.py` | `<html … xml:lang="zh-CN">` + `../Styles/style0001.css`、正文 `<p>` 无 class、引文/条文 `<p class="block">`、图 `<p class="center"><img/></p>`(+`<p class="img">图注</p>`)、题词 `p.center1`+`p.lk`、脚注 `<a id="wN"></a><a href="文件#mN"><sup>[N]</sup></a>` + 章末 `<hr/>` + `<p class="note"><a id="mN"></a>…`、书内目录 `<ul><li><a href="partNNNN.xhtml#aNNN">`（可嵌套）、封面 `cover_page.xhtml`（内联 `<style>`+SVG）、前折口/书名页/后折口/封底 纯图页、CIP 版权页独立文件 |
+| W | 竖排 EPUB3（`vrtl/hltr`+`tcy`+`noteref/footnote`） | `scripts/epub_clean_vertical.py` | `html.vrtl/hltr`、`body.bodymatter`、`p` 无 class、`h1#toc_index_N`(tcy+small)、`span.tcy`、`p.kfont`(+text-right)、`p.t4 kfont`、`p.sep`、`img.full`、`a#fnref_N`+`div.footnotes`、整页图版 `<svg><image><title>` |
+
 先跑 `analyze` 判断属于哪一套，再选脚本。类名对不上时：改该脚本顶部的 `CONFIG`（若能覆盖）或另立一套。
 
 ## 输出规范（所有 profile 统一）
@@ -127,10 +132,11 @@ python scripts/epub_clean_fix.py verify  <dir>
 - 报纸标题+正文、邀请函、手稿片段等**引文整体包 `<blockquote>`**，块内标题/落款用 `p.center`
 - 逐字拆开的拉丁词（`i P a d`、`V-2 火箭`）→ `iPad`、`V-2火箭`
 
-| S | Kindle-cn 三联/学术注释版（`p.calibre8` + `kindle-cn-noindent`） | `scripts/epub_clean_kindle_cn2.py` | `body.calibre`+id、`p.calibre8`/`kindle-cn-para-no-indent`/`-2em-indent` 正文、`p.kindle-cn-noindent` 小节（年表年行同 class）、`div.kindle-cn-toc-level1` 正文外壳、`h2.calibre6`、`a#chN-back`+`p.fnote` 尾注、`div.kindle-cn-bodycontent-div-alone` 图页（可嵌套）、`p.kindle-cn-picture-txt-*` 图注、`table.kindle-cn-picture-parallel` 双图、`p.kindle-cn-copyright-text`、`span.kindle-cn-bold/hei/kai1`、`img.kindle-cn-inline-image1` |
 
 ## 变更记录（本轮）
 
+- **新增 profile W**（竖排 EPUB3：`vrtl/hltr` + `tcy` + `noteref/footnote`，`epub_clean_vertical.py`）：首用于《發現絲綢、白銀與鴉片》。按用户口径**转横排**（去 `vrtl/hltr`/`bodymatter`、`span.tcy` 去壳留数字、清内联 `<style>` / `<meta viewport>` / `conmi/flex` 包装）；**整页图版保留 `<svg><image>`**，只清外层类与属性。`p.kfont` 题词 → `blockquote.intro` + `p.right`，紧跟 `h1` 的已有 `<blockquote>` 也标 `intro`；`h1` 内 `span.tcy`/`<small>` → `span.subtitle`；`p.t4 kfont` → `bodytext`；`p.sep` → `sprt`；`img.full` → `chatu`；1042 条尾注双向化（noteref == fnote）。`nav.xhtml` 只轻处理（去 `vrtl`、去 `tcy`、换 css），保留 EPUB3 nav。
+- **README 表整理**：把此前被追加到「人工精修」小节的 R/S 行并回主表，补 T（GBS）/U（Kindle→calibre 第二套类号）/V（calibre 简类号）/W（竖排 EPUB3），现为 A–W 共 23 行，与 SKILL.md 一致；命令速查里被粘在一起的注释也一并拆开。
 - **`assets/styles.css` 换版（2026-10-28）**：以《意外的國度》手工修改为准（6087 B / MD5 `44902CE72304D3D3E8698560CE24EB78`）：`.caption/.image` 字号 0.9em→0.95em、行高 1.2→1.4，并加 `max-width:90%`、`margin:0 auto`（图注/图版不再贴版心边缘）；另把《无畏之海》用过的嵌套列表规则并进来（`ul ul, ol ol, ul ol, ol ul` 只留 .5em 缩进、去掉上下 padding）。原《秦崩》版（5716 B / `8C24BC37…`）作废；12 本只用规范类的书已统一到新版（其余书自带的 `c01/c02/konghang`、`sigil_not_in_toc`、`calibre*` 等类需逐本合并，暂未动）。
 
 - **ssets/styles.css 换版**：以《秦崩》	ext/styles.css 为准（含 ody.cover，新增行内字图用的 .image-inline { height:1.4em; vertical-align:middle }）
@@ -144,9 +150,9 @@ python scripts/epub_clean_fix.py verify  <dir>
 - `assets/styles.css` 增补 `body.cover`（封面页整页居中、零页边距）
 
 - **`styles.css` 收进 skill**：新增 `assets/styles.css`（规范版，以此为准）+ `epub_clean_common.ensure_styles(dirpath)`；
-  17 个 profile 的 `process()` 都会在处理前自动复制/覆盖到目标目录（缺则复制、不同则覆盖、相同不动），**书里不再另维护 css**
+  23 个 profile 的 `process()` 都会在处理前自动复制/覆盖到目标目录（缺则复制、不同则覆盖、相同不动），**书里不再另维护 css**
 - **排版规范化**（`normalize_typography`）：NBSP→空格、中英文之间不留空格、缩写点前空格去掉、逐字 `<i>` 合并、两段不挤一行；新增「人工精修清单」（center / left / 作者名 h3+subtitle / 引文包 blockquote）
-- **通用规则：`chatu` 处理** —— ① 两个 `chatu` 之间不放 `p.sprt`（有则删）；② 正文中同一 (img src + 图注) 的 `chatu` 只保留首次出现（跨文件），**彩图页（整页插图墙）整体跳过不计**。实现于 `scripts/epub_clean_common.py`，16 个 profile 写出前自动调用；旧成果可用 `scripts/epub_clean_fix.py process <dir>` 补跑
+- **通用规则：`chatu` 处理** —— ① 两个 `chatu` 之间不放 `p.sprt`（有则删）；② 正文中同一 (img src + 图注) 的 `chatu` 只保留首次出现（跨文件），**彩图页（整页插图墙）整体跳过不计**。实现于 `scripts/epub_clean_common.py`，23 个 profile 写出前自动调用；旧成果可用 `scripts/epub_clean_fix.py process <dir>` 补跑
 - **新增 profile P**（八旗文化 繁中 InDesign）：无 class 的 `<p>` 正文、`span.num/num2`→subtitle 分行、`p.kai`/`div.kai`→blockquote、`ol.footnote`+`img.pw` 回链箭头→`hr`+fnote、`p.sec`→sprt、`p.ref/item/title`→bodytext-noindent
 - **新增 profile O**（文景/上海人民 `bodyContent-1`）：跨文件 `jz_X`/`jzyy_X` 脚注原样保留并双向化、楷体引文→blockquote、`contents-1/2`→toc1/toc2（三级只留前两级）、标题保持 h1/h3/h4 原层级；新增**目录级跨文件锚点校验**
 - **新增 profile N**（bookcrafter 生成版 / 磨铁·Z-Library）：`p.bookcrafter-body-paragraph`、纯文本 `(N)` 脚注（含孤儿注保留不回链）、占位标题 `正文 28`→`28`、`div.toc-list` → `p.toc1`
