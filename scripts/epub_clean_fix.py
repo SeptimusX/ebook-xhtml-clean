@@ -8,6 +8,7 @@ epub_clean_fix.py — 通用后处理（对已清洗过的目录补跑共同规�
   2) 两个 <div class="chatu"> 之间不保留 <p class="sprt">…</p>（有则删）
   3) 文本节点规范化：NBSP→空格、○(U+25CB)→〇(U+3007)、中英之间不留空格、逐字 <i> 合并
   4) <blockquote> 内没有 class 的 <p> 补 class="bodytext"
+  5) 删掉正文段首手工缩进用的全角空格「　」（styles.css 已用 text-indent）
 
 用法:
   python epub_clean_fix.py process <dir> [--dry-run]
@@ -17,6 +18,7 @@ import argparse, datetime, glob, os, re, shutil, sys
 
 from epub_clean_common import (postprocess, reset_dedupe, register_chatu,
                                count_dupe_chatu, count_sprt_between_chatu,
+                               count_indent_spaces,
                                is_gallery, _CHATU, ensure_styles)
 
 
@@ -57,7 +59,7 @@ def process(d, dry=False):
     print("备份/输出目录: %s" % outdir)
 
     reset_dedupe()
-    tdup = tsprt = 0
+    tdup = tsprt = tind = 0
     for fp in files:
         name = os.path.basename(fp)
         c = read(fp)
@@ -66,7 +68,8 @@ def process(d, dry=False):
             continue
         nd = count_dupe_chatu(c)
         ns = count_sprt_between_chatu(c)
-        if not nd and not ns:
+        ni = count_indent_spaces(c)
+        if not nd and not ns and not ni:
             register_chatu(c)          # 记入 seen，供后续文件比对
             continue
         if not dry:
@@ -75,20 +78,22 @@ def process(d, dry=False):
         write(os.path.join(outdir, name) if dry else fp, n)
         tdup += nd
         tsprt += ns
-        print("%-20s 删重复 chatu: %-2d 删 chatu 间 sprt: %d" % (name, nd, ns))
-    print("合计: 重复 chatu %d 处，chatu 间 sprt %d 处" % (tdup, tsprt))
+        tind += ni
+        print("%-20s 删重复 chatu: %-2d 删 chatu 间 sprt: %-2d 删段首全角空格: %d" % (name, nd, ns, ni))
+    print("合计: 重复 chatu %d 处，chatu 间 sprt %d 处，段首全角空格 %d 段" % (tdup, tsprt, tind))
     print("RESULT: OK")
 
 
 def verify_dir(d):
     reset_dedupe()
-    bad_d = bad_s = 0
+    bad_d = bad_s = bad_i = 0
     for fp in list_files(d):
         c = read(fp)
         if is_gallery(c):
             continue
         nd = count_dupe_chatu(c)
         ns = count_sprt_between_chatu(c)
+        ni = count_indent_spaces(c)
         register_chatu(c)
         if nd:
             bad_d += nd
@@ -96,9 +101,13 @@ def verify_dir(d):
         if ns:
             bad_s += ns
             print("%-20s 仍有 %d 处 chatu 间 sprt" % (os.path.basename(fp), ns))
-    print("RESULT:", "PASS" if not (bad_d or bad_s) else
-          "FAIL（重复 chatu %d，chatu 间 sprt %d）" % (bad_d, bad_s))
-    sys.exit(0 if not (bad_d or bad_s) else 1)
+        if ni:
+            bad_i += ni
+            print("%-20s 仍有 %d 段段首全角空格" % (os.path.basename(fp), ni))
+    ok = not (bad_d or bad_s or bad_i)
+    print("RESULT:", "PASS" if ok else
+          "FAIL（重复 chatu %d，chatu 间 sprt %d，段首全角空格 %d）" % (bad_d, bad_s, bad_i))
+    sys.exit(0 if ok else 1)
 
 
 def main():

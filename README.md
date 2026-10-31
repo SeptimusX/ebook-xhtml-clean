@@ -135,6 +135,7 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
+- **删段首全角空格（2026-10-31）**：源书用「　　」手工缩进，一律去掉 —— `styles.css` 的 `text-indent` 已负责两格，留着会变四格。`epub_clean_common.postprocess()` 新增 `strip_indent_spaces()`；`epub_clean_fix.py process` 可对旧成果补跑、`verify` 会报残留。`center/left/right/poem/caption/toc/sprt/image/fnote/author/title/subtitle/logo/cover` 保留段首空格。全库 84 本已扫过：14 本、80 个文件共删 1249 处
 - **新增 profile W**（竖排 EPUB3：`vrtl/hltr` + `tcy` + `noteref/footnote`，`epub_clean_vertical.py`）：首用于《發現絲綢、白銀與鴉片》。按用户口径**转横排**（去 `vrtl/hltr`/`bodymatter`、`span.tcy` 去壳留数字、清内联 `<style>` / `<meta viewport>` / `conmi/flex` 包装）；**整页图版保留 `<svg><image>`**，只清外层类与属性。`p.kfont` 题词 → `blockquote.intro` + `p.right`，紧跟 `h1` 的已有 `<blockquote>` 也标 `intro`；`h1` 内 `span.tcy`/`<small>` → `span.subtitle`；`p.t4 kfont` → `bodytext`；`p.sep` → `sprt`；`img.full` → `chatu`；1042 条尾注双向化（noteref == fnote）。`nav.xhtml` 只轻处理（去 `vrtl`、去 `tcy`、换 css），保留 EPUB3 nav。
 - **README 表整理**：把此前被追加到「人工精修」小节的 R/S 行并回主表，补 T（GBS）/U（Kindle→calibre 第二套类号）/V（calibre 简类号）/W（竖排 EPUB3），现为 A–W 共 23 行，与 SKILL.md 一致；命令速查里被粘在一起的注释也一并拆开。
 - **`assets/styles.css` 换版（2026-10-28）**：以《意外的國度》手工修改为准（6087 B / MD5 `44902CE72304D3D3E8698560CE24EB78`）：`.caption/.image` 字号 0.9em→0.95em、行高 1.2→1.4，并加 `max-width:90%`、`margin:0 auto`（图注/图版不再贴版心边缘）；另把《无畏之海》用过的嵌套列表规则并进来（`ul ul, ol ol, ul ol, ol ul` 只留 .5em 缩进、去掉上下 padding）。原《秦崩》版（5716 B / `8C24BC37…`）作废；12 本只用规范类的书已统一到新版（其余书自带的 `c01/c02/konghang`、`sigil_not_in_toc`、`calibre*` 等类需逐本合并，暂未动）。

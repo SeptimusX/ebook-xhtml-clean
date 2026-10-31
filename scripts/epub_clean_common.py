@@ -10,6 +10,10 @@ postprocess(c) 依次执行:
                                 · 其余文件（正文）跨文件去重，保留第一次出现。
                                 · seen 为模块级集合，一次 process＝一个书目录＝一个进程，天然复位。
   2) strip_sprt_between_chatu   两个 <div class="chatu"> 之间不保留 <p class="sprt">…</p>
+  3) blockquote_bodytext        引文块里没有 class 的 <p> 补 class="bodytext"
+  4) strip_indent_spaces        删掉正文段首手工缩进用的全角空格「　」（styles.css 已用 text-indent）
+  5) normalize_typography       NBSP→空格、○→〇、中英之间不留空格、缩写点前空格、逐字 <i> 合并
+  6) ensure_xml_decl            XML 声明规范成独占一行
 
 各 profile 在写出前调用 postprocess(c)；也可用 epub_clean_fix.py 对已清洗目录补跑。
 
@@ -132,6 +136,34 @@ def count_blockquote_bare_p(c):
     return sum(len(re.findall(r"<p\s*>", m.group(2))) for m in _BQ.finditer(c))
 
 
+# ---------- 4) 段首缩进用的全角空格 ----------
+# 源书常用「　　」手工缩进；我方 styles.css 已用 text-indent 缩进，必须删掉，
+# 否则会叠加成四格。默认处理所有段落，只有下面这些「空格即版面意图」的类除外。
+
+_INDENT_RE = re.compile(r'(<p\b[^>]*>)[ \t]*(?:\n[ \t]*)?(?:\u3000)+')
+
+# center/left/right 靠前置空格排版，poem/caption/toc/fnote/author 各有缩进规则
+_INDENT_KEEP_CLS = re.compile(
+    r"(?:center|right|left|poem|caption|toc|sprt|image|fnote|author|title|subtitle|logo|cover)")
+
+
+def _is_indent_target(tag):
+    m = re.search(r'class="([^"]*)"', tag)
+    return (not m) or not _INDENT_KEEP_CLS.search(m.group(1))
+
+
+def strip_indent_spaces(c):
+    """删段落开头的全角空格（U+3000）"""
+    def repl(m):
+        tag = m.group(1)
+        return tag if _is_indent_target(tag) else m.group(0)
+    return _INDENT_RE.sub(repl, c)
+
+
+def count_indent_spaces(c):
+    return sum(1 for m in _INDENT_RE.finditer(c) if _is_indent_target(m.group(1)))
+
+
 # ---------- 组合 ----------
 
 def _fix_text_node(t):
@@ -167,6 +199,7 @@ def postprocess(c):
     c = dedupe_chatu(c)
     c = strip_sprt_between_chatu(c)
     c = blockquote_bodytext(c)
+    c = strip_indent_spaces(c)
     c = normalize_typography(c)
     c = ensure_xml_decl(c)
     return c

@@ -91,7 +91,8 @@ description: 电子书 EPUB xhtml 清洗流水线（二十三套 profile：得�
   缩写点前不留空格（`T .S .`→`T.S.`）；逐字 `<i>` 合并（`<i>阿</i><i>提</i>`→`<i>阿提</i>`）；
   两个 `<p>` 不挤在同一行；**每个 xhtml 一律以 `<?xml version="1.0" encoding="utf-8"?>` 独占一行开头**
   （`epub_clean_common.ensure_xml_decl()`：缺则补、`<?xml version='1.0'?>`
-  /`encoding="UTF-8"`/`standalone="no"` 等变体统一改写，且声明后换行；BOM 不碰）。
+  /`encoding="UTF-8"`/`standalone="no"` 等变体统一改写，且声明后换行（BOM 不碰）。
+- **段首不留全角空格**：源书用「　　」手工缩进的，一律删掉 —— `styles.css` 的 `text-indent` 已负责两格，留着会叠成四格。`epub_clean_common.strip_indent_spaces()` 在 `postprocess()` 里自动执行（旧成果用 `epub_clean_fix.py process <dir>` 补跑，`verify` 会报残留）。`center`、`left`、`right`、`poem/poems`、`caption`、`toc`、`sprt`、`image`、`fnote`、`author`、`title/subtitle`、`logo`、`cover` 这些类的段首空格保留（空格可能是版面意图）。
 - **`<blockquote>` 内的 `<p>` 一律带 `class="bodytext"`**（默认规则，`epub_clean_common.blockquote_bodytext()`
   自动补；`blockquote.poem/menu` 等特例由 css 的 `blockquote.poem p` 覆盖，不用另写 class）。
 - 脚注：正文 `<sup><a epub:type="noteref" href="#footnote-x" id="noteref-N">[N]</a></sup>`；
