@@ -36,6 +36,7 @@ epub_clean_vertical.py — 竖排 EPUB3（vrtl/hltr + tcy + noteref/footnote）�
   尾注 -> 标准 <sup><a noteref>[N]</a></sup> + <hr/> + <p class="fnote" id="fn_N">…</p>
   纯图片部扉 -> <h1 id="…" title="One　前奏"><svg …/></h1>（id 从 svg 移到 h1；文字取 nav 目录项，
                只认带 #锚点 的目录链接，封面/內文等 landmarks 不算；有可见文字或已有 h1 的页不动）
+  标题级别 -> 按 nav.xhtml 的 <ol> 嵌套定：顶层条目 h1，部下的章（深度≥2）改 h2（step_heading_level）
   收尾 -> postprocess()（XML 声明/NBSP/○→〇/chatu 去重/chatu 间 sprt…）
 
 子命令: analyze <dir> [-o REPORT] / process <dir> [--dry-run] / verify <dir>
@@ -288,10 +289,41 @@ def step_plate_heading(c, name, ctx):
     return c[:m.start()] + '<h1%s title="%s">\n%s\n</h1>' % (hid, esc, svg) + c[m.end():]
 
 
+def load_nav_depth(dirpath):
+    """nav.xhtml 的 <ol> 嵌套层级 -> {文件名: 深度}（1=顶层，2=部下的章）"""
+    p = os.path.join(dirpath, "nav.xhtml")
+    if not os.path.exists(p):
+        return {}
+    c = read(p)
+    body = c[c.find("<body"):] if "<body" in c else c
+    depth, out = 0, {}
+    for m in re.finditer(r'<ol\b[^>]*>|</ol>|<a\b[^>]*href="([^"]+)"[^>]*>', body):
+        tok = m.group(0)
+        if tok.startswith("<ol"):
+            depth += 1
+        elif tok.startswith("</ol"):
+            depth -= 1
+        else:
+            f = re.sub(r"^.*?([^/]+\.x?html)(?:#.*)?$", r"\1", m.group(1))
+            if f not in out:
+                out[f] = depth
+    return out
+
+
+def step_heading_level(c, name, ctx):
+    """按 nav 层级定标题级别：顶层条目 h1，部下的章（深度≥2）改 h2。"""
+    dep = (ctx.get("nav_depth") or {}).get(name)
+    if not dep or dep < 2:
+        return c
+    c, n = re.subn(r"<h1(\b[^>]*)>(.*?)</h1>", r"<h2\1>\2</h2>", c, flags=re.S)
+    ctx["h_level"] += n
+    return c
+
+
 STEPS = [("css", step_css), ("layout", step_layout), ("footnotes", step_footnotes),
          ("quotes", step_quotes), ("headings", step_headings), ("misc", step_misc),
          ("tcy", step_tcy), ("body", step_body), ("plates", step_plates),
-         ("plate_heading", step_plate_heading)]
+         ("plate_heading", step_plate_heading), ("heading_level", step_heading_level)]
 
 # ---------- 校验 ----------
 
@@ -373,6 +405,7 @@ def process(d, dry=False):
     os.makedirs(outdir, exist_ok=True)
     print("备份/输出目录: %s" % outdir)
     nav_map = load_nav_titles(d)
+    nav_depth = load_nav_depth(d)
     ok = True
     for fp in files:
         name = os.path.basename(fp)
@@ -385,8 +418,9 @@ def process(d, dry=False):
             continue
         ctx = dict.fromkeys(["css", "layout", "refs", "fnotes", "bq", "heads",
                              "misc", "tcy", "bodytext", "plate", "chatu", "intro",
-                             "style", "plate_h1"], 0)
+                             "style", "plate_h1", "h_level"], 0)
         ctx["nav_map"] = nav_map
+        ctx["nav_depth"] = nav_depth
         if name == "nav.xhtml":
             # 目录页只做：去竖排类、去 tcy 壳、换 css（保留其 nav 结构）
             for sname in ("css", "layout", "tcy"):
@@ -408,9 +442,9 @@ def process(d, dry=False):
             print("%-24s FAIL: %s" % (name, "; ".join(probs)))
             continue
         write(os.path.join(outdir, name) if dry else fp, c)
-        print("%-24s bodytext=%-4d tcy=%-4d ref=%-3d 注=%-3d 引文=%-2d 图=%-2d 图版=%-2d h1图=%d" % (
+        print("%-24s bodytext=%-4d tcy=%-4d ref=%-3d 注=%-3d 引文=%-2d 图=%-2d 图版=%-2d h1图=%-2d h2=%d" % (
             name, ctx["bodytext"], ctx["tcy"], ctx["refs"], ctx["fnotes"],
-            ctx["bq"], ctx["misc"], ctx["plate"], ctx["plate_h1"]))
+            ctx["bq"], ctx["misc"], ctx["plate"], ctx["plate_h1"], ctx["h_level"]))
     print("RESULT:", "OK" if ok else "FAIL（有文件未通过校验，未写回）")
     sys.exit(0 if ok else 1)
 
