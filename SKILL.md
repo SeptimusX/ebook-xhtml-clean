@@ -958,6 +958,9 @@ chatu 必有图、class 白名单、逐文件文本与源一致（`sup` 与 `[N]
 
 `nav.xhtml` 只做轻处理（去 `vrtl`、去 `tcy` 壳、换 css），保留其 EPUB3 nav 结构。
 
+**纯图片部扉页**按 `nav.xhtml` 的目录链接文字加 `<h1>` 包裹：
+`<svg id="toc_index_1">…</svg>` → `<h1 id="toc_index_1" title="One　前奏"><svg …/></h1>`（`step_plate_heading`）。文字取目录项（保留全角空格），`id` 从 `svg` 移到 `h1`，nav/ncx 的锚点照旧可解析；只认带 `#锚点` 的目录链接（封面「封面」、正文起点「內文」这类 landmarks 不算），页面有可见文字或已有 `h1` 的不动。
+
 **校验**：XML 良构、无 `vrtl/hltr/bodymatter/tcy/kfont/sep/t4/full/conmi/flex` 残留、无内联 `<style>`、
 旧 css、id 唯一、`#锚点` 可解析、noteref 数 == fnote 数。
 

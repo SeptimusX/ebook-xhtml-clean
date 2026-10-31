@@ -135,6 +135,7 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
+- **部扉纯图片页加 `h1`（2026-10-31，profile W）**：`<svg id="toc_index_1">` 这类整页图片，按 `nav.xhtml` 目录链接文字包成 `<h1 id="toc_index_1" title="One　前奏"><svg …/></h1>`；id 从 svg 移到 h1，nav/ncx 锚点不变。只取带 `#锚点` 的目录项（landmarks 的「封面」「內文」不算），有可见文字或已有 h1 的页面跳过。《发现丝绸》8 个部扉页已处理
 - **删段首全角空格（2026-10-31）**：源书用「　　」手工缩进，一律去掉 —— `styles.css` 的 `text-indent` 已负责两格，留着会变四格。`epub_clean_common.postprocess()` 新增 `strip_indent_spaces()`；`epub_clean_fix.py process` 可对旧成果补跑、`verify` 会报残留。`center/left/right/poem/caption/toc/sprt/image/fnote/author/title/subtitle/logo/cover` 保留段首空格。全库 84 本已扫过：14 本、80 个文件共删 1249 处
 - **新增 profile W**（竖排 EPUB3：`vrtl/hltr` + `tcy` + `noteref/footnote`，`epub_clean_vertical.py`）：首用于《發現絲綢、白銀與鴉片》。按用户口径**转横排**（去 `vrtl/hltr`/`bodymatter`、`span.tcy` 去壳留数字、清内联 `<style>` / `<meta viewport>` / `conmi/flex` 包装）；**整页图版保留 `<svg><image>`**，只清外层类与属性。`p.kfont` 题词 → `blockquote.intro` + `p.right`，紧跟 `h1` 的已有 `<blockquote>` 也标 `intro`；`h1` 内 `span.tcy`/`<small>` → `span.subtitle`；`p.t4 kfont` → `bodytext`；`p.sep` → `sprt`；`img.full` → `chatu`；1042 条尾注双向化（noteref == fnote）。`nav.xhtml` 只轻处理（去 `vrtl`、去 `tcy`、换 css），保留 EPUB3 nav。
 - **README 表整理**：把此前被追加到「人工精修」小节的 R/S 行并回主表，补 T（GBS）/U（Kindle→calibre 第二套类号）/V（calibre 简类号）/W（竖排 EPUB3），现为 A–W 共 23 行，与 SKILL.md 一致；命令速查里被粘在一起的注释也一并拆开。

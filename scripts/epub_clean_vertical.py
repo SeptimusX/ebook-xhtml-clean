@@ -19,6 +19,7 @@ epub_clean_vertical.py — 竖排 EPUB3（vrtl/hltr + tcy + noteref/footnote）�
          <div id="fn_N" class="footnote" epub:type="footnote" role="doc-footnote">
            <p><span class="tcy">N</span>注文&#160;<a href="#fnref_N" role="doc-backlink">↩</a></p></div>…</div>
   整页图版 <body><svg viewBox="0 0 1444 2048"><image xlink:href="../Images/NNN.jpg"/><title>图注</title></svg></body>
+  部扉纯图片页 <svg id="toc_index_1">…</svg>，nav.xhtml 里的目录项写着「One　前奏」这类文字
 
 用户口径（2026-10-31 确认）:
   · **改成横排**：去掉 html 上的 vrtl/hltr 与 body 的 bodymatter；span.tcy 去壳留数字
@@ -33,11 +34,13 @@ epub_clean_vertical.py — 竖排 EPUB3（vrtl/hltr + tcy + noteref/footnote）�
   sep -> p.sprt
   img.full -> div.chatu
   尾注 -> 标准 <sup><a noteref>[N]</a></sup> + <hr/> + <p class="fnote" id="fn_N">…</p>
+  纯图片部扉 -> <h1 id="…" title="One　前奏"><svg …/></h1>（id 从 svg 移到 h1；文字取 nav 目录项，
+               只认带 #锚点 的目录链接，封面/內文等 landmarks 不算；有可见文字或已有 h1 的页不动）
   收尾 -> postprocess()（XML 声明/NBSP/○→〇/chatu 去重/chatu 间 sprt…）
 
 子命令: analyze <dir> [-o REPORT] / process <dir> [--dry-run] / verify <dir>
 """
-import argparse, datetime, glob, os, re, shutil, sys
+import argparse, datetime, glob, html, os, re, shutil, sys
 import xml.etree.ElementTree as ET
 from epub_clean_common import postprocess, ensure_styles
 
@@ -167,6 +170,8 @@ def step_quotes(c, name, ctx):
 def step_headings(c, name, ctx):
     def repl(m):
         attrs, inner = m.group(1), m.group(2)
+        if "<svg" in inner or "<img" in inner:   # 包图（部扉页）的 h1：不动内部空白
+            return m.group(0)
         ctx["heads"] += 1
         inner = re.sub(r'<span class="tcy">(.*?)</span>', r'<span class="subtitle">\1</span>', inner, flags=re.S)
         inner = re.sub(r'<small>(.*?)</small>', r'<span class="subtitle">\1</span>', inner, flags=re.S)
@@ -234,9 +239,59 @@ def step_plates(c, name, ctx):
         ctx["plate"] += 1
     return c
 
+PLATE_SVG = re.compile(r"<svg\b.*?</svg>", re.S)
+
+
+def load_nav_titles(dirpath):
+    """nav.xhtml -> {文件名: 链接文字}（保留内部全角空格，如 "One　前奏"）"""
+    p = os.path.join(dirpath, "nav.xhtml")
+    if not os.path.exists(p):
+        return {}
+    c = read(p)
+    out = {}
+    # 只取带锚点的目录项（landmarks 里的「封面」「內文」不带 #，不算目录标题）
+    for m in re.finditer(r'<a[^>]*href="[^"#]*?([^"/#]+\.x?html)#[^"]*"[^>]*>(.*?)</a>',
+                         c, re.S):
+        f = m.group(1)
+        t = html.unescape(re.sub(r"<[^>]+>", "", m.group(2))).strip()
+        if f not in out and t:
+            out[f] = t
+    return out
+
+
+def step_plate_heading(c, name, ctx):
+    """纯图片页（部扉/图版）按 nav 链接文字加 <h1 title="…"> 包裹。
+
+    <svg id="toc_index_1">…</svg>
+      -> <h1 id="toc_index_1" title="One　前奏"><svg …/></h1>
+    id 从 svg 移到 h1（nav/ncx 的锚点仍可解析）；已有 h1、或有可见文字则跳过。
+    """
+    title = (ctx.get("nav_map") or {}).get(name)
+    if not title or "<h1" in c or name in CONFIG["skip_files"]:
+        return c
+    body = c[c.find("<body"):]
+    inner = re.sub(r"</?(?:body|html)\b[^>]*>", "", body)
+    visible = re.sub(r"<[^>]+>", "", PLATE_SVG.sub("", inner)).strip()
+    if visible:
+        return c
+    m = PLATE_SVG.search(c)
+    if not m:
+        return c
+    svg = m.group(0)
+    hid = ""
+    idm = re.search(r'\sid="([^"]+)"', svg)
+    if idm:
+        hid = ' id="%s"' % idm.group(1)
+        svg = svg[:idm.start()] + svg[idm.end():]
+    esc = title.replace("&", "&amp;").replace('"', "&quot;")
+    ctx["plate_h1"] += 1
+    return c[:m.start()] + '<h1%s title="%s">\n%s\n</h1>' % (hid, esc, svg) + c[m.end():]
+
+
 STEPS = [("css", step_css), ("layout", step_layout), ("footnotes", step_footnotes),
          ("quotes", step_quotes), ("headings", step_headings), ("misc", step_misc),
-         ("tcy", step_tcy), ("body", step_body), ("plates", step_plates)]
+         ("tcy", step_tcy), ("body", step_body), ("plates", step_plates),
+         ("plate_heading", step_plate_heading)]
 
 # ---------- 校验 ----------
 
@@ -317,6 +372,7 @@ def process(d, dry=False):
     outdir = os.path.join(base, "out") if dry else base
     os.makedirs(outdir, exist_ok=True)
     print("备份/输出目录: %s" % outdir)
+    nav_map = load_nav_titles(d)
     ok = True
     for fp in files:
         name = os.path.basename(fp)
@@ -328,7 +384,9 @@ def process(d, dry=False):
             print("%-24s 跳过（nav/cover）" % name)
             continue
         ctx = dict.fromkeys(["css", "layout", "refs", "fnotes", "bq", "heads",
-                             "misc", "tcy", "bodytext", "plate", "chatu", "intro", "style"], 0)
+                             "misc", "tcy", "bodytext", "plate", "chatu", "intro",
+                             "style", "plate_h1"], 0)
+        ctx["nav_map"] = nav_map
         if name == "nav.xhtml":
             # 目录页只做：去竖排类、去 tcy 壳、换 css（保留其 nav 结构）
             for sname in ("css", "layout", "tcy"):
@@ -350,9 +408,9 @@ def process(d, dry=False):
             print("%-24s FAIL: %s" % (name, "; ".join(probs)))
             continue
         write(os.path.join(outdir, name) if dry else fp, c)
-        print("%-24s bodytext=%-4d tcy=%-4d ref=%-3d 注=%-3d 引文=%-2d 图=%-2d 图版=%d" % (
+        print("%-24s bodytext=%-4d tcy=%-4d ref=%-3d 注=%-3d 引文=%-2d 图=%-2d 图版=%-2d h1图=%d" % (
             name, ctx["bodytext"], ctx["tcy"], ctx["refs"], ctx["fnotes"],
-            ctx["bq"], ctx["misc"], ctx["plate"]))
+            ctx["bq"], ctx["misc"], ctx["plate"], ctx["plate_h1"]))
     print("RESULT:", "OK" if ok else "FAIL（有文件未通过校验，未写回）")
     sys.exit(0 if ok else 1)
 
