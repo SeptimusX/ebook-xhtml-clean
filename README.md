@@ -135,6 +135,7 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
+- **朝代/皇帝对照改两列表格（2026-10-31）**：《发现丝绸》`bodymatter_1_3.xhtml` 里「朝代」段与「皇帝」段交替，改成 `<table>`（表头 `朝代`/`皇帝`），每朝一行；每段开头的 `<b>皇帝</b><br/>` 与段间空行段删除。口径写进 SKILL.md「人工精修清单」
 - **html 语言统一 zh-CN（2026-10-31）**：`<html>` 上 `zh-TW` / `zh-Hant` / `zh-Hans` / `zh-HK` / `zh-cn` （`lang` 与 `xml:lang`）一律改 `zh-CN`，纯 `zh` 保持。`epub_clean_common.normalize_lang()` 并入 `postprocess()`；全库 12 本、347 个文件、448 个属性（zh-TW 160、zh-Hans 58、zh-Hant 38、zh-cn 192）已改，`epub_clean_fix.py` 的 process/verify 也会检查。`content.opf` 的 `dc:language` 未动
 - **部扉纯图片页加 `h1`（2026-10-31，profile W）**：`<svg id="toc_index_1">` 这类整页图片，按 `nav.xhtml` 目录链接文字包成 `<h1 id="toc_index_1" title="One　前奏"><svg …/></h1>`；id 从 svg 移到 h1，nav/ncx 锚点不变。只取带 `#锚点` 的目录项（landmarks 的「封面」「內文」不算），有可见文字或已有 h1 的页面跳过。《发现丝绸》8 个部扉页已处理
 - **删段首全角空格（2026-10-31）**：源书用「　　」手工缩进，一律去掉 —— `styles.css` 的 `text-indent` 已负责两格，留着会变四格。`epub_clean_common.postprocess()` 新增 `strip_indent_spaces()`；`epub_clean_fix.py process` 可对旧成果补跑、`verify` 会报残留。`center/left/right/poem/caption/toc/sprt/image/fnote/author/title/subtitle/logo/cover` 保留段首空格。全库 84 本已扫过：14 本、80 个文件共删 1249 处
