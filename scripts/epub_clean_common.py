@@ -183,6 +183,42 @@ def normalize_typography(c):
     return c
 
 
+# ---------- 5) html 标签语言：zh-* 统一为 zh-CN ----------
+
+_HTML_TAG = re.compile(r"<html\b[^>]*>", re.S)
+_LANG_ATTR = re.compile(r'((?:xml:)?lang)="([^"]*)"')
+
+
+def _lang_repl(m):
+    tag = m.group(0)
+
+    def sub(mm):
+        attr, val = mm.group(1), mm.group(2)
+        low = val.lower()
+        if low == "zh":
+            return '%s="zh"' % attr
+        if low.startswith("zh-"):
+            return '%s="zh-CN"' % attr
+        return mm.group(0)
+
+    return _LANG_ATTR.sub(sub, tag)
+
+
+def normalize_lang(c):
+    """`<html>` 上的 lang/xml:lang：zh-TW、zh-Hant、zh-Hans、zh-HK… 一律改 zh-CN；zh 保持。"""
+    return _HTML_TAG.sub(_lang_repl, c)
+
+
+def count_lang_non_cn(c):
+    n = 0
+    for m in _HTML_TAG.finditer(c):
+        for mm in _LANG_ATTR.finditer(m.group(0)):
+            v = mm.group(2)
+            if v.lower().startswith("zh") and v not in ("zh", "zh-CN"):
+                n += 1
+    return n
+
+
 def ensure_xml_decl(c):
     """把 XML 声明规范成 <?xml version="1.0" encoding="utf-8"?> 独占一行；缺则补上。"""
     body = c.lstrip("\ufeff")
@@ -201,5 +237,6 @@ def postprocess(c):
     c = blockquote_bodytext(c)
     c = strip_indent_spaces(c)
     c = normalize_typography(c)
+    c = normalize_lang(c)
     c = ensure_xml_decl(c)
     return c

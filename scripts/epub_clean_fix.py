@@ -9,6 +9,7 @@ epub_clean_fix.py — 通用后处理（对已清洗过的目录补跑共同规�
   3) 文本节点规范化：NBSP→空格、○(U+25CB)→〇(U+3007)、中英之间不留空格、逐字 <i> 合并
   4) <blockquote> 内没有 class 的 <p> 补 class="bodytext"
   5) 删掉正文段首手工缩进用的全角空格「　」（styles.css 已用 text-indent）
+  6) <html> 上 zh-TW/zh-Hant/zh-Hans/zh-HK/zh-cn 统一为 zh-CN（zh 保持）
 
 用法:
   python epub_clean_fix.py process <dir> [--dry-run]
@@ -18,7 +19,7 @@ import argparse, datetime, glob, os, re, shutil, sys
 
 from epub_clean_common import (postprocess, reset_dedupe, register_chatu,
                                count_dupe_chatu, count_sprt_between_chatu,
-                               count_indent_spaces,
+                               count_indent_spaces, count_lang_non_cn,
                                is_gallery, _CHATU, ensure_styles)
 
 
@@ -69,7 +70,8 @@ def process(d, dry=False):
         nd = count_dupe_chatu(c)
         ns = count_sprt_between_chatu(c)
         ni = count_indent_spaces(c)
-        if not nd and not ns and not ni:
+        nl = count_lang_non_cn(c)
+        if not nd and not ns and not ni and not nl:
             register_chatu(c)          # 记入 seen，供后续文件比对
             continue
         if not dry:
@@ -79,14 +81,15 @@ def process(d, dry=False):
         tdup += nd
         tsprt += ns
         tind += ni
-        print("%-20s 删重复 chatu: %-2d 删 chatu 间 sprt: %-2d 删段首全角空格: %d" % (name, nd, ns, ni))
+        print("%-20s 删重复 chatu: %-2d 删 chatu 间 sprt: %-2d 删段首全角空格: %-2d 改 lang: %d"
+              % (name, nd, ns, ni, nl))
     print("合计: 重复 chatu %d 处，chatu 间 sprt %d 处，段首全角空格 %d 段" % (tdup, tsprt, tind))
     print("RESULT: OK")
 
 
 def verify_dir(d):
     reset_dedupe()
-    bad_d = bad_s = bad_i = 0
+    bad_d = bad_s = bad_i = bad_l = 0
     for fp in list_files(d):
         c = read(fp)
         if is_gallery(c):
@@ -94,6 +97,7 @@ def verify_dir(d):
         nd = count_dupe_chatu(c)
         ns = count_sprt_between_chatu(c)
         ni = count_indent_spaces(c)
+        nl = count_lang_non_cn(c)
         register_chatu(c)
         if nd:
             bad_d += nd
@@ -104,9 +108,13 @@ def verify_dir(d):
         if ni:
             bad_i += ni
             print("%-20s 仍有 %d 段段首全角空格" % (os.path.basename(fp), ni))
-    ok = not (bad_d or bad_s or bad_i)
+        if nl:
+            bad_l += nl
+            print("%-20s 仍有 %d 处 lang 非 zh-CN" % (os.path.basename(fp), nl))
+    ok = not (bad_d or bad_s or bad_i or bad_l)
     print("RESULT:", "PASS" if ok else
-          "FAIL（重复 chatu %d，chatu 间 sprt %d，段首全角空格 %d）" % (bad_d, bad_s, bad_i))
+          "FAIL（重复 chatu %d，chatu 间 sprt %d，段首全角空格 %d，lang %d）"
+          % (bad_d, bad_s, bad_i, bad_l))
     sys.exit(0 if ok else 1)
 
 
