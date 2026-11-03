@@ -13,6 +13,7 @@ postprocess(c) 依次执行:
   3) blockquote_bodytext        引文块里没有 class 的 <p> 补 class="bodytext"
   3b) annot_blocks             【…】包裹的整段编注 -> <blockquote>，去括号、首段加「编注：」
   4) strip_indent_spaces        删掉正文段首手工缩进用的全角空格「　」（styles.css 已用 text-indent）
+  4b) hr_to_blank              正文分隔线 <hr/> -> 空行段（紧跟尾注 <p class="fnote"> 的那根保留）
   5) normalize_typography       NBSP→空格、○→〇、中英之间不留空格、缩写点前空格、逐字 <i> 合并
   6) ensure_xml_decl            XML 声明规范成独占一行
 
@@ -217,6 +218,26 @@ def count_indent_spaces(c):
     return sum(1 for m in _INDENT_RE.finditer(c) if _is_indent_target(m.group(1)))
 
 
+
+# ---------- 4b) 装饰性 <hr/> -> 空行段 ----------
+
+def hr_to_blank(c):
+    """正文里的分隔线（同日多则、小节之间）改成空行段；紧跟尾注列表的那根 <hr/> 保留。"""
+    out, pos = [], 0
+    for m in re.finditer(r"[ \t]*<hr\s*/?>", c):
+        nxt = c[m.end():m.end() + 80].lstrip()
+        if nxt.startswith('<p class="fnote"') or nxt.startswith("</body>"):
+            continue
+        out.append(c[pos:m.start()])
+        out.append('<p class="bodytext"><br/></p>')
+        pos = m.end()
+    out.append(c[pos:])
+    return "".join(out)
+
+
+def count_hr(c):
+    return len(re.findall(r"<hr\s*/?>", c))
+
 # ---------- 组合 ----------
 
 def _fix_text_node(t):
@@ -290,6 +311,7 @@ def postprocess(c):
     c = blockquote_bodytext(c)
     c = annot_blocks(c)
     c = strip_indent_spaces(c)
+    c = hr_to_blank(c)
     c = normalize_typography(c)
     c = normalize_lang(c)
     c = ensure_xml_decl(c)

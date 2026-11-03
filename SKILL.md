@@ -90,6 +90,8 @@ description: 电子书 EPUB xhtml 清洗流水线（二十四套 profile：得�
   正文/脚注/图注/书目录/alt 里的全部替换，编号 `二○○○年`→`二〇〇〇年`、`卷八○`→`卷八〇`）；
   中英文/数字之间不留空格（`A4 大小`→`A4大小`）；
   缩写点前不留空格（`T .S .`→`T.S.`）；逐字 `<i>` 合并（`<i>阿</i><i>提</i>`→`<i>阿提</i>`）；
+  正文里的分隔线 `<hr/>` → 空行段 `<p class="bodytext"><br/></p>`（同日多则 / 小节之间用空行；
+  **紧跟尾注 `<p class="fnote">` 的那根 `<hr/>` 保留**）——`epub_clean_common.hr_to_blank()`，postprocess 第 4b 步；
   两个 `<p>` 不挤在同一行；**每个 xhtml 一律以 `<?xml version="1.0" encoding="utf-8"?>` 独占一行开头**
   （`epub_clean_common.ensure_xml_decl()`：缺则补、`<?xml version='1.0'?>`
   /`encoding="UTF-8"`/`standalone="no"` 等变体统一改写，且声明后换行（BOM 不碰）。
@@ -802,6 +804,11 @@ h1、`<title>`、目录项三处同步；非占位标题（序幕/尾声/版权�
   `<h3>人名<br/><span class="subtitle">外文名（生卒年）</span></h3>`
 - **引文性内容整体包 `<blockquote>`**：报纸标题+报道正文、邀请函、手稿片段、信件等；
   引文里的标题/落款行用 `<p class="center">`（可含 `<b>`）
+- **正文里的引文 / 日记 / 书信 / 对话** → `<blockquote>`（单行写法 `<blockquote><p class="bodytext">…</p></blockquote>`，与多行等价；一处多段就并列多个 `<p>`）：
+  · 日记、回忆录、他人转述的整段 → 整段包入；相邻两段仍共用一个 blockquote
+  · 书信 → 称呼 `<p class="left">亲爱的…：</p>` + 正文各段 + 落款 `<p class="right">姓名</p>`
+  · 对话（问答）→ 每个说话段一个 `p.bodytext`，共用一个 blockquote
+  · 诗作 → 标题 `<p class="bodytext"><b>十日谈</b></p>`、空行段 `<p class="bodytext"><br/></p>`、每行诗一段，末尾署名/译者 `<p class="right">…（某某英译）</p>`
 - **正文里引用的古籍/文献原文** → `<blockquote><p class="bodytext">原文</p></blockquote>`：
   不加 class（**不用 `intro`**）、**不用 `span.kai`**、块内不出现 `<br/>`（多行原文每行一个 `p.bodytext`）
 - **章首「内容概述」（小节标题 + 一句话提要的列表）** → 整块包 `<blockquote class="intro">`：
