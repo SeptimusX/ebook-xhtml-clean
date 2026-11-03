@@ -11,6 +11,7 @@ postprocess(c) 依次执行:
                                 · seen 为模块级集合，一次 process＝一个书目录＝一个进程，天然复位。
   2) strip_sprt_between_chatu   两个 <div class="chatu"> 之间不保留 <p class="sprt">…</p>
   3) blockquote_bodytext        引文块里没有 class 的 <p> 补 class="bodytext"
+  3b) annot_blocks             【…】包裹的整段编注 -> <blockquote>，去括号、首段加「编注：」
   4) strip_indent_spaces        删掉正文段首手工缩进用的全角空格「　」（styles.css 已用 text-indent）
   5) normalize_typography       NBSP→空格、○→〇、中英之间不留空格、缩写点前空格、逐字 <i> 合并
   6) ensure_xml_decl            XML 声明规范成独占一行
@@ -136,6 +137,58 @@ def count_blockquote_bare_p(c):
     return sum(len(re.findall(r"<p\s*>", m.group(2))) for m in _BQ.finditer(c))
 
 
+
+# ---------- 3b) 【…】包裹的编注块 -> blockquote + 「编注：」 ----------
+
+_P_BODY = re.compile(r'<p class="bodytext">(.*?)</p>', re.S)
+
+
+def annot_blocks(c):
+    """整段（或连续多段）被【】包住的编者注：去括号、首段加「编注：」、整块包 blockquote。"""
+    bq_spans = [(m.start(), m.end()) for m in _BQ.finditer(c)]
+
+    def in_bq(pos):
+        return any(s < pos < e for s, e in bq_spans)
+
+    def plain(h):
+        return re.sub(r'<[^>]+>', '', h).strip()
+
+    ms = [m for m in _P_BODY.finditer(c) if not in_bq(m.start())]
+    out, pos, n = [], 0, 0
+    i = 0
+    while i < len(ms):
+        m = ms[i]
+        if plain(m.group(1)).startswith("【"):
+            j = i
+            while j < len(ms) and not plain(ms[j].group(1)).endswith("】"):
+                if j + 1 >= len(ms) or c[ms[j].end():ms[j + 1].start()].strip():
+                    j = -1
+                    break
+                j += 1
+            if j >= i and plain(ms[j].group(1)).endswith("】"):
+                parts = []
+                for k in range(i, j + 1):
+                    inner = ms[k].group(1)
+                    if k == i:
+                        inner = re.sub(r"^\s*【", "<b>编注：</b>", inner, count=1)
+                    if k == j:
+                        inner = re.sub(r"】\s*$", "", inner, count=1)
+                    parts.append('<p class="bodytext">%s</p>' % inner)
+                out.append(c[pos:ms[i].start()])
+                out.append("<blockquote>\n" + "\n".join(parts) + "\n</blockquote>")
+                pos = ms[j].end()
+                n += 1
+                i = j + 1
+                continue
+        i += 1
+    out.append(c[pos:])
+    return "".join(out)
+
+
+def count_annot_blocks(c):
+    return sum(1 for m in _P_BODY.finditer(c)
+               if re.sub(r'<[^>]+>', '', m.group(1)).strip().startswith("【"))
+
 # ---------- 4) 段首缩进用的全角空格 ----------
 # 源书常用「　　」手工缩进；我方 styles.css 已用 text-indent 缩进，必须删掉，
 # 否则会叠加成四格。默认处理所有段落，只有下面这些「空格即版面意图」的类除外。
@@ -235,6 +288,7 @@ def postprocess(c):
     c = dedupe_chatu(c)
     c = strip_sprt_between_chatu(c)
     c = blockquote_bodytext(c)
+    c = annot_blocks(c)
     c = strip_indent_spaces(c)
     c = normalize_typography(c)
     c = normalize_lang(c)
