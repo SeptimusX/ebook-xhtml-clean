@@ -228,7 +228,7 @@ def verify_dir(d):
             fn, _, frag = h.partition("#")
             if not fn:
                 fn = name
-            if not os.path.exists(os.path.join(d, fn)):
+            if not os.path.exists(os.path.join(os.path.dirname(fp), fn)):
                 probs.append("链接缺失 %s" % h)
             elif frag and frag not in ids.get(fn, set()):
                 probs.append("锚点缺失 %s" % h)

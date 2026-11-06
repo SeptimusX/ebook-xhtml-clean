@@ -81,7 +81,9 @@ description: 电子书 EPUB xhtml 清洗流水线（二十五套 profile：得�
    脚本内置校验（XML 良构、无残留、id 唯一、内链可解析、编号连续、图片存在），
    任何文件不过校验就不写回并整体 FAIL。注意：图片存在性按 `<dir>/../images` 校验，
    若在临时目录试处理须镜像 images 目录，否则会 FAIL。
-5. **报告**：向用户汇报计数表（pre/glyph/chatu/fnotes/fs/bodytext/sub/bold/join/
+5. **重命名**：`$rn <书根目录>`（先 `--dry-run` 看映射）——按 spine 顺序把 xhtml 改成
+   `NN_语义名.xhtml`，同步 opf/ncx/内部链接，然后重跑该 profile 的 `verify`。
+6. **报告**：向用户汇报计数表（pre/glyph/chatu/fnotes/fs/bodytext/sub/bold/join/
    unwrap/hB），并说明保留项与判断项。
 
 ## 默认输出约定（经用户确认/精修，勿重复询问）
@@ -132,6 +134,18 @@ description: 电子书 EPUB xhtml 清洗流水线（二十五套 profile：得�
   css → append（chatu 先于引文规则消费 fangsong caption；footnotes 先于引文规则
   以免 aside 割裂连续性；unwrap 先于 bodytext/h1_subtitle；merge_emphasis 在 unwrap 后、
   bold_bodytext 前，把逐字 `<b>/<i>` 合并成一个标签）。
+
+## 收尾：按 spine 顺序重命名（epub_renumber.py）
+
+处理并 `verify` 通过后，按 opf spine（= 书内阅读顺序，与 toc.ncx 一致）给 xhtml 加序号前缀：
+
+- 命名：`NN_<原语义 stem>.xhtml`，如 `01_cover.xhtml`、`02_title.xhtml`、`12_ch01.xhtml`、
+  `31_ch18_notes_1.xhtml`、`34_colophon.xhtml`；NN 从 01 起，超过 99 个自动扩位
+- 保留原语义 stem（已有的数字前缀先去掉，可反复执行 = 幂等）；拆篇文件用
+  `--rename ch18_split_000=ch18_notes_1 --rename ch18_split_001=ch18_notes_2` 指定
+- 同步改写：所有 xhtml 的 href/src、toc.ncx 的 content src、opf 的 item href；
+  备份到 `%TEMP%\opencode\renumber-bak-*`
+- 改名后必须重跑该 profile 的 `verify`（跨文件注、锚点、opf/ncx 缺文件会一并校验）
 
 ## calibre + duokan profile 约定（epub_clean_calibre.py，**配置驱动**）
 
@@ -1111,6 +1125,7 @@ $sc20= "$sk/epub_clean_calibre_simple.py"  # profile V calibre 简类号社科�
 $sc21= "$sk/epub_clean_vertical.py"        # profile W 竖排 EPUB3（vrtl/tcy/noteref，转横排）
 $sc22= "$sk/epub_clean_calibre_diary.py"   # profile X calibre 拆篇日记体（按 h1 合并）
 $sc23= "$sk/epub_clean_calibre_endnotes.py" # profile Y calibre 繁体 + 书末跨文件注（p.footnote/a.ref）
+$rn  = "$sk/epub_renumber.py"   # 收尾：按 spine 顺序加序号前缀（01_cover.xhtml …），同步 opf/ncx/内部链接
 & $py -X utf8 $sc  analyze <dir> -o <tmp>/report.txt   # 体检（只读）
 & $py -X utf8 $sc  process <dir> --dry-run             # 试处理→临时目录
 & $py -X utf8 $sc  process <dir>                       # 正式处理（自动备份+校验）
