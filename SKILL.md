@@ -141,6 +141,8 @@ description: 电子书 EPUB xhtml 清洗流水线（二十五套 profile：得�
 
 - 命名：`NN_<原语义 stem>.xhtml`，如 `01_cover.xhtml`、`02_title.xhtml`、`12_ch01.xhtml`、
   `31_ch18_notes_1.xhtml`、`34_colophon.xhtml`；NN 从 01 起，超过 99 个自动扩位
+- **stem 无语义时**（如 `Section0001.xhtml`）改用语义名：`03_preface`、`05_wedge_1`、
+  `08_part01_jiianyuan`、`09_y140bc`、`73_bibliography`、`74_epilogue`，用 `--rename 旧=新` 逐条指定
 - 保留原语义 stem（已有的数字前缀先去掉，可反复执行 = 幂等）；拆篇文件用
   `--rename ch18_split_000=ch18_notes_1 --rename ch18_split_001=ch18_notes_2` 指定
 - 同步改写：所有 xhtml 的 href/src、toc.ncx 的 content src、opf 的 item href；
@@ -195,11 +197,31 @@ calibre 的 `calibreNN` 类号**每本书都不同**（按首次出现顺序分�
   - 诗歌引文若与相邻正文诗行混标 → 统一处理
   - **年表/大事记类文件的条目**（`<p><span class="calibre25">年份</span></p>` + 条目段）不映射成 h3/h4：
     年份行做成 `<p class="bodytext"><b>年份</b></p>`，条目段 `p.bodytext`，每组之间插空行段
-  - **参考文献/书目条目**用 `p.bodytext`（不用 `bodytext-noindent`，书里不另设悬挂缩进类）
+  - **参考文献/书目条目**用 `p.bodytext`（不用 `bodytext-noindent`，书里不另设悬挂缩进类）；
+    2026-11 起《帝国暮色》《有为》改用 `p.bodytext-noindent`（顶格更清爽），新书默认 noindent
   - **列传体章节**（古籍原文 + 今译对照）：原文 `p.bodytext`、今译 `p.bodytext > span.kai`，中间插空行段
   - **正文引用的古籍原文**包 `<blockquote><p class="bodytext">`（不加 class、不加 `span.kai`）
   - **节标题「一、xxx」** 编号并入标题一行（`<h2>一、…</h2>`），不用 `subtitle` 分行
   - 详见「人工精修清单」——同类内容一律按该清单处理
+
+### 实例：《有为：汉武帝的五十四年》（得到/calibre 编年体，2026-11）
+
+- 结构：73 个 `SectionNNNN.xhtml`；`<div class="calibre3">` 反复包裹；正文 `p.calibre7 > span.calibre10`、
+  引文 `span.calibre13`、小节标题 `span.calibre17/18`、年份标题 `h2.calibre19 > span.calibre20`、
+  年龄行 `span.calibre21`；`aside`+`duokan-footnote-content` 脚注 79 条（同文件、`<hr/>` 后置）；
+  插图 `div.calibre26 > img.calibre27`；21 种内嵌 SVG 字图（calibre23/24/28/29/30/31）
+- `clean_config.json`：`p_para=calibre7`、`body_spans=[calibre10]`、`quote_spans=[calibre13]`、
+  `head_map={calibre17:h3, calibre18:h3, calibre19:h2, calibre20:h2}`、`h1_spans=[calibre5,calibre16]`、
+  `fig_div=calibre26`、`bold_spans=[calibre6,calibre9]`、**`author_span/date_span = null`**
+  （默认配置会把 `calibre21` 年龄行转 `p.right`，本书要并入 h2）、`custom_steps_position=tidy`
+- `custom_clean.py` 钩子（顺序）：字图→字；`<h2>年份</h2>`+`刘彻X岁` → `<h2>年份<br/><span class="subtitle">年龄</span></h2>`；
+  成对合并 `附录一：`/`常识一：`/`1.` + 下一行标题 → 单个 `h3`；楔子双 h1 → `h1 + subtitle`；
+  参考文献 noindent / 后记日期 `p.right` / 版权页 `COPYRIGHT` 居中；插图与签名图 → `chatu`；
+  **图注**（紧跟或紧邻插图的 `calibre13` 短句，含「示意图」「位置图」「军功爵」）→ `<p class="caption">` 收进 chatu
+- 21 个字图对照（古籍引文常用，可复用）：鷇 劗 鉏 磾 鹢 禨 强 貙 浿 鏦 駹 隤 鈇 鞸 貤 膢
+- 重命名（序号 + 语义名）：`01_titlepage`（书根 calibre 封面）、`02_cover`、`03_copyright`、`04_preface`、
+  `05_wedge_1`~`07_wedge_3`（楔子三节）、`08_part01_jiianyuan`…`70_part11_houyuan`（11 个「X年间」部页）、
+  年份章 `NN_y<年>bc`（如 `09_y140bc`、`72_y87bc`）、`73_bibliography`、`74_epilogue`
 
 
 ## Kobo 导出 · 多看式排版 profile 约定（epub_clean_kobo.py）
