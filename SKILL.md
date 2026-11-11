@@ -103,6 +103,8 @@ description: 电子书 EPUB xhtml 清洗流水线（二十六套 profile：得�
 - **`<html>` 的语言一律 `zh-CN`**：`zh-TW`、`zh-Hant`、`zh-Hans`、`zh-HK`、`zh-cn` 等变体（`lang` 与 `xml:lang` 两个属性）都改成 `zh-CN`，纯 `zh` 保持。`epub_clean_common.normalize_lang()` 在 `postprocess()` 里自动执行；旧成果用 `epub_clean_fix.py process <dir>` 补跑，`verify` 会报残留。注意只改 html 标签，`content.opf` 的 `dc:language` 不动（需要时另行统一）。
 - **`<blockquote>` 内的 `<p>` 一律带 `class="bodytext"`**（默认规则，`epub_clean_common.blockquote_bodytext()`
   自动补；`blockquote.poem/menu` 等特例由 css 的 `blockquote.poem p` 覆盖，不用另写 class）。
+- **`***` 分节符一律 `<p class="sprt">***</p>`**（不用 `center`；`sprt` 自带居中 + 上下留白，
+  与插图分隔符同一类）。源里 `***` 常带 `align-center`/`m-before-1em` 等版式类，清掉后套 `sprt`。
 - 脚注：正文 `<sup><a epub:type="noteref" href="#footnote-x" id="noteref-N">[N]</a></sup>`；
   章末 `<hr/>` 后 `<p class="fnote" id="footnote-x"><a href="#noteref-N">[N]</a> 注文</p>`；
   编号每文件从 [1] 重新开始；重复的 footnote id 输出时加 `-2`/`-3` 后缀消歧
@@ -1099,7 +1101,7 @@ chatu 必有图、class 白名单、逐文件文本与源一致（`sup` 与 `[N]
   - 图版 → `div.chatu` + `p.caption`（图注在图前/图后都收进 chatu）；整页图 → chatu
   - `p.indent-2em` → `bodytext`；`p.start-2em.indent--2em`（参考文献）→ `bodytext-noindent`；
     `p.start-4em.indent--1em` → `left2`；`p.align-center` → `center`；`p.align-end` → `right`；
-    `p.m-before-1em.m-after-1em.align-center`（`***` 分节）→ `center`；
+    `p.m-before-1em.m-after-1em.align-center`（`***` 分节）→ `p.sprt`；
     `p.m-before-1em.m-after-1em.start-2em.indent-2em`（诗/引文）→ `<blockquote><p class="bodytext">`
   - 目次页：目次 → `h1`，章行 → `p.toc2`，只有链接的行（前言/致謝/參考文獻）→ `p.toc1`
   - 献词 → `p.center`；题词 → `blockquote.intro` + `p.right`；作者/譯者簡介 → `h2`（作者/譯者）+ `p.center<b>姓名</b>`

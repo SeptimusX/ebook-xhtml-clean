@@ -90,7 +90,7 @@ def clean_para(c, role="plain"):
     c = re.sub(r'<p class="[^"]*\bstart-2em\b[^"]*\bindent-2em\b[^"]*">(.*?)</p>',
                r'<blockquote><p class="bodytext">\1</p></blockquote>', c, flags=re.S)
     # *** 分节
-    c = re.sub(r'<p class="[^"]*\balign-center\b[^"]*">(\s*\*\*\*\s*)</p>', r'<p class="center">\1</p>', c)
+    c = re.sub(r'<p class="[^"]*\balign-center\b[^"]*">(\s*\*\*\*\s*)</p>', r'<p class="sprt">\1</p>', c)
     # 居中 / 右对齐
     c = re.sub(r'<p class="[^"]*\balign-end\b[^"]*">(.*?)</p>', r'<p class="right">\1</p>', c, flags=re.S)
     c = re.sub(r'<p class="[^"]*\balign-center\b[^"]*">(.*?)</p>', r'<p class="center">\1</p>', c, flags=re.S)
