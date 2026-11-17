@@ -3,7 +3,7 @@
 把各类来源的电子书章节 XHTML 清洗为统一的语义化格式（`bodytext` / `fnote` / `chatu` / `blockquote` + `styles.css`）。
 An opencode skill / CLI for cleaning EPUB xhtml from twenty-two common Chinese e-book sources.
 
-## 支持的源格式（二十三套 profile）
+## 支持的源格式（二十七套 profile）
 
 | # | profile | 脚本 | 典型特征 |
 |---|---|---|---|
@@ -30,6 +30,10 @@ An opencode skill / CLI for cleaning EPUB xhtml from twenty-two common Chinese e
 | U | Kindle→calibre 第二套类号（`blockquote.calibre_13/15` 标题） | `scripts/epub_clean_kindle_calibre2.py` | 32` / `div.mbp_pagebreak` |
 | V | calibre 简类号社科书（`p.note` 注文 + `p.block` 引文） | `scripts/epub_clean_calibre_simple.py` | `<html … xml:lang="zh-CN">` + `../Styles/style0001.css`、正文 `<p>` 无 class、引文/条文 `<p class="block">`、图 `<p class="center"><img/></p>`(+`<p class="img">图注</p>`)、题词 `p.center1`+`p.lk`、脚注 `<a id="wN"></a><a href="文件#mN"><sup>[N]</sup></a>` + 章末 `<hr/>` + `<p class="note"><a id="mN"></a>…`、书内目录 `<ul><li><a href="partNNNN.xhtml#aNNN">`（可嵌套）、封面 `cover_page.xhtml`（内联 `<style>`+SVG）、前折口/书名页/后折口/封底 纯图页、CIP 版权页独立文件 |
 | W | 竖排 EPUB3（`vrtl/hltr`+`tcy`+`noteref/footnote`） | `scripts/epub_clean_vertical.py` | `html.vrtl/hltr`、`body.bodymatter`、`p` 无 class、`h1#toc_index_N`(tcy+small)、`span.tcy`、`p.kfont`(+text-right)、`p.t4 kfont`、`p.sep`、`img.full`、`a#fnref_N`+`div.footnotes`、整页图版 `<svg><image><title>` |
+| X | calibre 拆篇日记体（按 h1 合并） | `scripts/epub_clean_calibre_diary.py` | 上百个 `index-1_split_NNN.html`、`h1.calibre1`（年/单元）+ `h2.calibre4|5`（日期）、`p.calibre2`、`hr.calibre3`、`titlepage.xhtml` 封面、源里偶有坏标签 |
+| Y | calibre 繁体 + 书末跨文件注（`p.footnote` + `a.ref`） | `scripts/epub_clean_calibre_endnotes.py` | `body.calibre3`、书根 `stylesheet.css`、`p.calibre5` 正文、`p.t > span.kfont` 诗行、注释集中在书末「注释」章（`h6.calibre6` 按章分组）、跨文件 `a.ref`/`p#foot-*` |
+| Z | InDesign 竖排（`vrtl` + 版式类 + `aside` 章末注） | `scripts/epub_clean_indesign_vrtl.py` | `html.vrtl`、`body.p-text|p-image|p-colophon|p-reference`、`start-4em/indent--2em/align-center`、`span.big-h1/small-h3`、`aside epub:type="footnote"` + `span.ref`、`svg.fit` 图版 |
+| AA | 掌阅·行内图片注（`img.zhangyue-footnote` + `zy-footnote`） | `scripts/epub_clean_zhangyue_note.py` | `text-title-1-c/2-c/3` 标题、`span.content-word-small` 篇/章号、`p.bodytext-kt-*` 楷体引文组、`p.preface-text`、`p.inscribed-right`、注文写在 `img[zy-footnote]` 属性里（无锚点） |
 
 先跑 `analyze` 判断属于哪一套，再选脚本。类名对不上时：改该脚本顶部的 `CONFIG`（若能覆盖）或另立一套。
 
@@ -135,6 +139,7 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
+- **新增 profile AA**（掌阅·行内图片注，`epub_clean_zhangyue_note.py`）：《意识形态与美国外交政策》。标题同 profile K，但脚注是行内符号图、注文写在 `zy-footnote` 属性里（904 条）；脚本抽注文 → `[N]` 双向回链 + 章末 `p.fnote`，`bodytext-kt-*` 楷体引文组转 `blockquote`，篇/章号 `span.content-word-small` → `span.subtitle`，版权页按 bodytext-noindent。README 表同时补齐遗漏的 X/Y/Z 行
 - **多则题词合并**（2026-10-31 用户手改《发现丝绸》`bodymatter_0_17.xhtml` 确认）：同一页多条题词放进**一个** `blockquote.intro`，条间插 `<p class="bodytext"><br/></p>`，每条 `p.bodytext` + `p.right` 落款。写入 SKILL.md「人工精修清单」
 - **标题级别按 nav 层级（2026-10-31，profile W）**：`nav.xhtml` 顶层条目用 `h1`，部下面的章（`<ol>` 深度 ≥ 2）改 `h2`；id 与内部 `span.subtitle` 不动。《发现丝绸》27 个章文件已由 h1 改 h2（8 个部扉仍为 h1）
 - **朝代/皇帝对照改两列表格（2026-10-31）**：《发现丝绸》`bodymatter_1_3.xhtml` 里「朝代」段与「皇帝」段交替，改成 `<table>`（表头 `朝代`/`皇帝`），每朝一行；每段开头的 `<b>皇帝</b><br/>` 与段间空行段删除。口径写进 SKILL.md「人工精修清单」
@@ -156,9 +161,9 @@ python scripts/epub_clean_fix.py verify  <dir>
 - `assets/styles.css` 增补 `body.cover`（封面页整页居中、零页边距）
 
 - **`styles.css` 收进 skill**：新增 `assets/styles.css`（规范版，以此为准）+ `epub_clean_common.ensure_styles(dirpath)`；
-  23 个 profile 的 `process()` 都会在处理前自动复制/覆盖到目标目录（缺则复制、不同则覆盖、相同不动），**书里不再另维护 css**
+  27 个 profile 的 `process()` 都会在处理前自动复制/覆盖到目标目录（缺则复制、不同则覆盖、相同不动），**书里不再另维护 css**
 - **排版规范化**（`normalize_typography`）：NBSP→空格、中英文之间不留空格、缩写点前空格去掉、逐字 `<i>` 合并、两段不挤一行；新增「人工精修清单」（center / left / 作者名 h3+subtitle / 引文包 blockquote）
-- **通用规则：`chatu` 处理** —— ① 两个 `chatu` 之间不放 `p.sprt`（有则删）；② 正文中同一 (img src + 图注) 的 `chatu` 只保留首次出现（跨文件），**彩图页（整页插图墙）整体跳过不计**。实现于 `scripts/epub_clean_common.py`，23 个 profile 写出前自动调用；旧成果可用 `scripts/epub_clean_fix.py process <dir>` 补跑
+- **通用规则：`chatu` 处理** —— ① 两个 `chatu` 之间不放 `p.sprt`（有则删）；② 正文中同一 (img src + 图注) 的 `chatu` 只保留首次出现（跨文件），**彩图页（整页插图墙）整体跳过不计**。实现于 `scripts/epub_clean_common.py`，27 个 profile 写出前自动调用；旧成果可用 `scripts/epub_clean_fix.py process <dir>` 补跑
 - **新增 profile P**（八旗文化 繁中 InDesign）：无 class 的 `<p>` 正文、`span.num/num2`→subtitle 分行、`p.kai`/`div.kai`→blockquote、`ol.footnote`+`img.pw` 回链箭头→`hr`+fnote、`p.sec`→sprt、`p.ref/item/title`→bodytext-noindent
 - **新增 profile O**（文景/上海人民 `bodyContent-1`）：跨文件 `jz_X`/`jzyy_X` 脚注原样保留并双向化、楷体引文→blockquote、`contents-1/2`→toc1/toc2（三级只留前两级）、标题保持 h1/h3/h4 原层级；新增**目录级跨文件锚点校验**
 - **新增 profile N**（bookcrafter 生成版 / 磨铁·Z-Library）：`p.bookcrafter-body-paragraph`、纯文本 `(N)` 脚注（含孤儿注保留不回链）、占位标题 `正文 28`→`28`、`div.toc-list` → `p.toc1`
