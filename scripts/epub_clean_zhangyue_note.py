@@ -51,7 +51,7 @@ import shutil
 import sys
 import xml.etree.ElementTree as ET
 
-from epub_clean_common import postprocess, ensure_styles
+from epub_clean_common import postprocess, ensure_styles, count_fnote_tight
 
 CONFIG = {
     "css_href": "styles.css",
@@ -295,9 +295,10 @@ def step_tidy(c, name, ctx):
     return c
 
 
+# notes 必须排在 tidy 之后：tidy 的段内空白压缩会把「[N] 注文」之间的空格吃掉
 STEPS = [("css", step_css), ("html", step_html), ("shell", step_shell),
-         ("headings", step_headings), ("quotes", step_quotes), ("notes", step_notes),
-         ("body", step_body), ("tidy", step_tidy)]
+         ("headings", step_headings), ("quotes", step_quotes),
+         ("body", step_body), ("tidy", step_tidy), ("notes", step_notes)]
 
 
 # ---------- 校验 ----------
@@ -335,6 +336,9 @@ def verify_content(c, name, dirpath):
     nfn = len(re.findall(r'<p class="fnote"', c))
     if nref != nfn:
         probs.append("noteref(%d) != fnote(%d)" % (nref, nfn))
+    tight = count_fnote_tight(c)
+    if tight:
+        probs.append("fnote 序号后缺空格(%d)" % tight)
     info.append("bodytext=%d fnote=%d h1=%d h2=%d h3=%d bq=%d" % (
         len(re.findall(r'class="bodytext"', c)), nfn,
         len(re.findall(r"<h1", c)), len(re.findall(r"<h2", c)), len(re.findall(r"<h3", c)),

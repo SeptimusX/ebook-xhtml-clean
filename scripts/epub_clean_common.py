@@ -238,6 +238,24 @@ def hr_to_blank(c):
 def count_hr(c):
     return len(re.findall(r"<hr\s*/?>", c))
 
+# ---------- 4b) 尾注序号后留一个空格 ----------
+# `<p class="fnote"><a …>[12]</a>注文` -> `…</a> 注文`（用户口径 2026-11-17：序号与注文之间要有空格）
+
+_FNOTE_HEAD = r'(<p class="fnote"[^>]*>\s*<a [^>]*>(?:\[[^\]]+\]|\d{1,3})</a>(?:\s*<a \b[^>]*></a>)*)'
+_TIGHT_FNOTE = re.compile(_FNOTE_HEAD + r'(?=[^\s<])')
+_TIGHT_FNOTE_SPAN = re.compile(_FNOTE_HEAD + r'(?=<span\b)')
+
+
+def ensure_fnote_space(c):
+    c = _TIGHT_FNOTE.sub(r"\1 ", c)
+    c = _TIGHT_FNOTE_SPAN.sub(r"\1 ", c)
+    return c
+
+
+def count_fnote_tight(c):
+    return len(_TIGHT_FNOTE.findall(c)) + len(_TIGHT_FNOTE_SPAN.findall(c))
+
+
 # ---------- 组合 ----------
 
 def _fix_text_node(t):
@@ -314,5 +332,6 @@ def postprocess(c):
     c = hr_to_blank(c)
     c = normalize_typography(c)
     c = normalize_lang(c)
+    c = ensure_fnote_space(c)
     c = ensure_xml_decl(c)
     return c

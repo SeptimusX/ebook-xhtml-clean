@@ -19,7 +19,7 @@ import argparse, datetime, glob, os, re, shutil, sys
 
 from epub_clean_common import (postprocess, reset_dedupe, register_chatu,
                                count_dupe_chatu, count_sprt_between_chatu,
-                               count_indent_spaces, count_lang_non_cn,
+                               count_indent_spaces, count_lang_non_cn, count_fnote_tight,
                                is_gallery, _CHATU, ensure_styles)
 
 
@@ -71,7 +71,8 @@ def process(d, dry=False):
         ns = count_sprt_between_chatu(c)
         ni = count_indent_spaces(c)
         nl = count_lang_non_cn(c)
-        if not nd and not ns and not ni and not nl:
+        nf = count_fnote_tight(c)
+        if not nd and not ns and not ni and not nl and not nf:
             register_chatu(c)          # 记入 seen，供后续文件比对
             continue
         if not dry:
@@ -81,15 +82,15 @@ def process(d, dry=False):
         tdup += nd
         tsprt += ns
         tind += ni
-        print("%-20s 删重复 chatu: %-2d 删 chatu 间 sprt: %-2d 删段首全角空格: %-2d 改 lang: %d"
-              % (name, nd, ns, ni, nl))
+        print("%-20s 删重复 chatu: %-2d 删 chatu 间 sprt: %-2d 删段首全角空格: %-2d 改 lang: %-2d 补注号空格: %d"
+              % (name, nd, ns, ni, nl, nf))
     print("合计: 重复 chatu %d 处，chatu 间 sprt %d 处，段首全角空格 %d 段" % (tdup, tsprt, tind))
     print("RESULT: OK")
 
 
 def verify_dir(d):
     reset_dedupe()
-    bad_d = bad_s = bad_i = bad_l = 0
+    bad_d = bad_s = bad_i = bad_l = bad_f = 0
     for fp in list_files(d):
         c = read(fp)
         if is_gallery(c):
@@ -98,6 +99,7 @@ def verify_dir(d):
         ns = count_sprt_between_chatu(c)
         ni = count_indent_spaces(c)
         nl = count_lang_non_cn(c)
+        nf = count_fnote_tight(c)
         register_chatu(c)
         if nd:
             bad_d += nd
@@ -111,10 +113,13 @@ def verify_dir(d):
         if nl:
             bad_l += nl
             print("%-20s 仍有 %d 处 lang 非 zh-CN" % (os.path.basename(fp), nl))
-    ok = not (bad_d or bad_s or bad_i or bad_l)
+        if nf:
+            bad_f += nf
+            print("%-20s 仍有 %d 处注号后缺空格" % (os.path.basename(fp), nf))
+    ok = not (bad_d or bad_s or bad_i or bad_l or bad_f)
     print("RESULT:", "PASS" if ok else
-          "FAIL（重复 chatu %d，chatu 间 sprt %d，段首全角空格 %d，lang %d）"
-          % (bad_d, bad_s, bad_i, bad_l))
+          "FAIL（重复 chatu %d，chatu 间 sprt %d，段首全角空格 %d，lang %d，注号空格 %d）"
+          % (bad_d, bad_s, bad_i, bad_l, bad_f))
     sys.exit(0 if ok else 1)
 
 

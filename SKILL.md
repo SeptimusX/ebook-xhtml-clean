@@ -110,6 +110,7 @@ description: 电子书 EPUB xhtml 清洗流水线（二十七套 profile：得�
 - 脚注：正文 `<sup><a epub:type="noteref" href="#footnote-x" id="noteref-N">[N]</a></sup>`；
   章末 `<hr/>` 后 `<p class="fnote" id="footnote-x"><a href="#noteref-N">[N]</a> 注文</p>`；
   编号每文件从 [1] 重新开始；重复的 footnote id 输出时加 `-2`/`-3` 后缀消歧
+  **`</a>` 与注文之间必须有一个空格**（`<p class="fnote" id="foot-N"><a href="#back-N">[N]</a> 注文</p>`）；源书常漏掉，`epub_clean_common.ensure_fnote_space()` 在 `postprocess()` 里自动补，`epub_clean_fix.py` 可对旧成果补跑
   （noteref→aside 按 alt 文本精确配对，aside 正文为权威文本）。
 - 插图：`<div class="chatu">` + `<p class="image"><img src=... alt=""/></p>` + `<p class="caption">`。
   **两个 `chatu` 之间不放 `<p class="sprt">`**（连续插图之间不需要分隔符），已有则删 ——

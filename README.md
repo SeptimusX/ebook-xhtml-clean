@@ -139,6 +139,7 @@ python scripts/epub_clean_fix.py verify  <dir>
 
 ## 变更记录（本轮）
 
+- **尾注序号后补空格（2026-11-17）**：`<p class="fnote"><a …>[N]</a> 注文`，`</a>` 与注文之间留一个空格。`epub_clean_common.ensure_fnote_space()` 并入 `postprocess()`（也兼容 `</a><a id="x"></a>注文`、`</a><span class="italic">…` 两种变体）；全库 5 本、21 个文件共补 186 处
 - **新增 profile AA**（掌阅·行内图片注，`epub_clean_zhangyue_note.py`）：《意识形态与美国外交政策》。标题同 profile K，但脚注是行内符号图、注文写在 `zy-footnote` 属性里（904 条）；脚本抽注文 → `[N]` 双向回链 + 章末 `p.fnote`，`bodytext-kt-*` 楷体引文组转 `blockquote`，篇/章号 `span.content-word-small` → `span.subtitle`，版权页按 bodytext-noindent。README 表同时补齐遗漏的 X/Y/Z 行
 - **多则题词合并**（2026-10-31 用户手改《发现丝绸》`bodymatter_0_17.xhtml` 确认）：同一页多条题词放进**一个** `blockquote.intro`，条间插 `<p class="bodytext"><br/></p>`，每条 `p.bodytext` + `p.right` 落款。写入 SKILL.md「人工精修清单」
 - **标题级别按 nav 层级（2026-10-31，profile W）**：`nav.xhtml` 顶层条目用 `h1`，部下面的章（`<ol>` 深度 ≥ 2）改 `h2`；id 与内部 `span.subtitle` 不动。《发现丝绸》27 个章文件已由 h1 改 h2（8 个部扉仍为 h1）
